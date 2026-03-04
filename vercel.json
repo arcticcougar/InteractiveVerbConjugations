@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/Interactive__Verbs.html"
+    }
+  ]
+}
