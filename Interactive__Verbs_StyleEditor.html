@@ -1,0 +1,2010 @@
+﻿﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Interactive Verb Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&family=Lora:wght@400;500;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;500;700;800;900&family=Oswald:wght@400;500;700&family=Playfair+Display:wght@400;600;700;800&family=Poppins:wght@400;500;700;800&family=Source+Sans+3:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b1020;
+    --panel: #111a33;
+    --panel2: #0f1630;
+    --text: #e9eefc;
+    --muted: #a9b4d6;
+    --border: rgba(255,255,255,0.12);
+    --accent: #7dd3fc;
+    --accent2: #a78bfa;
+    --good: #34d399;
+    --warn: #fbbf24;
+    --header-offset: 2px;
+  }
+  * { box-sizing: border-box; }
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    padding-top: var(--header-offset);
+    overflow-x: auto;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    background: radial-gradient(1200px 600px at 20% 0%, #172554 0%, var(--bg) 60%) fixed;
+    color: var(--text);
+  }
+  .headerHotspot {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 14px;
+    z-index: 11;
+  }
+  header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    padding: 4px 6px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(11,16,32,0.65);
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    transform: translateY(calc(-100% - 2px));
+    transition: transform 160ms ease, opacity 160ms ease;
+  }
+  .headerHotspot:hover + header,
+  header:hover,
+  header:focus-within {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .wrap {
+    width: fit-content;
+    max-width: none;
+    margin: 0 auto;
+    padding: 0 6px;
+  }
+  h1 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.2px;
+  }
+  .row {
+    display: grid;
+    width: fit-content;
+    grid-template-columns: 290px max-content;
+    align-items: start;
+    gap: 10px;
+    padding: 2px 6px 10px;
+  }
+  .card {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+    box-shadow: 0 10px 28px rgba(0,0,0,0.25);
+  }
+  main.card {
+    width: fit-content;
+    justify-self: start;
+  }
+  .pad { padding: 8px; }
+  .search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 7px;
+  }
+  input[type="search"] {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 10px;
+    outline: none;
+    background: rgba(0,0,0,0.25);
+    color: var(--text);
+  }
+  input[type="search"]::placeholder {
+    color: rgba(233,238,252,0.55);
+  }
+  .list {
+    max-height: calc(100vh - 220px);
+    overflow: auto;
+    padding: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: #1f1f1f #2b2b2b;
+  }
+  .list::-webkit-scrollbar {
+    width: 14px;
+    height: 14px;
+  }
+  .list::-webkit-scrollbar-track {
+    background: #2b2b2b;
+  }
+  .list::-webkit-scrollbar-thumb {
+    border: 2px solid #2b2b2b;
+    border-radius: 999px;
+    background: #1f1f1f;
+  }
+  .list::-webkit-scrollbar-thumb:hover {
+    background: #161616;
+  }
+  .list::-webkit-scrollbar-button {
+    background: #1f1f1f;
+  }
+  .list::-webkit-scrollbar-button:hover {
+    background: #161616;
+  }
+  .verbBtn {
+    display: block;
+    width: 100%;
+    padding: 6px 7px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+  }
+  .verbBtn:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.08);
+  }
+  .verbBtn[aria-selected="true"] {
+    background: rgba(125,211,252,0.12);
+    border-color: rgba(125,211,252,0.35);
+  }
+  .verbTop {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+  }
+  .verbTitle {
+    overflow: hidden;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .verbMeta {
+    margin-top: 1px;
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+  .tagRow {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 4px;
+  }
+  .tagRow .pill {
+    max-width: 100%;
+    line-height: 1.15;
+    text-align: right;
+    white-space: normal;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 999px;
+    font-size: 11px;
+    line-height: 1;
+    vertical-align: middle;
+    color: var(--muted);
+  }
+  .typePill {
+    background: rgba(125,211,252,0.12);
+    border-color: rgba(125,211,252,0.35);
+    color: #7dd3fc;
+  }
+  .detailHead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 7px 9px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    background: rgba(0,0,0,0.12);
+  }
+  .detailHead .left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .big {
+    font-size: 19px;
+    font-weight: 900;
+    letter-spacing: 0.3px;
+  }
+  .meaning {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .chip {
+    padding: 3px 7px;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 999px;
+    background: rgba(0,0,0,0.22);
+    font-size: 14px;
+    color: var(--text);
+  }
+  .chip strong {
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .panel {
+    padding: 5px 7px 7px;
+  }
+  .twoCol {
+    display: grid;
+    grid-template-columns: max-content max-content;
+    gap: var(--sideGap);
+    align-items: start;
+  }
+  .colHeader {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 1px 0 4px;
+    padding: 0 2px;
+  }
+  .colHeader .h {
+    font-size: 12.5px;
+    font-weight: 900;
+    letter-spacing: 0.2px;
+    color: var(--text);
+  }
+  .tense {
+    overflow: visible;
+    margin: 3px 0;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    background: rgba(0,0,0,0.16);
+  }
+  .tense--spaced {
+    margin-top: 10px;
+  }
+  .tense summary {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 2px 6px;
+    list-style: none;
+    cursor: pointer;
+  }
+  .tense summary::-webkit-details-marker { display: none; }
+  .tenseTitle {
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.15;
+    color: var(--accent);
+  }
+  .tenseSub {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  table {
+    display: inline-table;
+    width: fit-content;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  .tense table {
+    margin: 0;
+  }
+  th,
+  td {
+    padding: 2px 6px;
+    border-top: 0;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+  th {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  thead th {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    font-size: 10.5px;
+  }
+  thead .thgroup {
+    font-weight: 950;
+    text-align: left;
+    color: var(--muted);
+  }
+  td:nth-child(1),
+  td:nth-child(3) {
+    color: var(--muted);
+  }
+  td:nth-child(2),
+  td:nth-child(4) {
+    padding-left: 8px;
+    text-align: left;
+  }
+  td:nth-child(4),
+  thead .thgroup:nth-child(2) {
+    padding-left: 10px;
+  }
+  td { overflow: visible; }
+  .formBtn {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-weight: 800;
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .formBtn:hover {
+    border-radius: 6px;
+    background: rgba(255,255,255,0.05);
+    color: var(--accent);
+  }
+  .mutedBlock {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--muted);
+    white-space: pre-wrap;
+  }
+  .stackGapSm { height: 8px; }
+  .stackGapMd { height: 10px; }
+  .sectionLabel {
+    margin-bottom: 6px;
+    font-weight: 900;
+  }
+  .imperativeBoard {
+    display: contents;
+  }
+  .imperativeHalf {
+    display: grid;
+    align-items: baseline;
+    row-gap: 6px;
+  }
+  .imperativeHalf--left {
+    grid-column: 1;
+    grid-template-columns: var(--p1W) max-content;
+    justify-self: end;
+    column-gap: 18px;
+    padding-right: 12px;
+  }
+  .imperativeHalf--right {
+    grid-column: 3;
+    grid-template-columns: var(--p2W) max-content;
+    justify-self: start;
+    column-gap: 18px;
+    padding-left: 12px;
+  }
+  .imperativeLabel {
+    font-size: 13px;
+    line-height: 1;
+    color: var(--muted);
+    white-space: nowrap;
+    text-align: left;
+  }
+  .imperativeForm {
+    font-size: 13px;
+    line-height: 1;
+    font-weight: 800;
+    color: var(--text);
+    white-space: nowrap;
+    text-align: left;
+  }
+  .notesList {
+    display: grid;
+    gap: 8px;
+  }
+  .notesRow {
+    font-size: 13px;
+    line-height: 1;
+    color: var(--muted);
+  }
+  .notesRow--split {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(240px, max-content));
+    gap: 8px 18px;
+    width: fit-content;
+  }
+  .notesItem {
+    min-width: 0;
+  }
+  .tense--centerHead summary {
+    justify-content: center;
+    text-align: center;
+  }
+  .imperativePanel .pad,
+  .notesPanel .pad {
+    text-align: center;
+  }
+  .imperativePanel,
+  .notesPanel {
+    width: calc(var(--simpleSideW) + var(--sideGap) + var(--compoundSideW));
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .notesPanel {
+    margin-top: 10px;
+  }
+  .notesPanel .sectionLabel,
+  .notesPanel .mutedBlock,
+  .notesPanel .notesRow,
+  .notesPanel .notesItem {
+    text-align: center;
+  }
+  .notesPanel .mutedBlock,
+  .notesPanel .notesRow,
+  .notesPanel .notesItem,
+  .notesPanel .sectionLabel {
+    line-height: 1;
+  }
+  .notesPanel .notesList {
+    justify-items: center;
+  }
+  .seamAnchor {
+    display: grid;
+    grid-template-columns: var(--simpleSideW) var(--sideGap) var(--compoundSideW);
+    width: fit-content;
+    margin: 0 auto;
+  }
+  .seamCenter {
+    grid-column: 2;
+    justify-self: center;
+    width: max-content;
+  }
+  .tense--centerHead summary {
+    display: block;
+  }
+  .tense--centerHead .summarySeam {
+    display: grid;
+    grid-template-columns: var(--simpleSideW) var(--sideGap) var(--compoundSideW);
+    width: fit-content;
+    margin: 0 auto;
+  }
+  .tense--centerHead .summarySeamInner {
+    grid-column: 2;
+    justify-self: center;
+    width: max-content;
+  }
+  #detail {
+    --sideGap: 8px;
+    --simpleSideW: 0px;
+    --compoundSideW: 0px;
+    --p1W: 34px;
+    --p2W: 72px;
+    --sF1W: 150px;
+    --sF2W: 180px;
+    --cF1W: 220px;
+    --cF2W: 320px;
+  }
+  col.p1 { width: var(--p1W); }
+  col.p2 { width: var(--p2W); }
+  section.side[data-side="simple"] {
+    --f1W: var(--sF1W);
+    --f2W: var(--sF2W);
+  }
+  section.side[data-side="compound"] {
+    --f1W: var(--cF1W);
+    --f2W: var(--cF2W);
+  }
+  col.f1 { width: var(--f1W); }
+  col.f2 { width: var(--f2W); }
+  .popover {
+    position: fixed;
+    inset: auto auto 0 0;
+    z-index: 999;
+    display: none;
+    min-width: 260px;
+    max-width: 360px;
+    padding: 12px 12px 10px;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 14px;
+    background: rgba(10,15,30,0.92);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+    backdrop-filter: blur(10px);
+  }
+  .popTitle {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .popTitle .word {
+    font-size: 16px;
+    font-weight: 950;
+    letter-spacing: 0.2px;
+  }
+  .close {
+    padding: 4px 8px;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    font-size: 12px;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .kv {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 6px 10px;
+    margin: 8px 0 10px;
+    font-size: 13px;
+  }
+  .k {
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .hint {
+    padding: 10px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    background: rgba(125,211,252,0.08);
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--text);
+  }
+  .hint strong { color: var(--accent); }
+  @media (max-width: 1100px) {
+    .twoCol { grid-template-columns: 1fr; }
+    .imperativeBoard,
+    .notesRow--split,
+    .seamAnchor,
+    .tense--centerHead .summarySeam {
+      grid-template-columns: 1fr;
+      width: 100%;
+    }
+    .imperativeHalf--left,
+    .imperativeHalf--right {
+      grid-column: 1;
+      justify-self: start;
+    }
+    .imperativePanel,
+    .notesPanel {
+      width: 100%;
+    }
+    .seamCenter,
+    .tense--centerHead .summarySeamInner {
+      grid-column: 1;
+    }
+    .imperativeLabel,
+    .imperativeForm {
+      text-align: left;
+    }
+  }
+  @media (max-width: 900px) {
+    .row { grid-template-columns: 1fr; }
+  }
+  @media (hover: none) {
+    .headerHotspot { display: none; }
+    header {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+<style>
+  :root {
+    --te-body-bg: #121212;
+    --te-font-body: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+    --te-font-heading: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+    --te-body-size: 10px;
+    --te-text-main: #ffffff;
+    --te-text-muted: #c2c2c2;
+    --te-accent: #8a2be2;
+    --te-title-color: #ffffff;
+    --te-header-bg: #000000;
+    --te-header-border: #000000;
+    --te-card-bg: #303030;
+    --te-card-border: #4f4f4f;
+    --te-card-radius: 14px;
+    --te-card-shadow: 0 10px 28px rgba(0,0,0,0.25);
+    --te-input-bg: rgba(0,0,0,0.25);
+    --te-input-border: rgba(255,255,255,0.16);
+    --te-input-radius: 10px;
+    --te-placeholder: rgba(233,238,252,0.55);
+    --te-hover-bg: rgba(255,255,255,0.05);
+    --te-hover-border: rgba(255,255,255,0.08);
+    --te-selected-bg: #2a2a2a;
+    --te-selected-border: #4f4f4f;
+    --te-detail-head-bg: rgba(0,0,0,0.12);
+    --te-tense-bg: rgba(0,0,0,0.16);
+    --te-tense-border: rgba(255,255,255,0.12);
+    --te-tense-radius: 12px;
+    --te-table-rule: #d4d4d4;
+    --te-row-line: rgba(255,255,255,0.03);
+    --te-table-header-color: #636363;
+    --te-subhead-color: #d6d6d6;
+    --te-pill-bg: transparent;
+    --te-pill-border: rgba(255,255,255,0.16);
+    --te-pill-text: #ffffff;
+    --te-type-pill-bg: #292929;
+    --te-type-pill-border: #545454;
+    --te-type-pill-text: #4682b4;
+    --te-chip-bg: rgba(0,0,0,0.22);
+    --te-chip-border: rgba(255,255,255,0.14);
+    --te-chip-radius: 999px;
+    --te-chip-size: 15px;
+    --te-hint-bg: #121212;
+    --te-hint-border: #0f0f0f;
+    --te-popover-bg: #2a2a2a;
+    --te-popover-border: rgba(255,255,255,0.14);
+    --te-popover-shadow: 0 18px 40px rgba(0,0,0,0.45);
+    --te-close-bg: rgba(255,255,255,0.06);
+    --te-close-border: rgba(255,255,255,0.14);
+    --te-form-hover-bg: rgba(255,255,255,0.05);
+    --te-form-hover-text: #ffd700;
+    --te-h1-size: 20px;
+    --te-h1-weight: 700;
+    --te-big-size: 22px;
+    --te-big-weight: 900;
+    --te-big-color: #ff00ff;
+    --te-verb-title-size: 18px;
+    --te-verb-title-weight: 700;
+    --te-section-size: 16.5px;
+    --te-section-weight: 600;
+    --te-section-color: #ff69b4;
+    --te-tense-size: 16.5px;
+    --te-tense-weight: 600;
+    --te-meta-size: 10.5px;
+    --te-meaning-size: 16px;
+    --te-table-size: 17px;
+    --te-table-header-size: 13px;
+    --te-form-weight: 700;
+    --te-note-subhead-size: 13.5px;
+    --te-note-subhead-weight: 700;
+    --te-note-subhead-color: #ffffff;
+  }
+
+  body {
+    background: var(--te-body-bg);
+    color: var(--te-text-main);
+    font-family: var(--te-font-body);
+    font-size: var(--te-body-size);
+  }
+
+  body.style-lab-open {
+    padding-right: 410px;
+  }
+
+  header {
+    background: var(--te-header-bg);
+    border-bottom-color: var(--te-header-border);
+  }
+
+  h1,
+  .big,
+  .verbTitle,
+  .colHeader .h,
+  .tenseTitle,
+  .popTitle .word {
+    font-family: var(--te-font-heading);
+  }
+
+  h1 {
+    color: var(--te-title-color);
+    font-size: var(--te-h1-size);
+    font-weight: var(--te-h1-weight);
+  }
+
+  .big {
+    color: var(--te-big-color);
+    font-size: var(--te-big-size);
+    font-weight: var(--te-big-weight);
+  }
+
+  .verbTitle {
+    color: var(--te-text-main);
+    font-size: var(--te-verb-title-size);
+    font-weight: var(--te-verb-title-weight);
+  }
+
+  .verbMeta {
+    font-size: var(--te-meta-size);
+  }
+
+  .meaning {
+    font-size: var(--te-meaning-size);
+  }
+
+  .verbMeta,
+  .meaning,
+  .k,
+  .tenseSub,
+  .mutedBlock,
+  td:nth-child(1),
+  td:nth-child(3) {
+    color: var(--te-text-muted);
+  }
+
+  .card {
+    background: var(--te-card-bg);
+    border-color: var(--te-card-border);
+    border-radius: var(--te-card-radius);
+    box-shadow: var(--te-card-shadow);
+  }
+
+  input[type="search"] {
+    background: var(--te-input-bg);
+    border-color: var(--te-input-border);
+    border-radius: var(--te-input-radius);
+    color: var(--te-text-main);
+  }
+
+  input[type="search"]::placeholder {
+    color: var(--te-placeholder);
+  }
+
+  .verbBtn:hover {
+    background: var(--te-hover-bg);
+    border-color: var(--te-hover-border);
+  }
+
+  .verbBtn[aria-selected="true"] {
+    background: var(--te-selected-bg);
+    border-color: var(--te-selected-border);
+  }
+  .verbBtn[aria-selected="true"] .verbTitle,
+  .verbBtn[aria-selected="true"] .pill:not(.typePill) {
+    color: var(--te-big-color);
+  }
+
+  .detailHead {
+    background: var(--te-detail-head-bg);
+    border-bottom-color: var(--te-table-rule);
+  }
+
+  .pill {
+    background: var(--te-pill-bg);
+    border-color: var(--te-pill-border);
+    color: var(--te-pill-text);
+  }
+  .big .pill {
+    color: var(--te-big-color);
+    font-weight: 700;
+  }
+
+  .typePill {
+    background: var(--te-type-pill-bg);
+    border-color: var(--te-type-pill-border);
+    color: var(--te-type-pill-text);
+  }
+
+  .chip {
+    background: var(--te-chip-bg);
+    border-color: var(--te-chip-border);
+    border-radius: var(--te-chip-radius);
+    font-size: var(--te-chip-size);
+    color: var(--te-text-main);
+  }
+
+  .chip strong,
+  .tenseTitle,
+  .hint strong {
+    color: var(--te-accent);
+  }
+
+  .colHeader .h {
+    color: var(--te-section-color);
+    font-size: var(--te-section-size);
+    font-weight: var(--te-section-weight);
+  }
+
+  .tense {
+    background: var(--te-tense-bg);
+    border-color: var(--te-tense-border);
+    border-radius: var(--te-tense-radius);
+  }
+
+  .tenseTitle {
+    font-size: var(--te-tense-size);
+    font-weight: var(--te-tense-weight);
+  }
+
+  th,
+  td {
+    border-top-color: var(--te-row-line);
+    line-height: 1;
+  }
+
+  thead th {
+    color: var(--te-table-header-color);
+    font-size: var(--te-table-header-size);
+  }
+
+  thead .thgroup {
+    color: var(--te-subhead-color);
+    font-size: var(--te-table-header-size);
+  }
+  thead .thgroup:nth-child(2) {
+    padding-left: 6px;
+  }
+
+  td,
+  .formBtn,
+  .mutedBlock,
+  .imperativeForm,
+  .notesRow,
+  .hint,
+  .close,
+  .kv {
+    font-size: var(--te-table-size);
+  }
+
+  .formBtn {
+    font-family: inherit;
+    color: var(--te-text-main);
+    font-weight: var(--te-form-weight);
+    font-style: normal;
+    letter-spacing: inherit;
+    line-height: 1;
+  }
+
+  .formBtn:hover {
+    background: var(--te-form-hover-bg);
+    color: var(--te-form-hover-text);
+  }
+
+  .sectionLabel {
+    color: var(--te-note-subhead-color);
+    font-size: var(--te-note-subhead-size);
+    font-weight: var(--te-note-subhead-weight);
+  }
+
+  .hint {
+    background: var(--te-hint-bg);
+    border-color: var(--te-hint-border);
+    color: var(--te-text-main);
+  }
+
+  .imperativeLabel {
+    color: var(--te-text-muted);
+    font-size: var(--te-table-size);
+    font-weight: 400;
+  }
+
+  .imperativeForm {
+    color: var(--te-text-main);
+    font-weight: var(--te-form-weight);
+    font-style: normal;
+  }
+
+  .notesRow,
+  .notesItem {
+    color: var(--te-text-muted);
+  }
+
+  .popover {
+    background: var(--te-popover-bg);
+    border-color: var(--te-popover-border);
+    box-shadow: var(--te-popover-shadow);
+  }
+
+  .close {
+    background: var(--te-close-bg);
+    border-color: var(--te-close-border);
+    color: var(--te-text-main);
+  }
+
+  .styleLabToggle {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 1100;
+    padding: 10px 14px;
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 999px;
+    background: rgba(11,16,32,0.92);
+    color: #e9eefc;
+    font: 700 13px/1 var(--te-font-body);
+    cursor: pointer;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.3);
+  }
+
+  .styleLab {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 1090;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    width: 390px;
+    height: 100vh;
+    border-left: 1px solid rgba(255,255,255,0.12);
+    background: rgba(9,13,27,0.97);
+    color: #e9eefc;
+    box-shadow: -18px 0 36px rgba(0,0,0,0.28);
+    transform: translateX(0);
+    transition: transform 160ms ease;
+    backdrop-filter: blur(12px);
+  }
+
+  .styleLab[hidden] {
+    display: grid;
+    transform: translateX(100%);
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .styleLabHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .styleLabHead h2 {
+    margin: 0;
+    font: 800 18px/1.1 var(--te-font-heading);
+  }
+
+  .styleLabHead p {
+    margin: 4px 0 0;
+    color: #a9b4d6;
+    font-size: 12px;
+  }
+
+  .styleLabHead button,
+  .styleLabActions button {
+    padding: 8px 10px;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.05);
+    color: #e9eefc;
+    font: 700 12px/1 var(--te-font-body);
+    cursor: pointer;
+  }
+
+  .styleLabActions {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .styleLabBody {
+    overflow: auto;
+    padding: 14px 16px 18px;
+  }
+
+  .styleLabGroup {
+    margin-bottom: 18px;
+  }
+
+  .styleLabGroup h3 {
+    margin: 0 0 10px;
+    color: #7dd3fc;
+    font: 800 13px/1 var(--te-font-heading);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .styleLabField {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .styleLabField label {
+    font-size: 12px;
+    color: #d7dff6;
+  }
+
+  .styleLabField input,
+  .styleLabField select,
+  .styleLabField textarea {
+    width: 100%;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.04);
+    color: #f3f6ff;
+    font: 500 12px/1.35 Consolas, "Courier New", monospace;
+  }
+
+  .styleLabField select {
+    color-scheme: dark;
+    font-family: var(--te-font-body);
+  }
+
+  .styleLabField select option {
+    background: #1a1a1a;
+    color: #f3f6ff;
+  }
+
+  .styleLabField input[type="color"] {
+    padding: 4px;
+    height: 38px;
+  }
+
+  .styleLabSplit {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .styleLabFooter {
+    display: grid;
+    gap: 8px;
+    padding: 12px 16px 16px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .styleLabFooter textarea {
+    width: 100%;
+    min-height: 140px;
+    resize: vertical;
+    padding: 10px 12px;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 12px;
+    background: rgba(0,0,0,0.28);
+    color: #f3f6ff;
+    font: 500 12px/1.45 Consolas, "Courier New", monospace;
+  }
+
+  .styleLabFooter small {
+    color: #a9b4d6;
+    font-size: 11px;
+  }
+
+  @media (max-width: 1280px) {
+    body.style-lab-open {
+      padding-right: 0;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .styleLab {
+      width: min(100vw, 390px);
+    }
+  }
+</style>
+</head>
+<body class="style-lab-open">
+<div class="headerHotspot" aria-hidden="true"></div>
+<header>
+  <div class="wrap">
+    <h1>Interactive Spanish Verb Conjugations</h1>
+  </div>
+</header>
+
+<aside id="styleLab" class="styleLab" aria-label="Style editor">
+  <div class="styleLabHead">
+    <div>
+      <h2>Style Lab</h2>
+      <p>Edit the live theme, then copy the exported settings.</p>
+    </div>
+    <button id="styleLabClose" type="button">Hide</button>
+  </div>
+  <div class="styleLabActions">
+    <button id="styleLabReset" type="button">Reset Defaults</button>
+    <button id="styleLabCopy" type="button">Copy Export</button>
+  </div>
+  <div id="styleLabBody" class="styleLabBody"></div>
+  <div class="styleLabFooter">
+    <small>Paste this export back into chat and I can hard-code it into the original file.</small>
+    <textarea id="styleLabExport" readonly></textarea>
+  </div>
+</aside>
+
+<button id="styleLabToggle" class="styleLabToggle" type="button">Hide Style Lab</button>
+
+<div class="wrap row">
+  <section class="card" aria-label="Verb list">
+    <div class="search">
+      <input id="q" type="search" placeholder="Search verbs (e.g., abrir, hug, burn)..." />
+    </div>
+    <div id="list" class="list"></div>
+  </section>
+
+  <main class="card" aria-label="Verb details">
+    <div id="detail"></div>
+  </main>
+</div>
+
+<div id="popover" class="popover" role="dialog" aria-modal="false" aria-hidden="true">
+  <div class="popTitle">
+    <div class="word" id="popWord"></div>
+    <button class="close" id="popClose" type="button">Close</button>
+  </div>
+  <div class="kv">
+    <div class="k">Verb</div><div id="popVerb"></div>
+    <div class="k">Tense</div><div id="popTense"></div>
+    <div class="k">Person</div><div id="popPerson"></div>
+    <div class="k">Number</div><div id="popNumber"></div>
+  </div>
+  <div class="hint" id="popHint"></div>
+</div>
+
+<script src="verbs-data.js"></script>
+<script>
+const DATA = window.VERB_DATA || [];
+
+function splitSynAntLine(line) {
+  const synMatch = line.match(/(?:^|\s)Syn\.\:\s*(.*?)(?=\s+Ant\.\:|$)/i);
+  const antMatch = line.match(/(?:^|\s)Ant\.\:\s*(.*)$/i);
+  return {
+    syn: synMatch ? synMatch[1].split(/\s*;\s*/).map(x => x.trim()).filter(Boolean) : [],
+    ant: antMatch ? antMatch[1].split(/\s*;\s*/).map(x => x.trim()).filter(Boolean) : []
+  };
+}
+
+function parseImperativeLines(lines) {
+  const cleaned = (lines || []).map(line => (line || "").trim()).filter(Boolean);
+  const pairParts = cleaned[1]
+    ? cleaned[1].split(/\s+(?=[^\s;]+;\s*no\s+)/).map(part => part.trim()).filter(Boolean)
+    : [];
+  const lowerMatch = cleaned[2] ? cleaned[2].match(/^(.*\S)\s+(\S+)$/) : null;
+
+  return {
+    nosotros: cleaned[0] ? cleaned[0].replace(/^[-—]\s*/, "").trim() : "",
+    tu: pairParts[0] || "",
+    vosotros: pairParts[1] || "",
+    usted: lowerMatch ? lowerMatch[1].trim() : (cleaned[2] || ""),
+    ustedes: lowerMatch ? lowerMatch[2].trim() : ""
+  };
+}
+
+function normalizeVerbRecord(v) {
+  const rawImperative = (v.imperative || [])
+    .map(line => (line || "").replace(/\u00ad/g, "").trim())
+    .filter(Boolean);
+  const imperativeLines = rawImperative.slice(0, 3);
+  const extras = {
+    syn: [...(v.extras?.syn || [])],
+    ant: [...(v.extras?.ant || [])],
+    related: [...(v.extras?.related || [])]
+  };
+
+  rawImperative.slice(3).forEach(line => {
+    if (/(?:^|\s)(?:Syn|Ant)\.\:/i.test(line)) {
+      const parsed = splitSynAntLine(line);
+      extras.syn.push(...parsed.syn);
+      extras.ant.push(...parsed.ant);
+      return;
+    }
+    extras.related.push(line);
+  });
+
+  v.imperative_raw = rawImperative;
+  v.imperative = imperativeLines;
+  v.imperativeParsed = parseImperativeLines(imperativeLines);
+  v.extras = extras;
+  return v;
+}
+
+DATA.forEach(normalizeVerbRecord);
+
+const PRONOUNS = {
+  "1-sg": "yo",
+  "2-sg": "tú",
+  "3-sg": "él",
+  "1-pl": "nosotros",
+  "2-pl": "vosotros",
+  "3-pl": "ellos",
+};
+
+const TENSE_HINTS = {
+  "1": "Used for <strong>now</strong> and general truths (present).",
+  "2": "Used for <strong>ongoing/habitual past</strong> or descriptions (imperfect).",
+  "3": "Used for <strong>completed past actions</strong> (preterite).",
+  "4": "Used for <strong>future</strong> statements and predictions.",
+  "5": "Often used for <strong>would</strong> / hypothetical situations (conditional).",
+  "6": "Used for <strong>present subjunctive</strong>: doubt, desire, recommendations.",
+  "7": "Used for <strong>imperfect subjunctive</strong>: past hypotheticals, reported speech.",
+  "8": "Present perfect: <strong>have + past participle</strong> (recent/connected past).",
+  "9": "Past perfect: <strong>had + past participle</strong> (earlier past).",
+  "10": "Preterite anterior: rare/literary; <strong>had (immediately) done</strong>.",
+  "11": "Future perfect: <strong>will have + past participle</strong>.",
+  "12": "Conditional perfect: <strong>would have + past participle</strong>.",
+  "13": "Perfect subjunctive: <strong>have + past participle</strong> in subjunctive contexts.",
+  "14": "Pluperfect subjunctive: <strong>had + past participle</strong> in subjunctive contexts."
+};
+
+function normalize(s) {
+  return (s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+}
+
+function renderList(filterText="") {
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+  const q = normalize(filterText);
+  const items = DATA.filter(v => {
+    const hay = normalize(v.infinitive + " " + v.meaning_en);
+    return hay.includes(q);
+  });
+
+  items.forEach(v => {
+    const btn = document.createElement("button");
+    btn.className = "verbBtn";
+    btn.type = "button";
+    btn.dataset.id = v.id;
+
+    btn.innerHTML = `
+      <div class="verbTop">
+        <div class="verbTitle"><span class="pill">#${String(v.id).padStart(4,"0")}</span> ${v.infinitive}</div>
+      </div>
+      <div class="verbMeta">${v.meaning_en || ""}</div>
+      <div class="tagRow">
+        <div class="pill typePill">${(v.pattern_notes && v.pattern_notes[0]) ? v.pattern_notes[0].replace("verb","").trim() : ""}</div>
+      </div>
+    `;
+
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".verbBtn").forEach(b => b.setAttribute("aria-selected","false"));
+      btn.setAttribute("aria-selected","true");
+      renderDetail(v.id);
+      hidePopover();
+    });
+
+    list.appendChild(btn);
+  });
+
+  // Auto-select first
+  const first = list.querySelector(".verbBtn");
+  if (first && !document.querySelector(".verbBtn[aria-selected='true']")) {
+    first.click();
+  }
+}
+
+function tenseBlocks(obj, verb, sectionLabel) {
+  const keys = Object.keys(obj || {});
+
+  return keys.map((k, idx) => {
+    const table = obj[k];
+    const num = (k.match(/^\d+/) || [""])[0];
+    const label = k.replace(/^\d+\s*/, "");
+    const rows = [
+      ["1", "Singular", table.singular?.[0], "Plural", table.plural?.[0]],
+      ["2", "Singular", table.singular?.[1], "Plural", table.plural?.[1]],
+      ["3", "Singular", table.singular?.[2], "Plural", table.plural?.[2]],
+    ];
+
+    // Person mapping by row: 1->1st,2->2nd,3->3rd
+    const persons = ["1","2","3"];
+
+    const rowHtml = persons.map((p, i) => {
+      const sg = table.singular?.[i] || "";
+      const pl = table.plural?.[i] || "";
+      return `
+        <tr>
+          <td><span class="k">${PRONOUNS[`${p}-sg`]}</span></td>
+          <td><button class="formBtn" data-verb="${verb.infinitive}" data-tense="${k}" data-person="${p}" data-number="sg">${escapeHtml(sg)}</button></td>
+          <td><span class="k">${PRONOUNS[`${p}-pl`]}</span></td>
+          <td><button class="formBtn" data-verb="${verb.infinitive}" data-tense="${k}" data-person="${p}" data-number="pl">${escapeHtml(pl)}</button></td>
+        </tr>
+      `;
+    }).join("");
+
+    return `
+      <details class="tense tnum-${num}" data-tnum="${num}" open>
+        <summary>
+          <div>
+            <div class="tenseTitle">${num} · ${escapeHtml(label)}</div>
+            </div>
+          
+        </summary>
+        <table>
+          
+          <colgroup>
+            <col class="p1"><col class="f1"><col class="p2"><col class="f2">
+          </colgroup>
+          ${idx === 0 ? `<thead>
+            <tr><th class="thgroup" colspan="2">SINGULAR</th><th class="thgroup" colspan="2">PLURAL</th></tr>
+          </thead>` : ``}
+          <tbody>
+            ${rowHtml}
+          </tbody>
+        </table>
+      </details>
+    `;
+  }).join("");
+}
+
+function escapeHtml(str) {
+  return (str || "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+}
+
+function renderImperative(v) {
+  const imp = v.imperativeParsed || {};
+  const hasStructured = imp.nosotros || imp.tu || imp.vosotros || imp.usted || imp.ustedes;
+
+  if (!hasStructured) {
+    return `<div class="mutedBlock">${escapeHtml((v.imperative || []).join("\n") || "—")}</div>`;
+  }
+
+  return `
+    <div class="imperativeBoard">
+      <div class="imperativeHalf imperativeHalf--left">
+        <div class="imperativeLabel">yo</div>
+        <div class="imperativeForm">--</div>
+        <div class="imperativeLabel">tú</div>
+        <div class="imperativeForm">${escapeHtml(imp.tu || "—")}</div>
+        <div class="imperativeLabel">usted</div>
+        <div class="imperativeForm">${escapeHtml(imp.usted || "—")}</div>
+      </div>
+      <div class="imperativeHalf imperativeHalf--right">
+        <div class="imperativeLabel">nosotros</div>
+        <div class="imperativeForm">${escapeHtml(imp.nosotros || "—")}</div>
+        <div class="imperativeLabel">vosotros</div>
+        <div class="imperativeForm">${escapeHtml(imp.vosotros || "—")}</div>
+        <div class="imperativeLabel">ustedes</div>
+        <div class="imperativeForm">${escapeHtml(imp.ustedes || "—")}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderRelatedLines(lines) {
+  const items = (lines || []).filter(Boolean);
+  if (!items.length) {
+    return `<div class="mutedBlock">—</div>`;
+  }
+
+  return `
+    <div class="notesList">
+      ${items.map(line => {
+        const parts = line.split(/\t+/).map(part => part.trim()).filter(Boolean);
+        if (parts.length > 1) {
+          return `<div class="notesRow notesRow--split">${parts.map(part => `<div class="notesItem">${escapeHtml(part)}</div>`).join("")}</div>`;
+        }
+        return `<div class="notesRow">${escapeHtml(line)}</div>`;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderDetail(id) {
+  const v = DATA.find(x => x.id == id);
+  if (!v) return;
+
+  const detail = document.getElementById("detail");
+
+  detail.innerHTML = `
+    <div class="detailHead">
+      <div class="left">
+        <div class="big">${v.infinitive} <span class="pill">#${String(v.id).padStart(4,"0")}</span></div>
+        <div class="meaning">${escapeHtml(v.meaning_en || "")}</div>
+      </div>
+      <div class="chips">
+        <div class="chip"><strong>Gerund</strong> ${escapeHtml(v.gerund || "—")}</div>
+        <div class="chip"><strong>Part.</strong> ${escapeHtml(v.past_participle || "—")}</div>
+      </div>
+    </div>
+
+    
+    <div class="panel">
+      <div class="twoCol">
+        <section class="side" data-side="simple">
+          <div class="colHeader">
+            <div class="h">Simple tenses (1–7)</div>
+</div>
+          ${tenseBlocks(v.simple, v, "Simple")}
+        </section>
+
+        <section class="side" data-side="compound">
+          <div class="colHeader">
+            <div class="h">Compound tenses (8–14)</div>
+</div>
+          ${tenseBlocks(v.compound, v, "Compound")}
+        </section>
+      </div>
+
+      <details class="tense tense--spaced imperativePanel tense--centerHead" open>
+        <summary>
+          <div class="summarySeam">
+            <div class="summarySeamInner">
+              <div class="tenseTitle">Imperative</div>
+            </div>
+          </div>
+        </summary>
+        <div class="pad">
+          <div class="seamAnchor">
+            ${renderImperative(v)}
+          </div>
+        </div>
+      </details>
+
+      <details class="tense notesPanel tense--centerHead" open>
+        <summary>
+          <div class="summarySeam">
+            <div class="summarySeamInner">
+              <div class="tenseTitle">Notes</div>
+            </div>
+          </div>
+        </summary>
+        <div class="pad">
+          <div class="seamAnchor">
+            <div class="seamCenter">
+              <div class="sectionLabel">Pattern notes</div>
+              <div class="mutedBlock">${escapeHtml((v.pattern_notes || []).join("\n") || "—")}</div>
+              <div class="stackGapMd"></div>
+              <div class="sectionLabel">Related words / expressions / examples</div>
+              ${renderRelatedLines((v.extras?.related || []).slice(0, 14))}
+              <div class="stackGapMd"></div>
+              <div class="sectionLabel">Synonyms / Antonyms</div>
+              <div class="mutedBlock">${escapeHtml([
+                (v.extras?.syn?.length ? "Syn.: " + v.extras.syn.join("; ") : ""),
+                (v.extras?.ant?.length ? "Ant.: " + v.extras.ant.join("; ") : "")
+              ].filter(Boolean).join("\n") || "—")}</div>
+            </div>
+          </div>
+        </div>
+      </details>
+    </div>
+  `;
+
+  // Auto-size columns after rendering (fonts/layout)
+  setTimeout(() => runAutoWidths(detail), 0);
+  setTimeout(() => runAutoWidths(detail), 120);
+
+  // Conjugation click handlers
+  detail.querySelectorAll(".formBtn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const b = e.currentTarget;
+      showPopover(b, {
+        verb: b.dataset.verb,
+        tense: b.dataset.tense,
+        person: b.dataset.person,
+        number: b.dataset.number,
+        form: b.textContent.trim()
+      });
+    });
+  });
+}
+
+
+
+
+
+
+
+
+
+
+function computeGridWidths(detailRoot) {
+  // Measure using a hidden DOM span so we get pixel-perfect widths for the actual font,
+  // avoiding canvas font fallbacks and avoiding underestimation that can cause truncation.
+  const meas = document.createElement("span");
+  meas.style.position = "absolute";
+  meas.style.left = "-99999px";
+  meas.style.top = "-99999px";
+  meas.style.whiteSpace = "nowrap";
+  meas.style.visibility = "hidden";
+  document.body.appendChild(meas);
+
+  function measureWithStyle(sampleEl, text) {
+    const cs = window.getComputedStyle(sampleEl);
+    meas.style.fontFamily = cs.fontFamily;
+    meas.style.fontSize = cs.fontSize;
+    meas.style.fontWeight = cs.fontWeight;
+    meas.style.fontStyle = cs.fontStyle;
+    meas.style.fontVariant = cs.fontVariant;
+    meas.textContent = text;
+    return Math.ceil(meas.getBoundingClientRect().width);
+  }
+
+  // Samples for styling
+  const formSample = detailRoot.querySelector(".formBtn");
+  const pronSample = detailRoot.querySelector("tbody tr td:nth-child(1)");
+  if (!formSample || !pronSample) {
+    meas.remove();
+    return;
+  }
+
+  // Pronoun widths (global across both sections)
+  let maxP1 = 0, maxP2 = 0;
+  detailRoot.querySelectorAll("tbody tr td:nth-child(1)").forEach(td => {
+    const t = (td.textContent || "").trim();
+    if (!t) return;
+    maxP1 = Math.max(maxP1, measureWithStyle(pronSample, t));
+  });
+  detailRoot.querySelectorAll("tbody tr td:nth-child(3)").forEach(td => {
+    const t = (td.textContent || "").trim();
+    if (!t) return;
+    maxP2 = Math.max(maxP2, measureWithStyle(pronSample, t));
+  });
+
+  // Form widths (independent per column & per section)
+  function measureForms(sectionSel, colIdx) {
+    let maxW = 0;
+    detailRoot.querySelectorAll(sectionSel + ` tbody tr td:nth-child(${colIdx}) .formBtn`).forEach(btn => {
+      const t = (btn.textContent || "").trim();
+      if (!t) return;
+      maxW = Math.max(maxW, measureWithStyle(formSample, t));
+    });
+    return maxW;
+  }
+
+  const sF1 = measureForms('section.side[data-side="simple"]', 2);
+  const sF2 = measureForms('section.side[data-side="simple"]', 4);
+  const cF1 = measureForms('section.side[data-side="compound"]', 2);
+  const cF2 = measureForms('section.side[data-side="compound"]', 4);
+
+  // Buffers include td padding + our extra padding-left for form columns + safety margin
+  const pronBuf = 18;
+  const formBuf = 30;
+
+  detailRoot.style.setProperty("--p1W", (maxP1 + pronBuf) + "px");
+  detailRoot.style.setProperty("--p2W", (maxP2 + pronBuf) + "px");
+
+  detailRoot.style.setProperty("--sF1W", (sF1 + formBuf) + "px");
+  detailRoot.style.setProperty("--sF2W", (sF2 + formBuf) + "px");
+  detailRoot.style.setProperty("--cF1W", (cF1 + formBuf) + "px");
+  detailRoot.style.setProperty("--cF2W", (cF2 + formBuf) + "px");
+
+  const simpleSide = detailRoot.querySelector('section.side[data-side="simple"]');
+  const compoundSide = detailRoot.querySelector('section.side[data-side="compound"]');
+  if (simpleSide && compoundSide) {
+    detailRoot.style.setProperty("--simpleSideW", Math.ceil(simpleSide.getBoundingClientRect().width) + "px");
+    detailRoot.style.setProperty("--compoundSideW", Math.ceil(compoundSide.getBoundingClientRect().width) + "px");
+  }
+
+  meas.remove();
+}
+
+
+
+
+
+function runAutoWidths(detailEl) {
+  // Run the same logic as "Reset to auto", but automatically.
+  // Waiting for fonts + a paint avoids under-measurement on first load.
+  const doIt = () => {
+    requestAnimationFrame(() => {
+      computeGridWidths(detailEl);
+    });
+  };
+
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(doIt).catch(doIt);
+  } else {
+    setTimeout(doIt, 0);
+  }
+}
+
+// Initialize once DOM is ready
+const pop = document.getElementById("popover");
+const popClose = document.getElementById("popClose");
+popClose.addEventListener("click", hidePopover);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") hidePopover(); });
+document.addEventListener("click", (e) => {
+  // click outside
+  if (pop.style.display === "none") return;
+  if (pop.contains(e.target)) return;
+  if (e.target.classList && e.target.classList.contains("formBtn")) return;
+  hidePopover();
+});
+
+function showPopover(anchorEl, meta) {
+  const rect = anchorEl.getBoundingClientRect();
+  const pad = 10;
+
+  const num = (meta.tense.match(/^\d+/) || [""])[0];
+  const label = meta.tense.replace(/^\d+\s*/, "");
+  const key = `${meta.person}-${meta.number}`;
+
+  document.getElementById("popWord").textContent = meta.form;
+  document.getElementById("popVerb").textContent = meta.verb;
+  document.getElementById("popTense").textContent = `${num} · ${label}`;
+  document.getElementById("popPerson").textContent = `${meta.person} (${
+    meta.person === "1" ? "first" : meta.person === "2" ? "second" : "third"
+  }) — ${PRONOUNS[key] || ""}`;
+  document.getElementById("popNumber").textContent = meta.number === "sg" ? "singular" : "plural";
+  document.getElementById("popHint").innerHTML = TENSE_HINTS[num] || "Tip: Add a short explanation here for this tense.";
+
+  pop.style.display = "block";
+  pop.setAttribute("aria-hidden","false");
+
+  // Position near anchor (prefer below; flip if needed)
+  const popRect = pop.getBoundingClientRect();
+  let x = rect.left;
+  let y = rect.bottom + 8;
+
+  if (x + popRect.width > window.innerWidth - pad) x = window.innerWidth - popRect.width - pad;
+  if (x < pad) x = pad;
+
+  if (y + popRect.height > window.innerHeight - pad) {
+    y = rect.top - popRect.height - 8;
+  }
+  if (y < pad) y = pad;
+
+  pop.style.left = Math.round(x) + "px";
+  pop.style.top = Math.round(y) + "px";
+}
+
+function hidePopover() {
+  pop.style.display = "none";
+  pop.setAttribute("aria-hidden","true");
+}
+
+document.getElementById("q").addEventListener("input", (e) => {
+  renderList(e.target.value);
+});
+
+renderList("");
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Build list and auto-select first verb (renderDetail will runAutoWidths)
+  renderList("");
+
+  // Extra safety: once everything (including fonts) is fully loaded, run again.
+  window.addEventListener("load", () => {
+    const detail = document.getElementById("detail");
+    if (detail) runAutoWidths(detail);
+  }, { once: true });
+});
+
+</script>
+<script>
+const STYLE_LAB_STORAGE_KEY = "interactive-verbs-style-lab-v5";
+
+const FONT_OPTIONS = [
+  { label: "System UI", value: 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, \"Apple Color Emoji\", \"Segoe UI Emoji\"' },
+  { label: "Montserrat", value: '"Montserrat", ui-sans-serif, system-ui, sans-serif' },
+  { label: "Inter", value: '"Inter", ui-sans-serif, system-ui, sans-serif' },
+  { label: "Poppins", value: '"Poppins", ui-sans-serif, system-ui, sans-serif' },
+  { label: "Source Sans 3", value: '"Source Sans 3", ui-sans-serif, system-ui, sans-serif' },
+  { label: "Oswald", value: '"Oswald", ui-sans-serif, system-ui, sans-serif' },
+  { label: "Playfair Display", value: '"Playfair Display", Georgia, serif' },
+  { label: "Merriweather", value: '"Merriweather", Georgia, serif' },
+  { label: "Lora", value: '"Lora", Georgia, serif' }
+];
+
+const STYLE_CONTROLS = [
+  { group: "Page", label: "Page background", varName: "--te-body-bg", type: "text" },
+  { group: "Page", label: "Body font family", varName: "--te-font-body", type: "select", options: FONT_OPTIONS },
+  { group: "Page", label: "Heading font family", varName: "--te-font-heading", type: "select", options: FONT_OPTIONS },
+  { group: "Page", label: "Base font size", varName: "--te-body-size", type: "number", unit: "px", min: 10, max: 24, step: 1 },
+  { group: "Page", label: "Main text", varName: "--te-text-main", type: "color" },
+  { group: "Page", label: "Muted text", varName: "--te-text-muted", type: "color" },
+  { group: "Page", label: "Accent", varName: "--te-accent", type: "color" },
+
+  { group: "Header", label: "Header background", varName: "--te-header-bg", type: "text" },
+  { group: "Header", label: "Header border", varName: "--te-header-border", type: "text" },
+  { group: "Header", label: "Title color", varName: "--te-title-color", type: "color" },
+  { group: "Header", label: "Title size", varName: "--te-h1-size", type: "number", unit: "px", min: 10, max: 40, step: 1 },
+  { group: "Header", label: "Title weight", varName: "--te-h1-weight", type: "number", min: 100, max: 900, step: 100 },
+
+  { group: "Cards", label: "Card background", varName: "--te-card-bg", type: "text" },
+  { group: "Cards", label: "Card border", varName: "--te-card-border", type: "text" },
+  { group: "Cards", label: "Card radius", varName: "--te-card-radius", type: "number", unit: "px", min: 0, max: 40, step: 1 },
+  { group: "Cards", label: "Card shadow", varName: "--te-card-shadow", type: "text" },
+  { group: "Cards", label: "Detail header bg", varName: "--te-detail-head-bg", type: "text" },
+  { group: "Cards", label: "Tense block bg", varName: "--te-tense-bg", type: "text" },
+  { group: "Cards", label: "Tense block border", varName: "--te-tense-border", type: "text" },
+  { group: "Cards", label: "Tense block radius", varName: "--te-tense-radius", type: "number", unit: "px", min: 0, max: 40, step: 1 },
+  { group: "Cards", label: "Table rule color", varName: "--te-table-rule", type: "text" },
+  { group: "Cards", label: "Row line color", varName: "--te-row-line", type: "text" },
+  { group: "Cards", label: "Table heading color", varName: "--te-table-header-color", type: "color" },
+  { group: "Cards", label: "Singular/plural subhead", varName: "--te-subhead-color", type: "color" },
+
+  { group: "Inputs & List", label: "Search bg", varName: "--te-input-bg", type: "text" },
+  { group: "Inputs & List", label: "Search border", varName: "--te-input-border", type: "text" },
+  { group: "Inputs & List", label: "Search radius", varName: "--te-input-radius", type: "number", unit: "px", min: 0, max: 30, step: 1 },
+  { group: "Inputs & List", label: "Placeholder", varName: "--te-placeholder", type: "text" },
+  { group: "Inputs & List", label: "Item hover bg", varName: "--te-hover-bg", type: "text" },
+  { group: "Inputs & List", label: "Item hover border", varName: "--te-hover-border", type: "text" },
+  { group: "Inputs & List", label: "Selected bg", varName: "--te-selected-bg", type: "text" },
+  { group: "Inputs & List", label: "Selected border", varName: "--te-selected-border", type: "text" },
+  { group: "Inputs & List", label: "Verb title size", varName: "--te-verb-title-size", type: "number", unit: "px", min: 10, max: 28, step: 1 },
+  { group: "Inputs & List", label: "Verb title weight", varName: "--te-verb-title-weight", type: "number", min: 100, max: 900, step: 100 },
+  { group: "Inputs & List", label: "Meta text size", varName: "--te-meta-size", type: "number", unit: "px", min: 9, max: 20, step: 0.5 },
+
+  { group: "Pills & Chips", label: "Pill bg", varName: "--te-pill-bg", type: "text" },
+  { group: "Pills & Chips", label: "Pill border", varName: "--te-pill-border", type: "text" },
+  { group: "Pills & Chips", label: "Pill text", varName: "--te-pill-text", type: "color" },
+  { group: "Pills & Chips", label: "Type pill bg", varName: "--te-type-pill-bg", type: "text" },
+  { group: "Pills & Chips", label: "Type pill border", varName: "--te-type-pill-border", type: "text" },
+  { group: "Pills & Chips", label: "Type pill text", varName: "--te-type-pill-text", type: "color" },
+  { group: "Pills & Chips", label: "Chip bg", varName: "--te-chip-bg", type: "text" },
+  { group: "Pills & Chips", label: "Chip border", varName: "--te-chip-border", type: "text" },
+  { group: "Pills & Chips", label: "Chip radius", varName: "--te-chip-radius", type: "number", unit: "px", min: 0, max: 999, step: 1 },
+  { group: "Pills & Chips", label: "Chip text size", varName: "--te-chip-size", type: "number", unit: "px", min: 10, max: 24, step: 0.5 },
+
+  { group: "Typography", label: "Main verb size", varName: "--te-big-size", type: "number", unit: "px", min: 12, max: 40, step: 1 },
+  { group: "Typography", label: "Main verb weight", varName: "--te-big-weight", type: "number", min: 100, max: 900, step: 100 },
+  { group: "Typography", label: "Main verb color", varName: "--te-big-color", type: "color" },
+  { group: "Typography", label: "Meaning size", varName: "--te-meaning-size", type: "number", unit: "px", min: 9, max: 22, step: 0.5 },
+  { group: "Typography", label: "Section heading size", varName: "--te-section-size", type: "number", unit: "px", min: 9, max: 24, step: 0.5 },
+  { group: "Typography", label: "Section heading weight", varName: "--te-section-weight", type: "number", min: 100, max: 900, step: 100 },
+  { group: "Typography", label: "Section heading color", varName: "--te-section-color", type: "color" },
+  { group: "Typography", label: "Tense title size", varName: "--te-tense-size", type: "number", unit: "px", min: 9, max: 24, step: 0.5 },
+  { group: "Typography", label: "Tense title weight", varName: "--te-tense-weight", type: "number", min: 100, max: 900, step: 100 },
+  { group: "Typography", label: "Table text size", varName: "--te-table-size", type: "number", unit: "px", min: 10, max: 24, step: 0.5 },
+  { group: "Typography", label: "Table heading size", varName: "--te-table-header-size", type: "number", unit: "px", min: 8, max: 20, step: 0.5 },
+  { group: "Typography", label: "Form weight", varName: "--te-form-weight", type: "number", min: 100, max: 900, step: 100 },
+  { group: "Typography", label: "Notes subhead size", varName: "--te-note-subhead-size", type: "number", unit: "px", min: 9, max: 24, step: 0.5 },
+  { group: "Typography", label: "Notes subhead weight", varName: "--te-note-subhead-weight", type: "number", min: 100, max: 900, step: 100 },
+  { group: "Typography", label: "Notes subhead color", varName: "--te-note-subhead-color", type: "color" },
+
+  { group: "Popover & Hint", label: "Hint bg", varName: "--te-hint-bg", type: "text" },
+  { group: "Popover & Hint", label: "Hint border", varName: "--te-hint-border", type: "text" },
+  { group: "Popover & Hint", label: "Popover bg", varName: "--te-popover-bg", type: "text" },
+  { group: "Popover & Hint", label: "Popover border", varName: "--te-popover-border", type: "text" },
+  { group: "Popover & Hint", label: "Popover shadow", varName: "--te-popover-shadow", type: "text" },
+  { group: "Popover & Hint", label: "Close btn bg", varName: "--te-close-bg", type: "text" },
+  { group: "Popover & Hint", label: "Close btn border", varName: "--te-close-border", type: "text" },
+  { group: "Popover & Hint", label: "Form hover bg", varName: "--te-form-hover-bg", type: "text" },
+  { group: "Popover & Hint", label: "Form hover text", varName: "--te-form-hover-text", type: "color" }
+];
+
+const STYLE_DEFAULTS = Object.fromEntries(
+  STYLE_CONTROLS.map(control => [control.varName, getComputedStyle(document.documentElement).getPropertyValue(control.varName).trim()])
+);
+
+const styleLab = document.getElementById("styleLab");
+const styleLabBody = document.getElementById("styleLabBody");
+const styleLabExport = document.getElementById("styleLabExport");
+const styleLabToggle = document.getElementById("styleLabToggle");
+const styleLabClose = document.getElementById("styleLabClose");
+const styleLabReset = document.getElementById("styleLabReset");
+const styleLabCopy = document.getElementById("styleLabCopy");
+
+function sanitizeHex(value) {
+  const match = value.trim().match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  return match ? match[0] : null;
+}
+
+function looksLikeColorControl(control) {
+  return /(?:bg|border|text|color|accent|placeholder|rule)$/i.test(control.varName);
+}
+
+function extractColorToken(value) {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const hexMatch = trimmed.match(/#(?:[0-9a-f]{3}|[0-9a-f]{6})\b/i);
+  if (hexMatch) return hexMatch[0];
+
+  const funcMatch = trimmed.match(/(?:rgba?|hsla?)\([^)]+\)/i);
+  if (funcMatch) return funcMatch[0];
+
+  if (!/\s/.test(trimmed) && /^[a-z-]+$/i.test(trimmed)) return trimmed;
+  return null;
+}
+
+function cssColorToHex(value) {
+  const token = extractColorToken(value);
+  if (!token) return null;
+
+  const probe = document.createElement("span");
+  probe.style.color = "";
+  probe.style.color = token;
+  if (!probe.style.color) return null;
+
+  document.body.appendChild(probe);
+  const resolved = getComputedStyle(probe).color;
+  probe.remove();
+
+  const match = resolved.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+  if (!match) return null;
+
+  return `#${[match[1], match[2], match[3]]
+    .map(part => Number(part).toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
+function formatControlValue(control, rawValue) {
+  if (control.type !== "number") return rawValue.trim();
+  const trimmed = rawValue.trim();
+  if (!trimmed) return "";
+  return control.unit ? `${trimmed}${control.unit}` : trimmed;
+}
+
+function setThemeValue(varName, value) {
+  document.documentElement.style.setProperty(varName, value);
+}
+
+function currentThemeState() {
+  return Object.fromEntries(
+    STYLE_CONTROLS.map(control => [control.varName, getComputedStyle(document.documentElement).getPropertyValue(control.varName).trim()])
+  );
+}
+
+function persistTheme() {
+  localStorage.setItem(STYLE_LAB_STORAGE_KEY, JSON.stringify(currentThemeState()));
+}
+
+function updateExport() {
+  const lines = [":root {"];
+  for (const control of STYLE_CONTROLS) {
+    lines.push(`  ${control.varName}: ${getComputedStyle(document.documentElement).getPropertyValue(control.varName).trim()};`);
+  }
+  lines.push("}");
+  styleLabExport.value = lines.join("\n");
+}
+
+function syncLinkedInputs(varName, value, source) {
+  document.querySelectorAll(`[data-var-name="${varName}"]`).forEach(input => {
+    if (input === source) return;
+    if (input.dataset.role === "color") {
+      const hex = sanitizeHex(value) || cssColorToHex(value);
+      if (hex) input.value = hex;
+    } else if (input.dataset.role === "value") {
+      input.value = value;
+    }
+  });
+}
+
+function applyControlChange(control, input, rawValue) {
+  const value = formatControlValue(control, rawValue);
+  if (!value) return;
+  setThemeValue(control.varName, value);
+  syncLinkedInputs(control.varName, value, input);
+  updateExport();
+  persistTheme();
+}
+
+function createField(control) {
+  const wrap = document.createElement("div");
+  wrap.className = "styleLabField";
+
+  const label = document.createElement("label");
+  label.textContent = control.label;
+  wrap.appendChild(label);
+
+  const currentValue = STYLE_DEFAULTS[control.varName];
+
+  if (control.type === "select") {
+    const select = document.createElement("select");
+    select.dataset.varName = control.varName;
+    select.dataset.role = "value";
+
+    control.options.forEach(option => {
+      const optionEl = document.createElement("option");
+      optionEl.value = option.value;
+      optionEl.textContent = option.label;
+      select.appendChild(optionEl);
+    });
+
+    select.value = currentValue;
+    if (select.value !== currentValue && control.options.length) {
+      select.value = control.options[0].value;
+      applyControlChange(control, select, select.value);
+    }
+
+    select.addEventListener("change", () => applyControlChange(control, select, select.value));
+    wrap.appendChild(select);
+    return wrap;
+  }
+
+  if (control.type === "color" || looksLikeColorControl(control)) {
+    const split = document.createElement("div");
+    split.className = "styleLabSplit";
+
+    const colorInput = document.createElement("input");
+    colorInput.type = "color";
+    colorInput.dataset.varName = control.varName;
+    colorInput.dataset.role = "color";
+    colorInput.value = sanitizeHex(currentValue) || cssColorToHex(currentValue) || "#ffffff";
+    colorInput.addEventListener("input", () => applyControlChange(control, colorInput, colorInput.value));
+
+    const textInput = document.createElement("input");
+    textInput.type = "text";
+    textInput.dataset.varName = control.varName;
+    textInput.dataset.role = "value";
+    textInput.value = currentValue;
+    textInput.addEventListener("change", () => applyControlChange(control, textInput, textInput.value));
+
+    split.append(colorInput, textInput);
+    wrap.appendChild(split);
+    return wrap;
+  }
+
+  const input = document.createElement("input");
+  input.dataset.varName = control.varName;
+  input.dataset.role = "value";
+  input.type = control.type === "number" ? "number" : "text";
+  if (control.type === "number") {
+    input.min = String(control.min ?? "");
+    input.max = String(control.max ?? "");
+    input.step = String(control.step ?? "1");
+    input.value = currentValue.replace(control.unit || "", "");
+    input.addEventListener("input", () => applyControlChange(control, input, input.value));
+  } else {
+    input.value = currentValue;
+    input.addEventListener("change", () => applyControlChange(control, input, input.value));
+  }
+
+  wrap.appendChild(input);
+  return wrap;
+}
+
+function buildStyleLab() {
+  const groups = [...new Set(STYLE_CONTROLS.map(control => control.group))];
+
+  groups.forEach(groupName => {
+    const groupEl = document.createElement("section");
+    groupEl.className = "styleLabGroup";
+
+    const heading = document.createElement("h3");
+    heading.textContent = groupName;
+    groupEl.appendChild(heading);
+
+    STYLE_CONTROLS.filter(control => control.group === groupName).forEach(control => {
+      groupEl.appendChild(createField(control));
+    });
+
+    styleLabBody.appendChild(groupEl);
+  });
+}
+
+function applyState(state) {
+  for (const control of STYLE_CONTROLS) {
+    const value = state?.[control.varName] || STYLE_DEFAULTS[control.varName];
+    setThemeValue(control.varName, value);
+    syncLinkedInputs(control.varName, value, null);
+  }
+  updateExport();
+}
+
+function setStyleLabOpen(isOpen) {
+  styleLab.hidden = !isOpen;
+  document.body.classList.toggle("style-lab-open", isOpen);
+  styleLabToggle.textContent = isOpen ? "Hide Style Lab" : "Show Style Lab";
+}
+
+buildStyleLab();
+
+try {
+  const saved = JSON.parse(localStorage.getItem(STYLE_LAB_STORAGE_KEY) || "null");
+  applyState(saved);
+} catch {
+  applyState(null);
+}
+
+styleLabToggle.addEventListener("click", () => {
+  const nextOpen = styleLab.hidden;
+  setStyleLabOpen(nextOpen);
+});
+
+styleLabClose.addEventListener("click", () => setStyleLabOpen(false));
+
+styleLabReset.addEventListener("click", () => {
+  localStorage.removeItem(STYLE_LAB_STORAGE_KEY);
+  applyState(STYLE_DEFAULTS);
+});
+
+styleLabCopy.addEventListener("click", async () => {
+  updateExport();
+  try {
+    await navigator.clipboard.writeText(styleLabExport.value);
+    styleLabCopy.textContent = "Copied";
+    setTimeout(() => { styleLabCopy.textContent = "Copy Export"; }, 1200);
+  } catch {
+    styleLabExport.focus();
+    styleLabExport.select();
+  }
+});
+
+setStyleLabOpen(true);
+</script>
+</body>
+</html>
+
+
