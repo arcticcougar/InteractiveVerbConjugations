@@ -1242,6 +1242,23 @@ function splitInfinitive(infinitive) {
   return { raw, reflexive, base, ending, stem };
 }
 
+function replaceLastOccurrence(text, search, replacement) {
+  const idx = text.lastIndexOf(search);
+  if (idx < 0) return text;
+  return text.slice(0, idx) + replacement + text.slice(idx + search.length);
+}
+
+function applyStemMutation(stem, type) {
+  if (!stem) return stem;
+  if (type === "base") return stem;
+  if (type === "o_ue" && stem.includes("o")) return replaceLastOccurrence(stem, "o", "ue");
+  if (type === "e_ie" && stem.includes("e")) return replaceLastOccurrence(stem, "e", "ie");
+  if (type === "e_i" && stem.includes("e")) return replaceLastOccurrence(stem, "e", "i");
+  if (type === "u_ue" && stem.includes("u")) return replaceLastOccurrence(stem, "u", "ue");
+  if (type === "i_ie" && stem.includes("i")) return replaceLastOccurrence(stem, "i", "ie");
+  return stem;
+}
+
 function guessRegularParticiple(infinitive) {
   const parts = splitInfinitive(infinitive);
   if (parts.ending === "ar") return `${parts.stem}ado`;
@@ -1281,6 +1298,20 @@ function transformModelFormToTarget(modelForm, modelVerb, targetVerb) {
       changed = true;
     }
   }
+  if (!changed && modelParts.stem && targetParts.stem) {
+    const mutationTypes = ["o_ue", "e_ie", "e_i", "u_ue", "i_ie"];
+    mutationTypes.forEach(type => {
+      const modelStemVariant = applyStemMutation(modelParts.stem, type);
+      const targetStemVariant = applyStemMutation(targetParts.stem, type);
+      if (!modelStemVariant || !targetStemVariant || modelStemVariant === modelParts.stem) return;
+      const rx = new RegExp(`\\b${escapeRegExp(modelStemVariant)}([\\p{L}]*)\\b`, "giu");
+      const next = out.replace(rx, (_, suffix) => `${targetStemVariant}${suffix}`);
+      if (next !== out) {
+        out = next;
+        changed = true;
+      }
+    });
+  }
   return { value: cleanText(out), changed };
 }
 
@@ -1309,26 +1340,42 @@ function hasAnswerKey(verb) {
   return !!(verb && verb.answer_key && Object.keys(verb.answer_key).length);
 }
 
+function answerKeyHasModelLeak(verb, modelVerb) {
+  if (!verb || !modelVerb || !hasAnswerKey(verb)) return false;
+  const modelMap = getExpectedMap(modelVerb) || buildCanonicalCellMap(modelVerb);
+  return getVerbCellOrder(verb).some(cellKey => {
+    if (cellKey === imperativeCellKey("yo")) return false;
+    const ownVal = normalizeForMatch(verb.answer_key[cellKey] || "");
+    const modelVal = normalizeForMatch(modelMap[cellKey] || "");
+    if (!ownVal || !modelVal) return false;
+    return ownVal === modelVal;
+  });
+}
+
 function autoGenerateMissingCustomAnswerKeys() {
   let generatedCount = 0;
+  let repairedCount = 0;
   CUSTOM_DATA.forEach(verb => {
     if (!verb || verb._source !== "custom") return;
-    if (hasAnswerKey(verb)) return;
-    if (!verb.model_verb_ref) return;
+    if (!verb.model_verb_ref || verb.locked) return;
     const model = findVerbByKey(verb.model_verb_ref);
     if (!model) return;
+    const missingKey = !hasAnswerKey(verb);
+    const leakedKey = !missingKey && verb.source_tag === "slang_seed" && answerKeyHasModelLeak(verb, model);
+    if (!missingKey && !leakedKey) return;
     const generated = generateAnswerKeyFromModel(verb, model);
     if (!generated || !generated.map || !Object.keys(generated.map).length) return;
     verb.answer_key = generated.map;
     verb.key_confidence = generated.confidence;
     verb.key_needs_review = generated.confidence < 0.85;
     verb.updated_at = new Date().toISOString();
-    generatedCount += 1;
+    if (missingKey) generatedCount += 1;
+    if (leakedKey) repairedCount += 1;
   });
-  if (generatedCount) {
+  if (generatedCount || repairedCount) {
     persistCustomData();
     scheduleSave();
-    console.info(`Auto-generated answer keys for ${generatedCount} custom verbs.`);
+    console.info(`Auto-generated ${generatedCount} and repaired ${repairedCount} custom answer keys.`);
   }
 }
 
