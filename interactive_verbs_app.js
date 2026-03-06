@@ -582,6 +582,30 @@ function getVerbCellOrder(verb) {
   return keys;
 }
 
+function getVerbNavigationCellOrder(verb) {
+  const keys = [];
+  const pushTenseInNaturalReadingOrder = (tenseNum) => {
+    // yo, tu, el, nosotros, vosotros, ellos
+    [0, 1, 2].forEach(i => keys.push(tenseCellKey(tenseNum, "sg", i)));
+    [0, 1, 2].forEach(i => keys.push(tenseCellKey(tenseNum, "pl", i)));
+  };
+
+  getOrderedTenseKeys(verb.simple).forEach(k => {
+    pushTenseInNaturalReadingOrder(extractTenseNumber(k));
+  });
+  getOrderedTenseKeys(verb.compound).forEach(k => {
+    pushTenseInNaturalReadingOrder(extractTenseNumber(k));
+  });
+
+  keys.push(imperativeCellKey("yo"));
+  keys.push(imperativeCellKey("tu"));
+  keys.push(imperativeCellKey("usted"));
+  keys.push(imperativeCellKey("nosotros"));
+  keys.push(imperativeCellKey("vosotros"));
+  keys.push(imperativeCellKey("ustedes"));
+  return keys;
+}
+
 function ensureDraft(verbKey) {
   if (!APP_STATE.drafts[verbKey] || typeof APP_STATE.drafts[verbKey] !== "object") {
     APP_STATE.drafts[verbKey] = { inputs: {}, updated_at: new Date().toISOString() };
@@ -1017,6 +1041,14 @@ function getEditableCells() {
   return Array.from(document.querySelectorAll("#detail .formBtn[data-cell-key]"));
 }
 
+function getEditableCellsForNavigation(verbKey) {
+  const verb = findVerbByKey(verbKey);
+  const cells = getEditableCells();
+  if (!verb || !cells.length) return cells;
+  const byKey = new Map(cells.map(el => [el.dataset.cellKey, el]));
+  return getVerbNavigationCellOrder(verb).map(cellKey => byKey.get(cellKey)).filter(Boolean);
+}
+
 function startInlineEdit(btn, verb) {
   if (!btn || !verb) return;
   if (ACTIVE_EDITOR) commitInlineEdit(0);
@@ -1091,13 +1123,23 @@ function commitInlineEdit(moveDelta) {
   if (detail) runAutoWidths(detail);
 
   if (!moveDelta) return;
-  const cells = getEditableCells();
+  const cells = getEditableCellsForNavigation(verbKey);
   const idx = cells.findIndex(el => el.dataset.cellKey === cellKey);
-  const nextIdx = idx + moveDelta;
-  if (nextIdx >= 0 && nextIdx < cells.length) {
+  if (idx < 0) return;
+  let nextIdx = idx;
+  while (true) {
+    nextIdx += moveDelta;
+    if (nextIdx < 0 || nextIdx >= cells.length) return;
     const next = cells[nextIdx];
+    if (!next) return;
+    const nextKey = next.dataset.cellKey;
+    // In normal progression, imperative "yo" is intentionally skipped.
+    if (nextKey === imperativeCellKey("yo") && cellKey !== imperativeCellKey("yo")) {
+      continue;
+    }
     const nextVerb = findVerbByKey(next.dataset.verbKey);
     if (nextVerb) startInlineEdit(next, nextVerb);
+    return;
   }
 }
 
