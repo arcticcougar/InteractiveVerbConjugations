@@ -1092,13 +1092,17 @@ function startInlineEdit(btn, verb) {
       cancelInlineEdit();
       return;
     }
-    if (e.key === "Tab") {
+    if (e.key === "Tab" || e.code === "Tab" || e.keyCode === 9) {
       e.preventDefault();
+      e.stopPropagation();
       commitInlineEdit(e.shiftKey ? -1 : 1);
     }
   });
   input.addEventListener("blur", () => {
-    if (ACTIVE_EDITOR && ACTIVE_EDITOR.input === input) commitInlineEdit(0);
+    // Defer blur-commit one tick so Tab key navigation can run first.
+    setTimeout(() => {
+      if (ACTIVE_EDITOR && ACTIVE_EDITOR.input === input) commitInlineEdit(0);
+    }, 0);
   });
 }
 
@@ -1138,8 +1142,10 @@ function commitInlineEdit(moveDelta) {
       continue;
     }
     const nextVerb = findVerbByKey(next.dataset.verbKey);
-    if (nextVerb) startInlineEdit(next, nextVerb);
-    return;
+    if (nextVerb) {
+      startInlineEdit(next, nextVerb);
+      return;
+    }
   }
 }
 
