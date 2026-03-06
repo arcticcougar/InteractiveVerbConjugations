@@ -699,6 +699,17 @@ function renderCellText(value) {
   return v ? escapeHtml(v) : "&nbsp;";
 }
 
+function splitMeaningAndCaution(rawMeaning) {
+  const text = cleanText(rawMeaning || "");
+  if (!text) return { meaning: "", caution: "" };
+  const match = text.match(/^(.*?)(?:\s+|^)Caution:\s*(.+)$/i);
+  if (!match) return { meaning: text, caution: "" };
+  return {
+    meaning: cleanText(match[1] || ""),
+    caution: cleanText(match[2] || "")
+  };
+}
+
 function formatPatternLabel(noteText) {
   const note = cleanText(noteText || "");
   if (!note) return "";
@@ -804,6 +815,7 @@ function renderList(filterText) {
     btn.dataset.key = v._key;
     btn.setAttribute("aria-selected", v._key === CURRENT_VERB_KEY ? "true" : "false");
     if (v._key === CURRENT_VERB_KEY) selectedVisible = true;
+    const meaningInfo = splitMeaningAndCaution(v.meaning_en || "");
     const tags = getVerbTags(v);
     const patternLabel = formatPatternLabel((getPatternNotesForDisplay(v)[0]) || "");
     const patternPill = patternLabel ? `<div class="pill typePill">${escapeHtml(patternLabel)}</div>` : "";
@@ -811,7 +823,7 @@ function renderList(filterText) {
       <div class="verbTop">
         <div class="verbTitle"><span class="pill">#${getDisplayVerbNumber(v)}</span> ${escapeHtml(v.infinitive)}</div>
       </div>
-      <div class="verbMeta">${escapeHtml(v.meaning_en || "")}</div>
+      <div class="verbMeta">${escapeHtml(meaningInfo.meaning || "")}</div>
       <div class="tagRow">
         ${patternPill}
         ${renderTagPills(tags)}
@@ -1063,6 +1075,7 @@ function renderDetail(verbKey) {
   const verb = findVerbByKey(verbKey);
   if (!verb) return;
   const patternNotesForDisplay = getPatternNotesForDisplay(verb);
+  const meaningInfo = splitMeaningAndCaution(verb.meaning_en || "");
   const canonical = buildCanonicalCellMap(verb);
   const gerundKey = gerundCellKey();
   const participleKey = participleCellKey();
@@ -1082,7 +1095,7 @@ function renderDetail(verbKey) {
     <div class="detailHead">
       <div class="left">
         <div class="big">${escapeHtml(verb.infinitive)} <span class="pill">#${getDisplayVerbNumber(verb)}</span></div>
-        <div class="meaning">${escapeHtml(verb.meaning_en || "")}</div>
+        <div class="meaning">${escapeHtml(meaningInfo.meaning || "")}</div>
       </div>
       <div class="chips">
         <div class="chip"><strong>Gerund</strong> <button class="formBtn chipFormBtn chipGerundBtn ${gerundStatusClass} ${gerundDraftClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Gerund" data-person="" data-number="" data-cell-key="${gerundKey}">${renderCellText(gerundDisplay)}</button></div>
@@ -1111,6 +1124,7 @@ function renderDetail(verbKey) {
             <div class="seamCenter">
               <div class="sectionLabel">Pattern notes</div>
               <div class="mutedBlock">${escapeHtml(patternNotesForDisplay.join("\n") || "—")}</div>
+              ${meaningInfo.caution ? `<div class="stackGapMd"></div><div class="sectionLabel">Usage caution</div><div class="mutedBlock">${escapeHtml(`Caution: ${meaningInfo.caution}`)}</div>` : ""}
               <div class="stackGapMd"></div>
               <div class="sectionLabel">Related words / expressions / examples</div>
               ${renderRelatedLines((verb.extras?.related || []).slice(0, 24))}
