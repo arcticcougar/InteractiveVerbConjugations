@@ -71,6 +71,58 @@ const TENSE_HINTS = {
   "14": "Pluperfect subjunctive: <strong>had + past participle</strong> in subjunctive contexts."
 };
 
+const CORE_NOTES_OVERRIDES = {
+  1: {
+    related: [
+      "abatidamente - dejectedly; batir - to beat, strike",
+      "el abatimiento - abasement, depression, discouragement; batir palmas - to applaud, clap",
+      "abatir el ánimo - to feel discouraged, low in spirit; abatido, abatida - dejected"
+    ]
+  },
+  2: {
+    related: [
+      "abrasadamente - ardently, fervently; abrasarse vivo - to burn with passion",
+      "abrasado, abrasada - burning",
+      "abrasarse de amor - to be passionately in love; el abrasamiento - burning, excessive passion",
+      "abrasarse en deseos - to become full of desire"
+    ]
+  },
+  3: {
+    pattern_notes: ["Regular -ar verb endings with spelling change: z becomes c before e"],
+    related: [
+      "un abrazo - embrace, hug; una abrazada - embrace",
+      "el abrazamiento - embracing; una abrazadera - clamp, clasp",
+      "un abrazo de Juanita - Love, Juanita"
+    ]
+  },
+  4: {
+    pattern_notes: ["Regular -ir verb endings with spelling change: irregular past participle"],
+    related: [
+      "Abrid los libros en la página diez, por favor. - Open your books to page ten, please.",
+      "Todos los alumnos abrieron los libros en la página diez y Pablo comenzó a leer. - All the students opened their books to page ten, and Paul began to read.",
+      "un abrimiento - opening; La puerta está abierta. - The door is open.",
+      "abrir paso - to make way; en un abrir y cerrar de ojos - in a wink"
+    ]
+  },
+  5: {
+    pattern_notes: ["Regular -er verb endings with spelling change: irregular past participle; stem change: Tenses 1, 6, Imperative"],
+    related: [
+      "la absolución - absolution, acquittal, pardon; el absolutismo - absolutism, despotism",
+      "absolutamente - absolutely; la absolución libre - not guilty verdict",
+      "absoluto, absoluta - absolute, unconditional; salir absuelto - to come out clear of any charges",
+      "en absoluto - absolutely; nada en absoluto - nothing at all"
+    ]
+  },
+  6: {
+    related: [
+      "la abstención - abstention, forbearance; el, la abstencionista - abstentionist",
+      "abstenerse de - to abstain from, to refrain from; el abstencionismo - abstentionism",
+      "la abstinencia - abstinence, fasting; el día de abstinencia - day of fasting",
+      "hacer abstinencia - to fast"
+    ]
+  }
+};
+
 let APP_STATE = loadState();
 let CURRENT_VERB_KEY = APP_STATE.ui.selected_verb_key || null;
 let ACTIVE_EDITOR = null;
@@ -323,6 +375,28 @@ function normalizeVerbRecord(v) {
   return v;
 }
 
+function applyCoreNotesOverride(v) {
+  const idNum = Number(v?.id);
+  const override = CORE_NOTES_OVERRIDES[idNum];
+  if (!override) return v;
+  if (Array.isArray(override.pattern_notes)) {
+    v.pattern_notes = override.pattern_notes.map(cleanText).filter(Boolean);
+  }
+  if (!v.extras || typeof v.extras !== "object") {
+    v.extras = { related: [], syn: [], ant: [] };
+  }
+  if (Array.isArray(override.related)) {
+    v.extras.related = override.related.map(cleanText).filter(Boolean);
+  }
+  if (Array.isArray(override.syn)) {
+    v.extras.syn = override.syn.map(cleanText).filter(Boolean);
+  }
+  if (Array.isArray(override.ant)) {
+    v.extras.ant = override.ant.map(cleanText).filter(Boolean);
+  }
+  return v;
+}
+
 function coerceState(raw) {
   const src = raw && typeof raw === "object" ? raw : {};
   return {
@@ -374,7 +448,7 @@ function withVerbIdentity(v, source) {
   return v;
 }
 
-const CORE_DATA = BASE_DATA.map(v => withVerbIdentity(normalizeVerbRecord(v), "core"));
+const CORE_DATA = BASE_DATA.map(v => withVerbIdentity(applyCoreNotesOverride(normalizeVerbRecord(v)), "core"));
 const CORE_BY_KEY = new Map(CORE_DATA.map(v => [v._key, v]));
 const SIMPLE_TENSE_KEYS = getOrderedTenseKeys(CORE_DATA[0]?.simple || {});
 const COMPOUND_TENSE_KEYS = getOrderedTenseKeys(CORE_DATA[0]?.compound || {});
@@ -1006,6 +1080,11 @@ function renderRelatedLines(lines) {
     const segments = [];
     const chunked = cleanText(line).split(/\s*;\s*/).map(cleanText).filter(Boolean);
     chunked.forEach(chunk => {
+      const explicitPair = chunk.match(/^(.+?)\s+-\s+(.+)$/);
+      if (explicitPair) {
+        segments.push({ es: cleanText(explicitPair[1]), en: cleanText(explicitPair[2]) });
+        return;
+      }
       const withTo = chunk.match(/^(.*?)([A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:\s+[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+){0,3})\s+\bto\b\s+(.+)$/i);
       if (withTo) {
         const prefix = cleanText(withTo[1]);
@@ -1048,6 +1127,8 @@ function renderRelatedLines(lines) {
 function renderSynAntLines(syn, ant) {
   const parseSynAntItem = (item) => {
     const cleaned = cleanText(item);
+    const explicitPair = cleaned.match(/^(.+?)\s+-\s+(.+)$/);
+    if (explicitPair) return { es: cleanText(explicitPair[1]), en: cleanText(explicitPair[2]) };
     const toMatch = cleaned.match(/^(.*?)\s+\bto\b\s+(.+)$/i);
     if (toMatch) return { es: cleanText(toMatch[1]), en: `to ${cleanText(toMatch[2])}` };
     const fallback = cleaned.match(/^(\S+)\s+(.+)$/);
