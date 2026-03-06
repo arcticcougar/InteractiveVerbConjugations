@@ -76,6 +76,7 @@ let SAVE_TIMER = null;
 let IMPORT_INPUT = null;
 let CUSTOM_DATA = [];
 let GLOBAL_FORM_FLOORS = null;
+let GLOBAL_HEADER_FLOORS = null;
 let CLICK_TIMER = null;
 
 function normalize(s) {
@@ -989,8 +990,8 @@ function renderDetail(verbKey) {
         <div class="meaning">${escapeHtml(verb.meaning_en || "")}</div>
       </div>
       <div class="chips">
-        <div class="chip"><strong>Gerund</strong> <button class="formBtn chipFormBtn ${gerundStatusClass} ${gerundDraftClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Gerund" data-person="" data-number="" data-cell-key="${gerundKey}">${renderCellText(gerundDisplay)}</button></div>
-        <div class="chip"><strong>Part.</strong> <button class="formBtn chipFormBtn ${participleStatusClass} ${participleDraftClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Participle" data-person="" data-number="" data-cell-key="${participleKey}">${renderCellText(participleDisplay)}</button></div>
+        <div class="chip"><strong>Gerund</strong> <button class="formBtn chipFormBtn chipGerundBtn ${gerundStatusClass} ${gerundDraftClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Gerund" data-person="" data-number="" data-cell-key="${gerundKey}">${renderCellText(gerundDisplay)}</button></div>
+        <div class="chip"><strong>Part.</strong> <button class="formBtn chipFormBtn chipPartBtn ${participleStatusClass} ${participleDraftClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Participle" data-person="" data-number="" data-cell-key="${participleKey}">${renderCellText(participleDisplay)}</button></div>
       </div>
     </div>
     <div class="panel">
@@ -1642,6 +1643,27 @@ function computeGlobalFormFloors(measureWithStyle, formSample) {
   return GLOBAL_FORM_FLOORS;
 }
 
+function computeGlobalHeaderFloors(measureWithStyle, chipSample) {
+  if (GLOBAL_HEADER_FLOORS) return GLOBAL_HEADER_FLOORS;
+  const floors = {
+    gerund: Infinity,
+    participle: Infinity
+  };
+
+  CORE_DATA.forEach(v => {
+    const ger = cleanText(v.gerund || "");
+    const part = cleanText(v.past_participle || "");
+    if (ger) floors.gerund = Math.min(floors.gerund, measureWithStyle(chipSample, ger));
+    if (part) floors.participle = Math.min(floors.participle, measureWithStyle(chipSample, part));
+  });
+
+  GLOBAL_HEADER_FLOORS = {
+    gerund: Number.isFinite(floors.gerund) ? floors.gerund : 64,
+    participle: Number.isFinite(floors.participle) ? floors.participle : 64
+  };
+  return GLOBAL_HEADER_FLOORS;
+}
+
 function computeGridWidths(detailRoot) {
   const meas = document.createElement("span");
   meas.style.position = "absolute";
@@ -1697,6 +1719,8 @@ function computeGridWidths(detailRoot) {
   const cF1 = measureForms('section.side[data-side="compound"]', 2);
   const cF2 = measureForms('section.side[data-side="compound"]', 4);
   const floors = computeGlobalFormFloors(measureWithStyle, formSample);
+  const chipSample = detailRoot.querySelector(".chipFormBtn") || formSample;
+  const headerFloors = computeGlobalHeaderFloors(measureWithStyle, chipSample);
 
   const sF1Clamped = Math.max(sF1, floors.sF1);
   const sF2Clamped = Math.max(sF2, floors.sF2);
@@ -1711,6 +1735,8 @@ function computeGridWidths(detailRoot) {
   detailRoot.style.setProperty("--sF2W", (sF2Clamped + formBuf) + "px");
   detailRoot.style.setProperty("--cF1W", (cF1Clamped + formBuf) + "px");
   detailRoot.style.setProperty("--cF2W", (cF2Clamped + formBuf) + "px");
+  detailRoot.style.setProperty("--gerundMinW", (headerFloors.gerund + 6) + "px");
+  detailRoot.style.setProperty("--partMinW", (headerFloors.participle + 6) + "px");
 
   const simpleSide = detailRoot.querySelector('section.side[data-side="simple"]');
   const compoundSide = detailRoot.querySelector('section.side[data-side="compound"]');
