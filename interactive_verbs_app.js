@@ -699,6 +699,31 @@ function renderCellText(value) {
   return v ? escapeHtml(v) : "&nbsp;";
 }
 
+function formatPatternLabel(noteText) {
+  const note = cleanText(noteText || "");
+  if (!note) return "";
+  const endingMatch = note.match(/-(ar|er|ir)/i);
+  const ending = endingMatch ? `-${endingMatch[1].toLowerCase()}` : "";
+  const hasRegular = /\bregular\b/i.test(note);
+  const hasIrregular = /\birregular\b/i.test(note);
+  const hasSpelling = /spelling change/i.test(note);
+
+  if (hasRegular && ending && !hasSpelling && !hasIrregular) return ending;
+  if (hasRegular && ending && hasSpelling) {
+    const tail = cleanText((note.split(":").slice(1).join(":") || "").trim());
+    if (!tail) return `${ending} (spelling change)`;
+    const conciseTail = tail
+      .replace(/\bbecomes\b/gi, "→")
+      .replace(/\s+/g, " ")
+      .trim();
+    return `${ending} (${conciseTail})`;
+  }
+  if (hasIrregular && ending) return `${ending} irregular`;
+  if (hasIrregular) return "irregular";
+  if (hasRegular && ending) return ending;
+  return note;
+}
+
 function inferPatternCategory(verb) {
   const notes = getPatternNotesForDisplay(verb);
   const primary = normalize(notes[0] || "");
@@ -780,7 +805,7 @@ function renderList(filterText) {
     btn.setAttribute("aria-selected", v._key === CURRENT_VERB_KEY ? "true" : "false");
     if (v._key === CURRENT_VERB_KEY) selectedVisible = true;
     const tags = getVerbTags(v);
-    const patternLabel = ((getPatternNotesForDisplay(v)[0]) || "").replace("verb", "").trim();
+    const patternLabel = formatPatternLabel((getPatternNotesForDisplay(v)[0]) || "");
     const patternPill = patternLabel ? `<div class="pill typePill">${escapeHtml(patternLabel)}</div>` : "";
     btn.innerHTML = `
       <div class="verbTop">
