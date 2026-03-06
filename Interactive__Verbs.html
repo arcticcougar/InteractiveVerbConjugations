@@ -315,13 +315,7 @@
     color: var(--accent);
   }
   .chipFormBtn {
-    display: inline;
-    width: auto;
-    min-width: 0;
     margin-left: 4px;
-    font-size: 15px;
-    line-height: 1;
-    vertical-align: baseline;
   }
   .panel {
     padding: 5px 7px 7px;
@@ -460,6 +454,21 @@
   }
   .formBtn.draftEdited {
     color: #ff4500;
+  }
+  .chip .chipFormBtn {
+    display: inline-flex;
+    align-items: baseline;
+    width: auto;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-size: inherit;
+    font-weight: 500;
+    line-height: 1;
+    vertical-align: baseline;
+    white-space: nowrap;
+    text-align: left;
   }
   .inlineCellEditor {
     width: 100%;
