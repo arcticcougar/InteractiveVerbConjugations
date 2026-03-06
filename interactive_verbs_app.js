@@ -436,6 +436,7 @@ function persistCustomData() {
 }
 
 hydrateCustomData();
+autoGenerateMissingCustomAnswerKeys();
 
 function getAllVerbs() {
   return [...CORE_DATA, ...CUSTOM_DATA];
@@ -1304,6 +1305,33 @@ function generateAnswerKeyFromModel(targetVerb, modelVerb) {
   return { map: output, confidence: total ? changed / total : 0 };
 }
 
+function hasAnswerKey(verb) {
+  return !!(verb && verb.answer_key && Object.keys(verb.answer_key).length);
+}
+
+function autoGenerateMissingCustomAnswerKeys() {
+  let generatedCount = 0;
+  CUSTOM_DATA.forEach(verb => {
+    if (!verb || verb._source !== "custom") return;
+    if (hasAnswerKey(verb)) return;
+    if (!verb.model_verb_ref) return;
+    const model = findVerbByKey(verb.model_verb_ref);
+    if (!model) return;
+    const generated = generateAnswerKeyFromModel(verb, model);
+    if (!generated || !generated.map || !Object.keys(generated.map).length) return;
+    verb.answer_key = generated.map;
+    verb.key_confidence = generated.confidence;
+    verb.key_needs_review = generated.confidence < 0.85;
+    verb.updated_at = new Date().toISOString();
+    generatedCount += 1;
+  });
+  if (generatedCount) {
+    persistCustomData();
+    scheduleSave();
+    console.info(`Auto-generated answer keys for ${generatedCount} custom verbs.`);
+  }
+}
+
 function generateModelKeyForCurrentCustomVerb() {
   const verb = findVerbByKey(CURRENT_VERB_KEY);
   if (!verb || verb._source !== "custom") {
@@ -1362,7 +1390,15 @@ function importSlangStarterSet() {
     if (!hydrated) return;
     hydrated.meaning_en = item.meaning_en || "";
     const model = findVerbByInfinitive(item.model);
-    if (model) hydrated.model_verb_ref = model._key;
+    if (model) {
+      hydrated.model_verb_ref = model._key;
+      const generated = generateAnswerKeyFromModel(hydrated, model);
+      if (generated && generated.map && Object.keys(generated.map).length) {
+        hydrated.answer_key = generated.map;
+        hydrated.key_confidence = generated.confidence;
+        hydrated.key_needs_review = generated.confidence < 0.85;
+      }
+    }
     CUSTOM_DATA.push(hydrated);
     added += 1;
   });
