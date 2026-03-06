@@ -120,6 +120,467 @@ const CORE_NOTES_OVERRIDES = {
       "la abstinencia - abstinence, fasting; el día de abstinencia - day of fasting",
       "hacer abstinencia - to fast"
     ]
+  },
+  7: {
+    related: [
+      "Los amigos de mi hermano me aburren. - My brother's friends bore me.",
+      "aburrido, aburrida - bored; una cara de aburrimiento - a bored look",
+      "el aburrimiento - boredom, weariness; la aburrición - annoyance, ennui",
+      "un aburridor, una aburridora - boring person; ¡Qué aburrimiento! - What a bore!",
+      "See also aburrirse."
+    ],
+    syn: [
+      "cansar - to tire (172)"
+    ],
+    ant: [
+      "divertir - to entertain (370)"
+    ]
+  },
+  8: {
+    related: [
+      "Aquí tienes mi teléfono celular. Puedes entretenerte con una aplicación para no aburrirte. - Here's my cell phone. You can keep yourself amused with an app so you won't be bored.",
+      "el aburrimiento - boredom, weariness; aburrirse como una ostra - to be bored stiff",
+      "aburridamente - tediously",
+      "Me aburro como una ostra. - I'm bored stiff.",
+      "See also aburrir."
+    ],
+    syn: [
+      "cansarse - to become tired"
+    ],
+    ant: [
+      "divertirse - to enjoy oneself"
+    ]
+  },
+  9: {
+    related: [
+      "acabar de + infinitive - to have just + past participle",
+      "María acaba de llegar. - Mary has just arrived.",
+      "Acabo de comer. - I have just eaten.",
+      "Acabamos de terminar la lección. - We have just finished the lesson.",
+      "María acababa de llegar. - Mary had just arrived.",
+      "Yo acababa de comer. - I had just eaten.",
+      "Acabábamos de terminar la lección. - We had just finished the lesson.",
+      "el acabamiento - completion; acabado, acabada - finished",
+      "acabar con - to put an end to; acabar en - to end in; acabar por - to end by, to finally...",
+      "Acabábamos de entrar cuando el teléfono sonó. - We had just entered the house when the telephone rang."
+    ]
+  },
+  10: {
+    related: [
+      "No aceleres cuando el semáforo cambia a rojo. ¡Es muy peligroso! - Do not accelerate when the traffic light changes to red. It is very dangerous!",
+      "aceleradamente - hastily, quickly, speedily; el acelerante, el acelerador - accelerant",
+      "la aceleración - haste, acceleration; el aceleramiento - acceleration",
+      "el acelerador de partícula - particle accelerator; el pedal del acelerador - accelerator pedal"
+    ],
+    syn: [
+      "apresurarse - to hasten, hurry"
+    ],
+    ant: [
+      "detener - to stop, detain",
+      "retardar - to slow down (199)"
+    ]
+  },
+  11: {
+    related: [
+      "aceptable - acceptable; aceptar + infinitive - to agree + infinitive",
+      "el aceptador, la aceptadora - acceptor; aceptar empleo - to take a job",
+      "el aceptante - accepter; acepto, acepta - acceptable",
+      "la aceptación - acceptance; aceptar o rechazar una oferta - to accept or reject an offer",
+      "la acepción - meaning (of a word)"
+    ],
+    syn: [
+      "aprobar - to approve"
+    ],
+    ant: [
+      "negar - to deny, refuse",
+      "rechazar - to reject (81)"
+    ]
+  },
+  12: {
+    pattern_notes: ["Regular -ar verb endings with spelling change: c becomes qu before e"],
+    related: [
+      "acerca de - about, regarding; de cerca - close at hand, closely",
+      "el acercamiento - approach, approximation; acerca de esto - hereof, about this",
+      "cerca de - near; mis parientes cercanos - my close relatives",
+      "See also acercarse."
+    ],
+    syn: [
+      "aproximar - to bring close (107)",
+      "traer - to bring"
+    ],
+    ant: [
+      "alejar - to move away from (86)"
+    ]
+  },
+  13: {
+    pattern_notes: ["Reflexive regular -ar verb endings with spelling change: c becomes qu before e"],
+    related: [
+      "cerca de - near; cercano, cercana - near, close",
+      "de cerca - close at hand, closely; cercar - to enclose, to fence in",
+      "cercanamente - soon, shortly; las cercanías - neighborhood, suburbs",
+      "See also acercar."
+    ],
+    ant: [
+      "alejarse (de) - to get away from (86, 289)"
+    ]
+  },
+  14: {
+    pattern_notes: ["Regular -ar verb endings with stem change: Tenses 1, 6, Imperative"],
+    related: [
+      "acertado, acertada - proper, fit, sensible; el acertijo - riddle",
+      "el acertador, la acertadora - good guesser; acertadamente - opportunely, correctly",
+      "acertar a + infinitive - to happen to + infinitive; ciertamente - certainly",
+      "acertar con - to come across, to find; Es cierto. - It's certain."
+    ],
+    ant: [
+      "equivocarse - to make a mistake",
+      "errar - to err"
+    ]
+  },
+  15: {
+    related: [
+      "aclamado, aclamada - acclaimed; aclamable - laudable",
+      "la aclamación - acclaim, acclamation; por aclamación - unanimously",
+      "la reclamación - claim, demand; reclamar - to claim, to demand, to reclaim",
+      "reclamar en juicio - to sue; reclamar por daños - to claim damages"
+    ],
+    syn: [
+      "aplaudir - to applaud"
+    ],
+    ant: [
+      "abuchear - to boo (175)"
+    ]
+  },
+  16: {
+    related: [
+      "una aclaración - explanation; ¡Claro que sí! - Of course!",
+      "aclarado, aclarada - cleared, made clear, rinsed; ¡Claro que no! - Of course not!",
+      "aclarar la voz - to clear one's throat; ¿Está claro? - Is that clear?",
+      "poner en claro - to clarify"
+    ],
+    syn: [
+      "esclarecer - to make clear (344)",
+      "explicar - to explain"
+    ],
+    ant: [
+      "complicar - to complicate (76)"
+    ]
+  },
+  17: {
+    related: [
+      "el acompañador, la acompañadora - companion, chaperon, accompanist",
+      "el acompañamiento - accompaniment",
+      "el acompañado, la acompañada - assistant",
+      "un compañero, una compañera - friend, mate, companion",
+      "compañero de cuarto - roommate"
+    ],
+    ant: [
+      "abandonar - to abandon (473)"
+    ]
+  },
+  18: {
+    related: [
+      "el aconsejador, la aconsejadora - adviser, counselor; aconsejarse - to seek advice",
+      "aconsejar con - to consult; aconsejarse de - to consult with",
+      "el consejo - advice, counsel; el aconsejamiento - counseling",
+      "El tiempo da buen consejo. - Time will tell.",
+      "mal aconsejado, mal aconsejada - ill-advised"
+    ],
+    syn: [
+      "recomendar - to recommend",
+      "sugerir - to suggest"
+    ],
+    ant: [
+      "desaconsejar - to advise against (18)"
+    ]
+  },
+  19: {
+    pattern_notes: ["Regular -ar verb endings with stem change: Tenses 1, 6, Imperative"],
+    related: [
+      "la acordada - decision, resolution; desacordar - to put out of tune",
+      "acordadamente - jointly, by common consent; desacordado, desacordada - out of tune",
+      "un acuerdo - agreement; estar de acuerdo con - to be in agreement with",
+      "de acuerdo - in agreement; de común acuerdo - unanimously, by mutual agreement",
+      "See also acordarse."
+    ],
+    syn: [
+      "estar de acuerdo con - to be in agreement with"
+    ],
+    ant: [
+      "desacordar - to put out of tune"
+    ]
+  },
+  20: {
+    pattern_notes: ["Reflexive regular -ar verb endings with stem change: Tenses 1, 6, Imperative"],
+    related: [
+      "si mal no me acuerdo - if I remember correctly",
+      "Lo siento, pero no me acuerdo de su nombre. - I'm sorry, but I don't remember your name.",
+      "See also acordar."
+    ],
+    syn: [
+      "recordar - to remember",
+      "rememorar - to remember (32)"
+    ],
+    ant: [
+      "olvidar - to forget"
+    ]
+  },
+  21: {
+    pattern_notes: ["Reflexive regular -ar verb endings with stem change: Tenses 1, 6, Imperative"],
+    related: [
+      "Todas las noches me acuesto a las diez y mi hermanito se acuesta a las ocho. - Every night, I go to bed at ten and my little brother goes to bed at eight.",
+      "el acostamiento - lying down; acostar - to put to bed",
+      "acostado, acostada - in bed, lying down",
+      "Note: Do not use acostar to express to accost; use abordar (54).",
+      "acostarse con las gallinas - to go to bed very early"
+    ],
+    ant: [
+      "levantarse - to get up"
+    ]
+  },
+  22: {
+    related: [
+      "acostumbradamente - customarily; acostumbrado, acostumbrada - accustomed",
+      "la costumbre - custom, habit; acostumbrarse a algo - to become accustomed to something",
+      "de costumbre - customary, usual",
+      "tener por costumbre - to be in the habit of"
+    ],
+    syn: [
+      "soler - to be accustomed (Def. and Imp.)"
+    ]
+  },
+  23: {
+    related: [
+      "un cuchillo - knife; acuchillado, acuchillada - knifed, slashed",
+      "un cuchillo de monte - hunting knife; las mangas acuchilladas - slashed sleeves (fashion)",
+      "un cuchillo de cocina - kitchen knife"
+    ],
+    syn: [
+      "apuñalar - to stab (259)",
+      "herir - to wound"
+    ]
+  },
+  24: {
+    related: [
+      "acudir en socorro de - to go to help; acudir a un examen - to take an exam",
+      "acudir con el remedio - to bring the remedy; acudir a alguien - to give help to someone",
+      "acudir a los tribunales - to go to court; acudir en ayuda de alguien - to come to someone's rescue",
+      "acudir a una cita - to keep an appointment"
+    ],
+    syn: [
+      "asistir - to assist, attend",
+      "auxiliar - to help (106)",
+      "ayudar - to help",
+      "socorrer - to help"
+    ]
+  },
+  25: {
+    related: [
+      "Tenemos derecho de encontrarnos cara a cara con una persona que nos acusa de un crimen. - We have the right to face a person who accuses us of a crime.",
+      "La propia conciencia acusa. - One's own conscience accuses.",
+      "el acusado, la acusada - defendant, accused; acusar de robo - to accuse of robbery",
+      "la acusación - accusation; acusar recibo de una cosa - to acknowledge receipt of something",
+      "el acusador, la acusadora - accuser",
+      "acusarse de un pecado - to confess a sin"
+    ],
+    syn: [
+      "denunciar - to denounce"
+    ],
+    ant: [
+      "absolver - to absolve",
+      "defender - to defend",
+      "perdonar - to pardon"
+    ]
+  },
+  26: {
+    related: [
+      "el adelantamiento - advance, growth, increase, progress",
+      "adelante - ahead, forward; ¡Adelante! - Come in! Go ahead!",
+      "adelantar dinero - to advance money; un adelanto - advance payment",
+      "en lo adelante - in the future; de aquí en adelante - henceforth; de hoy en adelante - from now on",
+      "los adelantos tecnológicos - technological advances, progress",
+      "See also adelantarse."
+    ],
+    syn: [
+      "avanzar - to advance",
+      "progresar - to progress (235)"
+    ],
+    ant: [
+      "atrasar - to retard, to delay (2)",
+      "retrasar - to delay, to postpone"
+    ]
+  },
+  27: {
+    related: [
+      "adelantado, adelantada - bold, anticipated, fast (watch or clock)",
+      "adelantadamente - in anticipation, beforehand",
+      "más adelante - later on, farther on",
+      "llevar adelante - to carry on, to go ahead",
+      "See also adelantar."
+    ],
+    syn: [
+      "avanzar - to advance"
+    ],
+    ant: [
+      "retirarse - to move back, to withdraw (414, 64)",
+      "retrasarse - to be delayed, to be late (415, 64)"
+    ]
+  },
+  28: {
+    related: [
+      "un adivino, una adivina - prophet, fortune teller, guesser",
+      "la adivinación - fortune telling; una adivinanza - prophecy, prediction, riddle",
+      "¡Adivine quién soy! - Guess who I am!",
+      "adivinar el pensamiento de alguien - to read a person's mind"
+    ],
+    syn: [
+      "predecir - to predict",
+      "pronosticar - to forecast, foretell (424)"
+    ]
+  },
+  29: {
+    related: [
+      "el admirador, la admiradora - admirer; sentir admiración por alguien - to feel admiration for someone",
+      "la admiración - admiration; hablar en tono admirativo - to speak in an admiring tone",
+      "admirable - admirable; admirablemente - admirably",
+      "admirativamente - admiringly, with admiration; causar admiración - to inspire admiration"
+    ],
+    ant: [
+      "despreciar - to despise, to scorn (57)"
+    ]
+  },
+  30: {
+    related: [
+      "la admisión - acceptance, admission; admitir una reclamación - to accept a claim",
+      "admisible - admissible; el examen de admisión - entrance exam"
+    ],
+    syn: [
+      "permitir - to permit"
+    ],
+    ant: [
+      "rechazar - to reject (81)",
+      "rehusar - to refuse (481)"
+    ]
+  },
+  31: {
+    related: [
+      "El Congreso adoptó una nueva ley para proteger a los consumidores. - Congress adopted a new law to protect consumers.",
+      "la adopción - adoption; adoptable - adoptable",
+      "el adopcionismo - adoptionism; adoptado, adoptada - adopted"
+    ],
+    ant: [
+      "abandonar - to abandon (473)"
+    ]
+  },
+  32: {
+    related: [
+      "el adorador, la adoradora - adorer, worshipper; adorablemente - adorably, adoringly",
+      "adorable - adorable; adorado, adorada - adored",
+      "la adoración - adoration, worship, veneration"
+    ],
+    syn: [
+      "amar - to love",
+      "venerar - to venerate (409)"
+    ],
+    ant: [
+      "despreciar - to despise (57)",
+      "odiar - to hate (232)"
+    ]
+  },
+  33: {
+    related: [
+      "el adquiridor, la adquiridora - acquirer; los bienes adquiridos - acquired wealth",
+      "el, la adquirente - acquirer, purchaser; adquirible - obtainable",
+      "la adquisición - acquisition, attainment; adquirir un hábito - to acquire a habit"
+    ],
+    syn: [
+      "comprar - to buy",
+      "obtener - to obtain",
+      "recibir - to receive, get"
+    ],
+    ant: [
+      "dar - to give",
+      "perder - to lose"
+    ]
+  },
+  34: {
+    related: [
+      "advertido, advertida - skillful, clever; después de repetidas advertencias - after repeated warnings",
+      "la advertencia - warning, notice, foreword",
+      "advertidamente - advisedly; hacer una advertencia a un niño - to correct a child's inappropriate behavior",
+      "un advertimiento - notice, warning"
+    ],
+    syn: [
+      "aconsejar - to advise",
+      "avisar - to advise (340)"
+    ]
+  },
+  35: {
+    related: [
+      "afeitar - to shave; una afeitadora - shaving machine, shaver",
+      "un afeitado - a shave; la maquinilla (de afeitar) eléctrica - electric shaver, razor",
+      "el afeite - cosmetic, makeup",
+      "Esta mañana, me levanté, me afeité y me fui al trabajo. - This morning I got up, shaved, and went to work."
+    ],
+    syn: [
+      "rasurarse - to shave (one's beard) (292)"
+    ]
+  },
+  36: {
+    related: [
+      "Me agarré bien al paraguas, pero hacía demasiado viento. - I held onto my umbrella tightly, but it was too windy.",
+      "el agarro - grasp; agarrarse a/de - to seize, to hold on",
+      "la agarrada - quarrel, scrap; agarrarse una fiebre - to catch a fever"
+    ],
+    syn: [
+      "asir - to seize, grasp",
+      "coger - to seize, grasp (Spain: see note in coger)",
+      "tomar - to take"
+    ],
+    ant: [
+      "soltar - to let go (138)",
+      "liberar - to release (409)"
+    ]
+  },
+  37: {
+    related: [
+      "la agitación - agitation, excitement; agitarse - to fidget, to become agitated",
+      "agitado, agitada - agitated, excited; un agitador, una agitadora - agitator, shaker"
+    ],
+    syn: [
+      "mover - to move",
+      "sacudir - to shake, jolt"
+    ],
+    ant: [
+      "aquietar - to calm down (11)",
+      "calmar - to calm (54)"
+    ]
+  },
+  38: {
+    related: [
+      "agotador, agotadora - exhausting; agotable - exhaustible",
+      "el agotamiento - exhaustion; agotado, agotada - exhausted, out of print, out of stock, sold out",
+      "agotarse - to become exhausted"
+    ],
+    syn: [
+      "cansar - to tire (172)",
+      "gastar - to wear out, waste"
+    ]
+  },
+  39: {
+    related: [
+      "agradable - pleasing, pleasant, agreeable; de su agrado - to one's liking",
+      "agradablemente - agreeably, pleasantly; ser del agrado de uno - to be to one's taste",
+      "el agrado - pleasure, liking; Es de mi agrado. - It's to my liking.",
+      "desagradable - unpleasant, disagreeable"
+    ],
+    syn: [
+      "gustar - to like (Def. and Imp.)",
+      "satisfacer - to satisfy"
+    ],
+    ant: [
+      "desagradar - to be unpleasant (39)"
+    ]
   }
 };
 
