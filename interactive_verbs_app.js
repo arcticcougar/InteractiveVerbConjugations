@@ -2423,64 +2423,85 @@ function renderRelatedLines(lines) {
   const items = (lines || []).filter(Boolean);
   if (!items.length) return `<div class="mutedBlock">—</div>`;
 
-  const parseSimpleEsEn = (text) => {
-    const cleaned = cleanText(text);
-    if (!cleaned) return null;
-    const toMatch = cleaned.match(/^(.*?)\s+\bto\b\s+(.+)$/i);
-    if (toMatch) return { es: cleanText(toMatch[1]), en: `to ${cleanText(toMatch[2])}` };
-    const articleMatch = cleaned.match(/^((?:el|la|los|las|un|una|unos|unas)\s+\S+)\s+(.+)$/i);
-    if (articleMatch) return { es: cleanText(articleMatch[1]), en: cleanText(articleMatch[2]) };
-    const commaEsMatch = cleaned.match(/^([A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:,\s*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)+)\s+(.+)$/);
-    if (commaEsMatch) return { es: cleanText(commaEsMatch[1]), en: cleanText(commaEsMatch[2]) };
-    const twoTokenAdverbMatch = cleaned.match(/^(\S+)\s+([A-Za-z-]+ly)$/i);
-    if (twoTokenAdverbMatch) return { es: cleanText(twoTokenAdverbMatch[1]), en: cleanText(twoTokenAdverbMatch[2]) };
-    const fallback = cleaned.match(/^(\S+)\s+(.+)$/);
-    if (fallback) return { es: cleanText(fallback[1]), en: cleanText(fallback[2]) };
-    return null;
+  const EN_STOP_RE = /\b(to|the|and|or|for|with|from|my|your|his|her|our|their|all|any|one|two|three|what|when|where|who|how|i|we|you|he|she|they|is|are|was|were|have|has|had|will|would|should|can|could|do|does|did|not|long|work|cloud|photos?|price|prices|up|down)\b/i;
+  const ES_HINT_RE = /[áéíóúñü¿¡]|\b(el|la|los|las|un|una|unos|unas|de|del|al|que|por|para|con|sin|se|yo|tú|usted|nosotros|vosotros|ellos|ellas|mi|mis|su|sus|qué|cómo|dónde)\b/i;
+
+  const looksSpanishish = (text) => ES_HINT_RE.test(cleanText(text));
+  const looksMostlyEnglish = (text) => EN_STOP_RE.test(cleanText(text));
+
+  const shouldHighlightLeft = (left) => {
+    const l = cleanText(left);
+    if (!l) return false;
+    if (looksMostlyEnglish(l) && !looksSpanishish(l)) return false;
+    return true;
   };
 
-  const parseRelatedLine = (line) => {
-    const segments = [];
-    const chunked = cleanText(line).split(/\s*;\s*/).map(cleanText).filter(Boolean);
-    chunked.forEach(chunk => {
-      const explicitPair = chunk.match(/^(.+?)\s+-\s+(.+)$/);
-      if (explicitPair) {
-        segments.push({ es: cleanText(explicitPair[1]), en: cleanText(explicitPair[2]) });
-        return;
-      }
-      const withTo = chunk.match(/^(.*?)([A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:\s+[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+){0,3})\s+\bto\b\s+(.+)$/i);
-      if (withTo) {
-        const prefix = cleanText(withTo[1]);
-        if (prefix) {
-          const prefixPair = parseSimpleEsEn(prefix);
-          if (prefixPair) segments.push(prefixPair);
-          else segments.push({ raw: prefix });
+  const splitDashSegments = (chunk) => {
+    const parts = cleanText(chunk).split(/\s+-\s+/).map(cleanText).filter(Boolean);
+    if (parts.length < 2) return [{ raw: cleanText(chunk) }];
+    const out = [];
+    if (parts.length % 2 === 0) {
+      for (let i = 0; i < parts.length; i += 2) out.push({ es: parts[i], en: parts[i + 1] });
+      return out;
+    }
+    out.push({ es: parts[0], en: parts[1] });
+    out.push({ raw: parts.slice(2).join(" - ") });
+    return out;
+  };
+
+  const splitEmbeddedTailPair = (pair) => {
+    const en = cleanText(pair.en || "");
+    const m = en.match(/^(.*?\bto\b.+?)\s+((?:el|la|los|las|un|una|unos|unas)\s+[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:\s+[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+){0,2})\s+([A-Za-z][A-Za-z'-]+(?:\s*\(\d+\))?)$/i);
+    if (!m) return [pair];
+    const firstEn = cleanText(m[1]);
+    const es2 = cleanText(m[2]);
+    const en2 = cleanText(m[3]);
+    const out = [{ es: cleanText(pair.es), en: firstEn }];
+    if (es2 && en2) out.push({ es: es2, en: en2 });
+    return out;
+  };
+
+  const parseChunk = (chunk) => {
+    const t = cleanText(chunk);
+    if (!t) return [];
+
+    if (/\s+-\s+/.test(t)) {
+      const split = splitDashSegments(t);
+      const out = [];
+      split.forEach(part => {
+        if (part.raw) {
+          out.push(part);
+          return;
         }
-        const mainEn = cleanText(withTo[3]);
-        const tailPair = mainEn.match(/^(.*)\s+([A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:,\s*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)+)\s+([A-Za-z][A-Za-z'-]+)$/);
-        if (tailPair) {
-          segments.push({ es: cleanText(withTo[2]), en: cleanText(tailPair[1]).startsWith("to ") ? cleanText(tailPair[1]) : `to ${cleanText(tailPair[1])}` });
-          segments.push({ es: cleanText(tailPair[2]), en: cleanText(tailPair[3]) });
-        } else {
-          segments.push({ es: cleanText(withTo[2]), en: mainEn.startsWith("to ") ? mainEn : `to ${mainEn}` });
-        }
-        return;
-      }
-      const basicPair = parseSimpleEsEn(chunk);
-      if (basicPair) segments.push(basicPair);
-      else segments.push({ raw: chunk });
-    });
-    return segments;
+        splitEmbeddedTailPair(part).forEach(p => out.push(p));
+      });
+      return out;
+    }
+
+    // conservative fallback only for simple "X to Y" lines
+    const toMatch = t.match(/^(.*?)\s+\bto\b\s+(.+)$/i);
+    if (toMatch) {
+      const es = cleanText(toMatch[1]);
+      const en = `to ${cleanText(toMatch[2])}`;
+      if (es && !looksMostlyEnglish(es)) return [{ es, en }];
+    }
+
+    return [{ raw: t }];
   };
 
   return `
     <div class="notesList">
       ${items.map(line => {
-        const parsed = parseRelatedLine(line);
-        const rendered = parsed.map(part => part.raw
-          ? escapeHtml(part.raw)
-          : `<span class="notesEsRelated">${escapeHtml(part.es)}</span> - ${escapeHtml(part.en)}`
-        ).join("; ");
+        const chunks = cleanText(line).split(/\s*;\s*/).map(cleanText).filter(Boolean);
+        const parsed = chunks.flatMap(parseChunk);
+        const rendered = parsed.map(part => {
+          if (part.raw) return escapeHtml(part.raw);
+          const es = cleanText(part.es || "");
+          const en = cleanText(part.en || "");
+          if (!es || !en) return escapeHtml([es, en].filter(Boolean).join(" - "));
+          if (!shouldHighlightLeft(es)) return escapeHtml(`${es} - ${en}`);
+          return `<span class="notesEsRelated">${escapeHtml(es)}</span> - ${escapeHtml(en)}`;
+        }).join("; ");
         return `<div class="notesRow">${rendered}</div>`;
       }).join("")}
     </div>
