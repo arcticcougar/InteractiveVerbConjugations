@@ -9,32 +9,57 @@
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #121212;
-    --panel: #303030;
-    --panel2: #303030;
+    --bg: #000000;
+    --panel: #1e1e1e;
+    --panel2: #1e1e1e;
     --text: #ffffff;
     --muted: #c2c2c2;
-    --border: #4f4f4f;
+    --border: #3b3b3b00;
     --accent: #8a2be2;
     --accent2: #a78bfa;
     --good: #34d399;
     --warn: #fbbf24;
     --header-offset: 2px;
+    --header-bg: #000000;
+    --header-border: #00000000;
+    --title-color: #ffffff;
     --seam-pad: 12px;
+    --card-bg: #1e1e1e;
+    --card-shadow: 0 10px 28px rgba(0,0,0,0.25);
     --table-header: #636363;
     --subhead: #d6d6d6;
-    --selected-bg: #2a2a2a;
-    --selected-border: #4f4f4f;
+    --selected-bg: #1e1e1e;
+    --selected-border: #383838;
     --row-line: rgba(255,255,255,0.03);
-    --type-pill-bg: #292929;
-    --type-pill-border: #545454;
+    --input-bg: #161616;
+    --input-border: rgb(255 255 255 / 0%);
+    --hover-bg: rgba(255,255,255,0.05);
+    --hover-border: rgb(255 255 255 / 0%);
+    --detail-head-bg: #1e1e1e;
+    --tense-bg: #2b2b2b;
+    --tense-border: #3b3b3b00;
+    --type-pill-bg: #383838;
+    --type-pill-border: #54545400;
     --type-pill-text: #4682b4;
+    --pill-border: rgb(255 255 255 / 14%);
+    --chip-bg: #2b2b2b;
+    --chip-border: rgb(255 255 255 / 0%);
     --table-rule: #d4d4d4;
     --big-color: #ff00ff;
     --section-color: #ff69b4;
     --note-subhead-size: 13.5px;
     --note-subhead-weight: 700;
     --note-subhead-color: #ffffff;
+    --item-border: #42424200;
+    --hint-bg: #121212;
+    --hint-border: #0f0f0f00;
+    --popover-bg: #2a2a2a;
+    --popover-border: rgb(255 255 255 / 0%);
+    --popover-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+    --close-bg: rgba(255, 255, 255, 0.06);
+    --close-border: rgb(255 255 255 / 0%);
+    --form-hover-bg: rgba(255, 255, 255, 0.05);
+    --form-hover-text: #ffd700;
   }
   * { box-sizing: border-box; }
   html,
@@ -65,8 +90,8 @@
     right: 0;
     z-index: 10;
     padding: 4px 6px;
-    border-bottom: 1px solid #000000;
-    background: #000000;
+    border-bottom: 1px solid var(--header-border);
+    background: var(--header-bg);
     backdrop-filter: blur(8px);
     opacity: 0;
     transform: translateY(calc(-100% - 2px));
@@ -90,6 +115,7 @@
     font-weight: 700;
     line-height: 1;
     letter-spacing: 0.2px;
+    color: var(--title-color);
   }
   .row {
     display: grid;
@@ -99,12 +125,17 @@
     gap: 10px;
     padding: 2px 6px 10px;
   }
+  .listCard {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
   .card {
     overflow: hidden;
     border: 1px solid var(--border);
     border-radius: 14px;
-    background: #303030;
-    box-shadow: 0 10px 28px rgba(0,0,0,0.25);
+    background: var(--card-bg);
+    box-shadow: var(--card-shadow);
   }
   main.card {
     width: fit-content;
@@ -120,19 +151,26 @@
   input[type="search"] {
     width: 100%;
     padding: 6px 8px;
-    border: 1px solid rgba(255,255,255,0.16);
+    border: 1px solid var(--input-border);
     border-radius: 10px;
     outline: none;
-    background: rgba(0,0,0,0.25);
+    background: var(--input-bg);
     color: var(--text);
   }
   input[type="search"]::placeholder {
     color: rgba(233,238,252,0.55);
   }
   .list {
-    max-height: calc(100vh - 220px);
+    display: grid;
+    align-content: start;
+    gap: 3px;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
     overflow: auto;
     padding: 4px;
+    scroll-padding-top: 4px;
+    scroll-snap-type: y proximity;
     scrollbar-width: thin;
     scrollbar-color: #1f1f1f #2b2b2b;
   }
@@ -161,16 +199,18 @@
     display: block;
     width: 100%;
     padding: 6px 7px;
-    border: 1px solid transparent;
+    border: 1px solid var(--item-border);
     border-radius: 10px;
-    background: transparent;
+    background: #2b2b2b;
     color: var(--text);
     text-align: left;
     cursor: pointer;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
   }
   .verbBtn:hover {
-    background: rgba(255,255,255,0.05);
-    border-color: rgba(255,255,255,0.08);
+    background: var(--hover-bg);
+    border-color: var(--hover-border);
   }
   .verbBtn[aria-selected="true"] {
     background: var(--selected-bg);
@@ -215,7 +255,7 @@
     align-items: center;
     justify-content: center;
     padding: 4px 8px;
-    border: 1px solid rgba(255,255,255,0.16);
+    border: 1px solid var(--pill-border);
     border-radius: 999px;
     font-size: 11px;
     line-height: 1;
@@ -238,8 +278,8 @@
     justify-content: space-between;
     gap: 8px;
     padding: 7px 9px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-    background: rgba(0,0,0,0.12);
+    border-bottom: 1px solid var(--table-rule);
+    background: var(--detail-head-bg);
   }
   .detailHead .left {
     display: flex;
@@ -264,9 +304,9 @@
   }
   .chip {
     padding: 3px 7px;
-    border: 1px solid rgba(255,255,255,0.14);
+    border: 1px solid var(--chip-border);
     border-radius: 999px;
-    background: rgba(0,0,0,0.22);
+    background: var(--chip-bg);
     font-size: 15px;
     color: var(--text);
   }
@@ -300,9 +340,9 @@
   .tense {
     overflow: visible;
     margin: 3px 0;
-    border: 1px solid var(--table-rule);
+    border: 1px solid var(--tense-border);
     border-radius: 12px;
-    background: rgba(0,0,0,0.16);
+    background: var(--tense-bg);
   }
   .tense--spaced {
     margin-top: 10px;
@@ -378,6 +418,9 @@
   }
   td { overflow: visible; }
   .formBtn {
+    display: block;
+    width: 100%;
+    min-width: 1ch;
     padding: 0;
     border: 0;
     background: transparent;
@@ -390,11 +433,37 @@
     cursor: pointer;
     line-height: 1;
     white-space: nowrap;
+    text-align: left;
   }
   .formBtn:hover {
     border-radius: 6px;
-    background: rgba(255,255,255,0.05);
-    color: #ffd700;
+    background: var(--form-hover-bg);
+    color: var(--form-hover-text);
+  }
+  .formBtn.checkCorrect {
+    color: var(--good);
+  }
+  .formBtn.checkWarn {
+    color: #ff8c00;
+  }
+  .formBtn.checkBad {
+    color: var(--accent);
+  }
+  .formBtn.draftEdited {
+    color: #ff4500;
+  }
+  .inlineCellEditor {
+    width: 100%;
+    min-width: 56px;
+    padding: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: #ff4500;
+    font: inherit;
+    font-weight: 700;
+    line-height: inherit;
+    text-align: left;
   }
   .mutedBlock {
     font-size: 17px;
@@ -449,6 +518,16 @@
     white-space: nowrap;
     text-align: left;
   }
+  .imperativeFormBtn:hover {
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+  }
+  .imperativeFormBtn {
+    display: inline;
+    width: auto;
+    vertical-align: baseline;
+  }
   .notesList {
     display: grid;
     gap: 8px;
@@ -457,6 +536,22 @@
     font-size: 17px;
     line-height: 1;
     color: var(--muted);
+  }
+  .notesTagSyn {
+    color: #32cd32;
+    font-weight: 800;
+  }
+  .notesTagAnt {
+    color: #ff4500;
+    font-weight: 800;
+  }
+  .notesEsSyn {
+    color: #ffffff;
+    font-weight: 800;
+  }
+  .notesEsRelated {
+    color: #85f4fb;
+    font-weight: 800;
   }
   .notesRow--split {
     display: grid;
@@ -555,10 +650,10 @@
     min-width: 260px;
     max-width: 360px;
     padding: 12px 12px 10px;
-    border: 1px solid rgba(255,255,255,0.14);
+    border: 1px solid var(--popover-border);
     border-radius: 14px;
-    background: #2a2a2a;
-    box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+    background: var(--popover-bg);
+    box-shadow: var(--popover-shadow);
     backdrop-filter: blur(10px);
   }
   .popTitle {
@@ -575,9 +670,9 @@
   }
   .close {
     padding: 4px 8px;
-    border: 1px solid rgba(255,255,255,0.14);
+    border: 1px solid var(--close-border);
     border-radius: 999px;
-    background: rgba(255,255,255,0.06);
+    background: var(--close-bg);
     font-size: 17px;
     color: var(--text);
     cursor: pointer;
@@ -595,9 +690,9 @@
   }
   .hint {
     padding: 10px;
-    border: 1px solid #0f0f0f;
+    border: 1px solid var(--hint-border);
     border-radius: 12px;
-    background: #121212;
+    background: var(--hint-bg);
     font-size: 17px;
     line-height: 1.45;
     color: var(--text);
@@ -651,7 +746,7 @@
 </header>
 
 <div class="wrap row">
-  <section class="card" aria-label="Verb list">
+  <section class="card listCard" aria-label="Verb list">
     <div class="search">
       <input id="q" type="search" placeholder="Search verbs (e.g., abrir, hug, burn)..." />
     </div>
@@ -678,7 +773,7 @@
 </div>
 
 <script src="verbs-data.js"></script>
-<script>
+<script type="text/plain" id="legacy-inline-script">
 const DATA = window.VERB_DATA || [];
 
 function splitSynAntLine(line) {
@@ -688,6 +783,117 @@ function splitSynAntLine(line) {
     syn: synMatch ? synMatch[1].split(/\s*;\s*/).map(x => x.trim()).filter(Boolean) : [],
     ant: antMatch ? antMatch[1].split(/\s*;\s*/).map(x => x.trim()).filter(Boolean) : []
   };
+}
+
+function cleanText(input) {
+  let out = (input || "").replace(/\u00ad/g, "").replace(/\s+/g, " ").trim();
+  if (!out) return "";
+
+  const replacements = [
+    ["â€™", "’"], ["â€˜", "‘"], ["â€œ", "“"], ["â€", "”"],
+    ["â€“", "–"], ["â€”", "—"], ["â€¦", "…"], ["â€¢", "•"],
+    ["Â¿", "¿"], ["Â¡", "¡"], ["Â«", "«"], ["Â»", "»"],
+    ["Ã¡", "á"], ["Ã©", "é"], ["Ã­", "í"], ["Ã³", "ó"], ["Ãº", "ú"],
+    ["Ã", "Á"], ["Ã‰", "É"], ["Ã", "Í"], ["Ã“", "Ó"], ["Ãš", "Ú"],
+    ["Ã±", "ñ"], ["Ã‘", "Ñ"], ["Ã¼", "ü"], ["Ãœ", "Ü"], ["Â", ""]
+  ];
+  replacements.forEach(([bad, good]) => {
+    out = out.split(bad).join(good);
+  });
+
+  return out
+    .replace(/\s+([,.;:!?])/g, "$1")
+    .replace(/([¿¡])\s+/g, "$1")
+    .trim();
+}
+
+function isLikelyEditorialNote(line) {
+  const t = normalize(line || "");
+  return (
+    /^an essential\b/.test(t) ||
+    /^can'?t (find|remember)\b/.test(t) ||
+    /^\d+\s+verb\b/.test(t) ||
+    /^sentences using\b/.test(t) ||
+    /^words and expressions related to (this|these) verb/.test(t) ||
+    /^proverb(s)?\b/.test(t) ||
+    /^[a-z]+(?:\/[a-z]+)?$/.test(t)
+  );
+}
+
+function extractInlineSynAnt(line) {
+  const text = cleanText(line);
+  const markers = [...text.matchAll(/\b(Syn|Ant)\.\:\s*/gi)];
+  if (!markers.length) {
+    return { rest: text, syn: [], ant: [] };
+  }
+
+  const syn = [];
+  const ant = [];
+  const rest = cleanText(text.slice(0, markers[0].index));
+
+  markers.forEach((m, idx) => {
+    const label = (m[1] || "").toLowerCase();
+    const start = (m.index ?? 0) + m[0].length;
+    const end = idx + 1 < markers.length ? (markers[idx + 1].index ?? text.length) : text.length;
+    const segment = cleanText(text.slice(start, end).replace(/^[-–—:;\s]+/, ""));
+    if (!segment) return;
+    const parts = segment.split(/\s*;\s*/).map(cleanText).filter(Boolean);
+    if (label === "syn") syn.push(...parts);
+    if (label === "ant") ant.push(...parts);
+  });
+
+  return { rest, syn, ant };
+}
+
+function splitReadableNoteLine(line) {
+  const cleaned = cleanText(line);
+  if (!cleaned) return [];
+
+  const rows = [];
+  const push = (text) => {
+    const t = cleanText(text);
+    if (t) rows.push(t);
+  };
+
+  cleaned.split(/\t+/).forEach(part => {
+    const p = cleanText(part);
+    if (!p) return;
+
+    if (p.includes(";")) {
+      p.split(/\s*;\s*/).forEach(push);
+      return;
+    }
+
+    if (p.includes(" / ") && p.length > 90) {
+      p.split(/\s+\/\s+/).forEach(push);
+      return;
+    }
+
+    if (p.length > 120) {
+      const sentenceParts = p.split(/(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ¿¡])/);
+      if (sentenceParts.length > 1) {
+        sentenceParts.forEach(push);
+        return;
+      }
+    }
+
+    push(p);
+  });
+
+  return rows;
+}
+
+function dedupeTextRows(rows) {
+  const out = [];
+  const seen = new Set();
+  (rows || []).forEach(row => {
+    const value = cleanText(row);
+    const key = normalize(value);
+    if (!value || seen.has(key)) return;
+    seen.add(key);
+    out.push(value);
+  });
+  return out;
 }
 
 function parseImperativeLines(lines) {
@@ -707,30 +913,76 @@ function parseImperativeLines(lines) {
 }
 
 function normalizeVerbRecord(v) {
+  v.infinitive = cleanText(v.infinitive);
+  v.meaning_en = cleanText(v.meaning_en);
+  v.gerund = cleanText(v.gerund);
+  v.past_participle = cleanText(v.past_participle);
+  v.pattern_notes = dedupeTextRows((v.pattern_notes || []).flatMap(splitReadableNoteLine));
+
   const rawImperative = (v.imperative || [])
-    .map(line => (line || "").replace(/\u00ad/g, "").trim())
+    .map(line => cleanText(line))
     .filter(Boolean);
   const imperativeLines = rawImperative.slice(0, 3);
   const extras = {
-    syn: [...(v.extras?.syn || [])],
-    ant: [...(v.extras?.ant || [])],
-    related: [...(v.extras?.related || [])]
+    syn: [...(v.extras?.syn || [])].map(cleanText).filter(Boolean),
+    ant: [...(v.extras?.ant || [])].map(cleanText).filter(Boolean),
+    related: [...(v.extras?.related || [])].map(cleanText).filter(Boolean)
   };
 
   rawImperative.slice(3).forEach(line => {
     if (/(?:^|\s)(?:Syn|Ant)\.\:/i.test(line)) {
       const parsed = splitSynAntLine(line);
-      extras.syn.push(...parsed.syn);
-      extras.ant.push(...parsed.ant);
+      extras.syn.push(...parsed.syn.map(cleanText));
+      extras.ant.push(...parsed.ant.map(cleanText));
       return;
     }
     extras.related.push(line);
   });
 
+  const related = [];
+  const syn = [...extras.syn];
+  const ant = [...extras.ant];
+
+  extras.related.forEach(line => {
+    const extracted = extractInlineSynAnt(line);
+    if (extracted.syn.length) syn.push(...extracted.syn);
+    if (extracted.ant.length) ant.push(...extracted.ant);
+    if (extracted.rest && !isLikelyEditorialNote(extracted.rest)) {
+      related.push(...splitReadableNoteLine(extracted.rest));
+    }
+  });
+
+  v.extras = {
+    related: dedupeTextRows(related),
+    syn: dedupeTextRows(syn.flatMap(splitReadableNoteLine)),
+    ant: dedupeTextRows(ant.flatMap(splitReadableNoteLine))
+  };
   v.imperative_raw = rawImperative;
   v.imperative = imperativeLines;
   v.imperativeParsed = parseImperativeLines(imperativeLines);
-  v.extras = extras;
+
+  Object.entries(v.simple || {}).forEach(([tenseKey, tenseTable]) => {
+    ["singular", "plural"].forEach(numKey => {
+      tenseTable[numKey] = (tenseTable[numKey] || []).map(cleanText);
+    });
+    const cleanKey = cleanText(tenseKey);
+    if (cleanKey !== tenseKey) {
+      v.simple[cleanKey] = tenseTable;
+      delete v.simple[tenseKey];
+    }
+  });
+
+  Object.entries(v.compound || {}).forEach(([tenseKey, tenseTable]) => {
+    ["singular", "plural"].forEach(numKey => {
+      tenseTable[numKey] = (tenseTable[numKey] || []).map(cleanText);
+    });
+    const cleanKey = cleanText(tenseKey);
+    if (cleanKey !== tenseKey) {
+      v.compound[cleanKey] = tenseTable;
+      delete v.compound[tenseKey];
+    }
+  });
+
   return v;
 }
 
@@ -902,15 +1154,122 @@ function renderRelatedLines(lines) {
     return `<div class="mutedBlock">—</div>`;
   }
 
+  const parseSimpleEsEn = (text) => {
+    const cleaned = cleanText(text);
+    if (!cleaned) return null;
+
+    const toMatch = cleaned.match(/^(.*?)\s+\bto\b\s+(.+)$/i);
+    if (toMatch) {
+      return { es: cleanText(toMatch[1]), en: `to ${cleanText(toMatch[2])}` };
+    }
+
+    const articleMatch = cleaned.match(/^((?:el|la|los|las|un|una|unos|unas)\s+\S+)\s+(.+)$/i);
+    if (articleMatch) {
+      return { es: cleanText(articleMatch[1]), en: cleanText(articleMatch[2]) };
+    }
+
+    const commaEsMatch = cleaned.match(/^([A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:,\s*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)+)\s+(.+)$/);
+    if (commaEsMatch) {
+      return { es: cleanText(commaEsMatch[1]), en: cleanText(commaEsMatch[2]) };
+    }
+
+    const twoTokenAdverbMatch = cleaned.match(/^(\S+)\s+([A-Za-z-]+ly)$/i);
+    if (twoTokenAdverbMatch) {
+      return { es: cleanText(twoTokenAdverbMatch[1]), en: cleanText(twoTokenAdverbMatch[2]) };
+    }
+
+    const fallback = cleaned.match(/^(\S+)\s+(.+)$/);
+    if (fallback) {
+      return { es: cleanText(fallback[1]), en: cleanText(fallback[2]) };
+    }
+    return null;
+  };
+
+  const parseRelatedLine = (line) => {
+    const segments = [];
+    const chunked = cleanText(line).split(/\s*;\s*/).map(cleanText).filter(Boolean);
+
+    chunked.forEach(chunk => {
+      const withTo = chunk.match(/^(.*?)([A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:\s+[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+){0,3})\s+\bto\b\s+(.+)$/i);
+      if (withTo) {
+        const prefix = cleanText(withTo[1]);
+        if (prefix) {
+          const prefixPair = parseSimpleEsEn(prefix);
+          if (prefixPair) {
+            segments.push(prefixPair);
+          } else {
+            segments.push({ raw: prefix });
+          }
+        }
+
+        const mainEn = cleanText(withTo[3]);
+        const tailPair = mainEn.match(/^(.*)\s+([A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:,\s*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)+)\s+([A-Za-z][A-Za-z'-]+)$/);
+        if (tailPair) {
+          segments.push({ es: cleanText(withTo[2]), en: cleanText(tailPair[1]).startsWith("to ") ? cleanText(tailPair[1]) : `to ${cleanText(tailPair[1])}` });
+          segments.push({ es: cleanText(tailPair[2]), en: cleanText(tailPair[3]) });
+        } else {
+          segments.push({ es: cleanText(withTo[2]), en: mainEn.startsWith("to ") ? mainEn : `to ${mainEn}` });
+        }
+        return;
+      }
+
+      const basicPair = parseSimpleEsEn(chunk);
+      if (basicPair) {
+        segments.push(basicPair);
+      } else {
+        segments.push({ raw: chunk });
+      }
+    });
+
+    return segments;
+  };
+
   return `
     <div class="notesList">
       ${items.map(line => {
-        const parts = line.split(/\t+/).map(part => part.trim()).filter(Boolean);
-        if (parts.length > 1) {
-          return `<div class="notesRow notesRow--split">${parts.map(part => `<div class="notesItem">${escapeHtml(part)}</div>`).join("")}</div>`;
-        }
-        return `<div class="notesRow">${escapeHtml(line)}</div>`;
+        const parsed = parseRelatedLine(line);
+        const rendered = parsed.map(part => {
+          if (part.raw) {
+            return escapeHtml(part.raw);
+          }
+          return `<span class="notesEsRelated">${escapeHtml(part.es)}</span> - ${escapeHtml(part.en)}`;
+        }).join("; ");
+        return `<div class="notesRow">${rendered}</div>`;
       }).join("")}
+    </div>
+  `;
+}
+
+function renderSynAntLines(syn, ant) {
+  const parseSynAntItem = (item) => {
+    const cleaned = cleanText(item);
+    const toMatch = cleaned.match(/^(.*?)\s+\bto\b\s+(.+)$/i);
+    if (toMatch) {
+      return { es: cleanText(toMatch[1]), en: `to ${cleanText(toMatch[2])}` };
+    }
+    const fallback = cleaned.match(/^(\S+)\s+(.+)$/);
+    if (fallback) {
+      return { es: cleanText(fallback[1]), en: cleanText(fallback[2]) };
+    }
+    return { es: cleaned, en: "" };
+  };
+
+  const synItems = (syn || []).filter(Boolean).map(parseSynAntItem);
+  const antItems = (ant || []).filter(Boolean).map(parseSynAntItem);
+
+  if (!synItems.length && !antItems.length) {
+    return `<div class="mutedBlock">—</div>`;
+  }
+
+  const renderItem = (item) => {
+    if (!item.en) return `<span class="notesEsSyn">${escapeHtml(item.es)}</span>`;
+    return `<span class="notesEsSyn">${escapeHtml(item.es)}</span> - ${escapeHtml(item.en)}`;
+  };
+
+  return `
+    <div class="notesList">
+      ${synItems.length ? `<div class="notesRow"><span class="notesTagSyn">Synonyms:</span> ${synItems.map(renderItem).join("; ")}.</div>` : ""}
+      ${antItems.length ? `<div class="notesRow"><span class="notesTagAnt">Antonyms:</span> ${antItems.map(renderItem).join("; ")}.</div>` : ""}
     </div>
   `;
 }
@@ -981,13 +1340,9 @@ function renderDetail(id) {
               <div class="mutedBlock">${escapeHtml((v.pattern_notes || []).join("\n") || "—")}</div>
               <div class="stackGapMd"></div>
               <div class="sectionLabel">Related words / expressions / examples</div>
-              ${renderRelatedLines((v.extras?.related || []).slice(0, 14))}
+              ${renderRelatedLines((v.extras?.related || []).slice(0, 24))}
               <div class="stackGapMd"></div>
-              <div class="sectionLabel">Synonyms / Antonyms</div>
-              <div class="mutedBlock">${escapeHtml([
-                (v.extras?.syn?.length ? "Syn.: " + v.extras.syn.join("; ") : ""),
-                (v.extras?.ant?.length ? "Ant.: " + v.extras.ant.join("; ") : "")
-              ].filter(Boolean).join("\n") || "—")}</div>
+              ${renderSynAntLines(v.extras?.syn || [], v.extras?.ant || [])}
             </div>
           </div>
         </div>
@@ -998,6 +1353,8 @@ function renderDetail(id) {
   // Auto-size columns after rendering (fonts/layout)
   setTimeout(() => runAutoWidths(detail), 0);
   setTimeout(() => runAutoWidths(detail), 120);
+  setTimeout(syncSidebarHeight, 0);
+  setTimeout(syncSidebarHeight, 120);
 
   // Conjugation click handlers
   detail.querySelectorAll(".formBtn").forEach(btn => {
@@ -1124,6 +1481,27 @@ function runAutoWidths(detailEl) {
   }
 }
 
+function syncSidebarHeight() {
+  const listCard = document.querySelector(".listCard");
+  const mainCard = document.querySelector("main.card");
+  const search = listCard?.querySelector(".search");
+  const list = document.getElementById("list");
+  if (!listCard || !mainCard || !search || !list) return;
+
+  if (window.matchMedia("(max-width: 900px)").matches) {
+    listCard.style.height = "";
+    list.style.height = "";
+    list.style.maxHeight = "";
+    return;
+  }
+
+  const targetHeight = Math.ceil(mainCard.getBoundingClientRect().height);
+  const listHeight = Math.max(120, targetHeight - Math.ceil(search.getBoundingClientRect().height));
+  listCard.style.height = `${targetHeight}px`;
+  list.style.height = `${listHeight}px`;
+  list.style.maxHeight = `${listHeight}px`;
+}
+
 // Initialize once DOM is ready
 const pop = document.getElementById("popover");
 const popClose = document.getElementById("popClose");
@@ -1183,20 +1561,27 @@ document.getElementById("q").addEventListener("input", (e) => {
   renderList(e.target.value);
 });
 
-renderList("");
-
 document.addEventListener("DOMContentLoaded", () => {
   // Build list and auto-select first verb (renderDetail will runAutoWidths)
   renderList("");
+  syncSidebarHeight();
 
   // Extra safety: once everything (including fonts) is fully loaded, run again.
   window.addEventListener("load", () => {
     const detail = document.getElementById("detail");
     if (detail) runAutoWidths(detail);
+    syncSidebarHeight();
   }, { once: true });
 });
 
+window.addEventListener("resize", () => {
+  const detail = document.getElementById("detail");
+  if (detail) runAutoWidths(detail);
+  syncSidebarHeight();
+});
+
 </script>
+<script src="interactive_verbs_app.js"></script>
 </body>
 </html>
 
