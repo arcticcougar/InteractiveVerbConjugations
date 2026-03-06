@@ -1483,7 +1483,8 @@ const CORE_NOTES_OVERRIDES_BASE = {
 
 const CORE_NOTES_OVERRIDES = {
   ...CORE_NOTES_OVERRIDES_BASE,
-  ...(window.CORE_NOTES_OVERRIDES || {})
+  ...(window.CORE_NOTES_OVERRIDES || {}),
+  ...(window.CORE_NOTES_MANUAL_FIXES || {})
 };
 
 let APP_STATE = loadState();
