@@ -71,7 +71,7 @@ const TENSE_HINTS = {
   "14": "Pluperfect subjunctive: <strong>had + past participle</strong> in subjunctive contexts."
 };
 
-const CORE_NOTES_OVERRIDES = {
+const CORE_NOTES_OVERRIDES_BASE = {
   1: {
     related: [
       "abatidamente - dejectedly; batir - to beat, strike",
@@ -1479,6 +1479,11 @@ const CORE_NOTES_OVERRIDES = {
       "perder - to lose"
     ]
   }
+};
+
+const CORE_NOTES_OVERRIDES = {
+  ...CORE_NOTES_OVERRIDES_BASE,
+  ...(window.CORE_NOTES_OVERRIDES || {})
 };
 
 let APP_STATE = loadState();
