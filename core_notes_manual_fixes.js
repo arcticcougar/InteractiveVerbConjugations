@@ -273,5 +273,304 @@ window.CORE_NOTES_MANUAL_FIXES = {
       "Conocer is useful in many everyday expressions and situations.",
       "Be careful when choosing between conocer and saber, which also means to know."
     ]
+  },
+  "135": {
+    "related": [
+      "el consiguiente - consequent; dar por conseguido - to take for granted",
+      "de consiguiente, por consiguiente - consequently; conseguir un permiso - to get a permit",
+      "consiguientemente - consequently; conseguir billetes - to get tickets",
+      "conseguir una buena colocación - to get a good job",
+      "See also seguir."
+    ]
+  },
+  "136": {
+    "related": [
+      "El pirateo constituye un grave problema en el Internet. - Computer hacking constitutes a serious problem on the Internet.",
+      "constitutivo, constitutiva - constitutive, essential; constituyente - constituent",
+      "la constitución - constitution; instituir - to institute, instruct, teach",
+      "el constitucionalismo - constitutionalism; restituir - to restore, give back"
+    ]
+  },
+  "137": {
+    "related": [
+      "Construir is a useful verb for beginning students and review learners.",
+      "Pay special attention to the added y before endings beginning with a, e, or o.",
+      "En la clase de carpintería, estoy construyendo una casita para pajaritos. - In woodworking class, I’m building a birdhouse.",
+      "Mi casa fue construida en 1889. - My house was built in 1889.",
+      "El diseñador de páginas web que construyó mi sitio web hizo un buen trabajo. - The web designer who built my website did a good job.",
+      "la construcción - construction; el constructor, la constructora - builder",
+      "la construcción naval - shipbuilding; el edificio en construcción - building under construction",
+      "constructivo, constructiva - constructive; la crítica constructiva - constructive criticism",
+      "reconstruir - to reconstruct, rebuild; la reconstrucción - reconstruction",
+      "deconstruir - to deconstruct; la deconstrucción - deconstruction"
+    ],
+    "syn": [
+      "componer - to compose",
+      "formar - to make up",
+      "edificar - to build (424)",
+      "erigir - to erect, to build (188)",
+      "hacer - to make"
+    ],
+    "ant": [
+      "abatir - to knock down",
+      "derribar - to knock down",
+      "deshacer - to destroy",
+      "destruir - to destroy"
+    ]
+  },
+  "139": {
+    "related": [
+      "el contenido - content, contents; contenerse - to contain oneself",
+      "contenido, contenida - contained; contenible - containable",
+      "el contenedor - container; contener la risa - to keep a straight face",
+      "See also tener."
+    ]
+  },
+  "140": {
+    "related": [
+      "la contestación - answer, reply; un contestador automático - answering machine",
+      "contestable - contestable; contestar una pregunta - to answer a question",
+      "protestar - to protest",
+      "contestar el teléfono - to answer the telephone"
+    ]
+  },
+  "141": {
+    "related": [
+      "la continuación - continuation; la descontinuación - discontinuation",
+      "continuamente - continually; continuo, continua - continuous",
+      "a continuación - following, next; la continuidad - continuity",
+      "descontinuar - to discontinue"
+    ]
+  },
+  "143": {
+    "related": [
+      "el convencimiento - conviction; convencible - convincible",
+      "convencido, convencida - convinced; convencedor, convencedora - convincing",
+      "See also vencer."
+    ]
+  },
+  "144": {
+    "related": [
+      "convenir + infinitive - to be important + infinitive; el convenio - agreement",
+      "convenir en + infinitive - to agree + infinitive; conveniente - convenient",
+      "convenido, convenida - agreed; la convención - convention",
+      "See also venir."
+    ]
+  },
+  "146": {
+    "related": [
+      "El Presidente convocó a su Gabinete ministerial. - The President convened his Cabinet.",
+      "la convocación - convocation; el convocador - convener",
+      "la vocación - vocation, calling; la convocatoria - convocation, summons"
+    ]
+  },
+  "147": {
+    "related": [
+      "corregir pruebas - to read proofs; correcto, correcta - correct",
+      "corregible - corrigible; correctamente - correctly",
+      "incorregible - incorrigible; correccional - correctional",
+      "la corrección - correction; el correccional - reformatory"
+    ]
+  },
+  "148": {
+    "related": [
+      "el correo - mail, post; descorrer - to draw a curtain or drape",
+      "echar una carta al correo - to mail a letter; por correo aparte - under separate cover",
+      "la corrida - race; de corrida - at full speed; recorrer - to travel on, go over",
+      "el correo electrónico - e-mail"
+    ]
+  },
+  "151": {
+    "related": [
+      "crecer como la mala hierba - to grow like a weed; el crecimiento - growth",
+      "crecidamente - abundantly; la crecida del río - swelling of the river",
+      "el crescendo - crescendo; creciente - growing, increasing",
+      "la luna creciente - crescent moon"
+    ],
+    "syn": [
+      "agrandar - to grow larger",
+      "aumentar - to augment, increase (317)"
+    ],
+    "ant": [
+      "disminuir - to diminish (271)"
+    ]
+  },
+  "152": {
+    "related": [
+      "Creer is a useful verb with an important stem change in Tenses 3 and 7.",
+      "Hasta que no lo veas, no lo creas. - Don’t believe it until you see it.",
+      "Ver es creer. - Seeing is believing.",
+      "¡Ya lo creo! - Of course!",
+      "Creo que sí. - I think so.",
+      "Creo que no. - I don’t think so.",
+      "No me lo creo. - I can’t believe it.",
+      "Se cree buen cantante, pero yo creo que él sería mejor como mimo. - He thinks he’s a good singer, but I believe he would be better as a mime.",
+      "crédulo, crédula - credulous, gullible; la credulidad - credulity",
+      "tener buenas credederas - to be very gullible; crédulamente - credulously",
+      "el credo - creed; dar crédito - to believe; descreer - to disbelieve",
+      "incrédulo, incrédula - incredulous; la incredulidad - incredulity, disbelief",
+      "increíble - incredible; creíble - believable",
+      "creerse - to consider, think, believe oneself"
+    ],
+    "syn": [
+      "considerar - to consider (227)",
+      "pensar - to think"
+    ],
+    "ant": [
+      "descreer - to disbelieve (152)",
+      "dudar - to doubt"
+    ]
+  },
+  "153": {
+    "related": [
+      "la criandera, la criadora - wet nurse; mala crianza - bad manners, impoliteness",
+      "el criado, la criada - servant; Dios los cría y ellos se juntan. - Birds of a feather flock together.",
+      "la crianza - nursing; el criadero - nursery, farm",
+      "dar crianza - to educate, bring up; el criador, la criadora - breeder"
+    ]
+  },
+  "154": {
+    "related": [
+      "El que no se aventura no cruza el mar. - Nothing ventured, nothing gained.",
+      "Cruzamos la calle en el cruce peatonal. - We crossed the street in the crosswalk.",
+      "el cruzamiento - crossing; la cruz - cross",
+      "la cruzada - crusade, crossroads; la Cruz Roja - the Red Cross"
+    ]
+  },
+  "155": {
+    "related": [
+      "la cubierta - cover, wrapping; encubrir - to hide, conceal, mask",
+      "la cubierta del motor - hood of an automobile; el encubrimiento - concealment",
+      "el cubrimiento - covering; descubrir - to discover",
+      "el cubierto - place setting; bajo cubierto - under cover",
+      "a cubierto de - under cover of; cubrir los gastos - to cover expenses",
+      "el cielo está cubierto. - The sky is overcast.",
+      "cubiertamente - covertly"
+    ]
+  },
+  "156": {
+    "related": [
+      "cuidar de - to care for, look after; el descuido - negligence, neglect",
+      "cuidarse de - to be careful about; ¡Cuidado! - Careful!",
+      "el cuidado - care, concern; cuidadoso, cuidadosa - careful",
+      "con cuidado - with care; al cuidado de - under the care of",
+      "descuidar - to neglect, overlook; tener cuidado - to be careful"
+    ]
+  },
+  "157": {
+    "related": [
+      "el cumpleaños - birthday; cumplir... años - to reach the age of...",
+      "cumplidamente - completely; Hoy cumplo diecisiete años. - Today is my seventeenth birthday.",
+      "el cumplimiento - completion; ¡Feliz cumpleaños! - Happy birthday!",
+      "cumplir con - to fulfill one’s obligations"
+    ],
+    "syn": [
+      "ejecutar - to carry out, perform",
+      "realizar - to fulfill",
+      "satisfacer - to satisfy"
+    ],
+    "ant": [
+      "faltar - to be lacking, to miss",
+      "incumplir - to fail to fulfill (157)",
+      "omitir - to omit (30)"
+    ]
+  },
+  "158": {
+    "related": [
+      "Dar is used in many everyday expressions and situations.",
+      "El comedor da al jardín. - The dining room faces the garden.",
+      "Esta mañana di con dinero en la calle. - This morning, I found money in the street.",
+      "Anoche, di con mi amiga Elena en el cine. - Last night, I ran into my friend Elena at the movies.",
+      "El tiempo da buen consejo. - Time will tell.",
+      "Dame dineros y no consejos. - Give me money, not advice.",
+      "Me gusta dar de comer a los pájaros en el parque. - I like to feed the birds in the park.",
+      "Lo doy por perdido. - I consider it lost.",
+      "Me doy por insultado. - I consider myself insulted.",
+      "A Dios rogando y con el mazo dando. - Put your faith in God and keep your powder dry.",
+      "dar a - to face, look out on; dar cara a - to face up to",
+      "dar con algo - to find something; dar con alguien - to meet, run into someone",
+      "dar cuerda al reloj - to wind a watch",
+      "dar de beber a - to give something to drink; dar de comer a - to feed",
+      "dar el primer paso - to take the first step; dar en - to hit against",
+      "dar en el blanco - to hit the target; dar gritos - to shout",
+      "dar la bienvenida - to welcome; dar la hora - to strike the hour",
+      "dar la mano, dar las manos a alguien - to shake hands with someone",
+      "dar las buenas noches a alguien - to say good evening, good night",
+      "dar las gracias a alguien - to thank someone",
+      "dar los buenos días a alguien - to say good morning",
+      "dar por + past participle - to consider; dar recuerdos a - to give regards to",
+      "dar un abrazo - to embrace; dar un paseo - to take a walk",
+      "dar un paseo a caballo - to go horseback riding; dar un paseo en automóvil - to go for a drive",
+      "dar una vuelta - to go for a short walk; dar voces - to shout",
+      "darse - to give oneself up, give in",
+      "darse cuenta de - to realize, be aware of; darse la mano - to shake hands with each other",
+      "darse por + past participle - to consider oneself; darse prisa - to hurry",
+      "dar a conocer - to announce, make known",
+      "dar un consejo - to give advice; dar su palabra - to give one’s word",
+      "los datos - data, information"
+    ],
+    "syn": [
+      "devolver - to give back",
+      "donar - to donate, give (355)",
+      "entregar - to give, hand over",
+      "ofrecer - to offer"
+    ],
+    "ant": [
+      "adquirir - to acquire",
+      "obtener - to obtain",
+      "recibir - to receive"
+    ]
+  },
+  "160": {
+    "related": [
+      "Guillermo decidió comer fuera. - William decided to dine out.",
+      "la decisión - decision; decidir a + infinitive - to persuade + infinitive",
+      "decidir + infinitive - to decide + infinitive",
+      "decididamente - decidedly; decidirse - to make up one’s mind, be determined",
+      "decisivamente - decisively; estar decidido, decidida a + infinitive - to make up one’s mind",
+      "decisivo, decisiva - decisive"
+    ],
+    "syn": [
+      "resolver - to resolve",
+      "tomar una decisión - to make a decision"
+    ],
+    "ant": [
+      "dudar - to doubt"
+    ]
+  },
+  "161": {
+    "related": [
+      "Decir is an extremely useful irregular verb used in many everyday expressions.",
+      "Dígame, por favor, dónde está la sala de espera. - Tell me, please, where the waiting room is.",
+      "¿Qué quiere decir esta palabra? - What does this word mean?",
+      "¡Te he dicho mil veces de ponerte el cinturón de seguridad! - I’ve told you a thousand times to put on your seat belt!",
+      "Dime con quién andas y te diré quién eres. - Tell me who your friends are and I’ll tell you who you are.",
+      "Al decir las verdades se pierden las amistades. - Friendships are lost when the truth is told.",
+      "De decir a hacer hay mucho que ver. - There is a great difference between saying and doing.",
+      "Dicho y hecho. - No sooner said than done.",
+      "querer decir - to mean; Diga, Dígame - hello (on the telephone)",
+      "decirle al oído - to whisper in one’s ear; no decir palabra - to not say a word",
+      "Es decir... - that is to say",
+      "un dicho - saying, expression",
+      "dictar - to dictate; el dictado - dictation; el dictador - dictator",
+      "decir mentiras - to tell lies; decir adiós - to say good-bye",
+      "bendecir - to bless; maldecir - to curse, swear"
+    ],
+    "syn": [
+      "anunciar - to announce, proclaim",
+      "declarar - to declare",
+      "hablar - to speak, talk"
+    ],
+    "ant": [
+      "callarse - to be silent"
+    ]
+  },
+  "163": {
+    "related": [
+      "Gabriela quería ser médica, por eso se dedicó a sus estudios. - Gabrielle wanted to be a physician, so she devoted herself to her studies.",
+      "dedicarse a - to devote oneself to; una dedicación - dedication",
+      "dedicar - to dedicate, consecrate; dedicar algo a - to dedicate something to",
+      "dedicado, dedicada - dedicated"
+    ]
   }
 };
