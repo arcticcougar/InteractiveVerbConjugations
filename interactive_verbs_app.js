@@ -581,6 +581,424 @@ const CORE_NOTES_OVERRIDES = {
     ant: [
       "desagradar - to be unpleasant (39)"
     ]
+  },
+  40: {
+    pattern_notes: ["Regular -er verb endings with spelling change: c becomes zc before a or o"],
+    related: [
+      "agradecido, agradecida - thankful, grateful; Yo le agradezco el regalo. - I am grateful for the gift.",
+      "el agradecimiento - gratitude, gratefulness",
+      "muy agradecido - much obliged; desagradecidamente - ungratefully"
+    ],
+    syn: [
+      "dar las gracias a - to thank",
+      "reconocer - to be grateful for"
+    ],
+    ant: [
+      "desagradecer - to be ungrateful (40)"
+    ]
+  },
+  41: {
+    related: [
+      "Un agujero negro se agranda al agarrar los objetos que pasan de cerca. - A black hole grows by grabbing objects that pass nearby.",
+      "el agrandamiento - aggrandizement, increase; grande - great, big, large, grand, huge",
+      "en grande - in a grand way; la grandeza - greatness, size",
+      "grandemente - greatly"
+    ],
+    syn: [
+      "añadir - to add",
+      "crecer - to grow",
+      "incrementar - to augment, increase (11)"
+    ],
+    ant: [
+      "disminuir - to diminish (271)",
+      "reducir - to reduce"
+    ]
+  },
+  42: {
+    related: [
+      "agraviadamente - offensively; agravante - aggravating",
+      "agraviador, agraviadora - insulting; una agravación, un agravamiento - aggravation",
+      "el agravio - offense, wrongful injury"
+    ],
+    syn: [
+      "empeorar - to make worse (409)"
+    ],
+    ant: [
+      "mejorar - to improve"
+    ]
+  },
+  43: {
+    pattern_notes: ["Regular -ar verb endings with spelling change: g becomes gu before e"],
+    related: [
+      "agregarse a - to join; agregar dos a cinco - to add two to five",
+      "un agregado comercial - commercial attaché",
+      "desagregar - to disintegrate, to separate",
+      "un agregado cultural, una agregada cultural - cultural attaché",
+      "una agregación - aggregation"
+    ],
+    syn: [
+      "añadir - to add",
+      "colegir - to collect",
+      "recoger - to gather, collect"
+    ],
+    ant: [
+      "segregar - to segregate (421)",
+      "sustraer - to subtract, to take away (477)"
+    ]
+  },
+  44: {
+    related: [
+      "una agrupación, un agrupamiento - group, cluster; un grupo - group",
+      "una agrupación coral - choral group",
+      "agrupado, agrupada - grouped",
+      "agruparse - to form a group"
+    ],
+    syn: [
+      "unir - to unite, join"
+    ],
+    ant: [
+      "separar - to separate, set apart"
+    ]
+  },
+  45: {
+    related: [
+      "Aguardamos con inquietud los resultados de las elecciones presidenciales. - We are waiting anxiously for the results of the presidential elections.",
+      "la aguardada - expecting, waiting; guardar silencio - to keep silent",
+      "guardar - to guard, to watch over; ¡Dios guarde al Rey! - God save the King!"
+    ],
+    syn: [
+      "esperar - to wait for, to hope"
+    ]
+  },
+  46: {
+    related: [
+      "un ahorrador de tiempo - time saver; los ahorros - savings",
+      "ahorrador, ahorradora - thrifty person; el ahorramiento - saving, economy"
+    ],
+    syn: [
+      "economizar - to economize on (339)"
+    ],
+    ant: [
+      "gastar - to waste",
+      "despilfarrar - to squander, to waste (46)"
+    ]
+  },
+  47: {
+    pattern_notes: ["Regular -ar verb endings with spelling change: z becomes c before e"],
+    related: [
+      "Afortunadamente, la estropeada barca de remos alcanzó la orilla antes de hundirse. - Fortunately, the damaged rowboat reached the shore before sinking.",
+      "el alcance - overtaking, reach; al alcance del oído - within earshot",
+      "al alcance de - within reach of; alcanzable - attainable, reachable",
+      "dar alcance a - to overtake; el alcanzador, la alcanzadora - pursuer"
+    ],
+    syn: [
+      "conseguir - to attain",
+      "lograr - to attain (29)",
+      "obtener - to obtain"
+    ],
+    ant: [
+      "perder - to lose"
+    ]
+  },
+  48: {
+    related: [
+      "la alegría - joy, rejoicing, mirth; alegremente - gladly, cheerfully",
+      "alegro - allegro; alegre - happy, joyful, merry, bright",
+      "tener mucha alegría - to be very glad; alegrar la fiesta - to liven up the party",
+      "¡Qué alegría! - What joy!; saltar de alegría - to jump for joy"
+    ],
+    syn: [
+      "disfrutar - to enjoy",
+      "divertirse - to have a good time",
+      "gozar - to enjoy"
+    ],
+    ant: [
+      "entristecerse - to become sad (345)"
+    ]
+  },
+  49: {
+    pattern_notes: ["Regular -ar verb endings with stem change: Tenses 1, 6, Imperative; spelling change: z becomes c before e"],
+    related: [
+      "Todos los días desayuno en casa, almuerzo en la escuela y ceno con mi familia. - Every day I breakfast at home, lunch at school, and have dinner with my family.",
+      "el desayuno - breakfast; cenar - to have dinner, supper",
+      "el almuerzo - lunch; una almorzada - handful",
+      "la cena - dinner, supper; desayunarse - to have breakfast"
+    ],
+    syn: [
+      "comer - to eat",
+      "tomar el almuerzo - to have lunch"
+    ]
+  },
+  50: {
+    related: [
+      "El verano pasado, alquilamos una cabaña en la playa, cerca de Cancún. - Last summer, we rented a hut at the beach, near Cancún.",
+      "alquilable - rentable; desalquilarse - to become vacant, unrented",
+      "SE ALQUILA - for rent; desalquilado, desalquilada - unrented, unlet, vacant",
+      "ALQUILA - available"
+    ],
+    syn: [
+      "arrendar - to rent (352)"
+    ],
+    ant: [
+      "desalquilar - to vacate, to stop renting (50)"
+    ]
+  },
+  51: {
+    related: [
+      "alumbrante - illuminating, enlightening",
+      "el alumbramiento - lighting; el alumbrado fluorescente - fluorescent lighting",
+      "el alumbrado indirecto - indirect lighting",
+      "la lumbre - fire, light; calentarse a la lumbre - to warm oneself by the fire"
+    ],
+    syn: [
+      "aclarar - to clarify",
+      "iluminar - to illuminate (107)"
+    ],
+    ant: [
+      "apagar - to extinguish"
+    ]
+  },
+  52: {
+    related: [
+      "Mi tío se alumbró en la fiesta. Afortunadamente, él me había dado las llaves de su coche. - My uncle got tipsy at the party. Fortunately, he had given me his car keys.",
+      "See also alumbrar."
+    ],
+    syn: [
+      "alzar el codo - to drink to excess"
+    ],
+    ant: [
+      "abstenerse del alcohol - to abstain from alcohol",
+      "ser abstemio, abstemia - to be a teetotaler"
+    ]
+  },
+  53: {
+    pattern_notes: ["Regular -ar verb endings with spelling change: z becomes c before e"],
+    related: [
+      "alzar velas - to set the sails, to hoist sail; el alzo - robbery, theft",
+      "alzar con - to run off with, to steal; alzar la mano - to threaten, to raise one's hand",
+      "la alza - rise, rising; estar en alza - to be on the rise",
+      "alzar la voz - to raise one's voice",
+      "el alzamiento - raising, lifting; alzar el codo - to drink to excess"
+    ],
+    syn: [
+      "subir - to go up, to rise",
+      "elevar - to elevate (259)",
+      "levantar - to lift"
+    ],
+    ant: [
+      "bajar - to lower, descend"
+    ]
+  },
+  54: {
+    related: [
+      "la amabilidad - amiability, kindness; amablemente - amiably, kindly",
+      "amable - amiable, kind, affable; el amor - love; amante - lover",
+      "Note: To say 'to love' in common usage, prefer querer or gustar. Amar is often used in poetic or religious contexts.",
+      "También los pecadores aman a los que los aman. - Even sinners love those who love them. (Luke 6:32)"
+    ],
+    syn: [
+      "adorar - to adore",
+      "querer bien a - to love"
+    ],
+    ant: [
+      "detestar - to detest (250)",
+      "odiar - to hate (232)"
+    ]
+  },
+  55: {
+    related: [
+      "la añadidura - increase, addition; de añadidura - extra, for good measure",
+      "por añadidura - in addition, besides; añadido, añadida - added, additional"
+    ],
+    syn: [
+      "adicionar - to add (54)",
+      "agregar - to add, gather",
+      "sumar - to add (54)"
+    ],
+    ant: [
+      "sustraer - to subtract (477)"
+    ]
+  },
+  56: {
+    related: [
+      "Andar is a very useful verb for beginning students. Pay attention to the spelling change in Tenses 3 and 7.",
+      "¿Cómo andan los negocios? - How's business?",
+      "Anda despacio que tengo prisa. - Make haste slowly.",
+      "Amadís de Gaula fue un caballero andante de la Edad Media. - Amadis of Gaul was a knight-errant of the Middle Ages.",
+      "¡Anda a pasear! - Take a walk!",
+      "¡A Magdalena le gusta andar a caballo! Anda a caballo tres veces por semana. - Madeleine loves horseback riding. She rides a horse three times per week.",
+      "andarse - to go away; las andanzas - events",
+      "buena andanza - good fortune; mala andanza - bad fortune; a todo andar - at full speed",
+      "desandar - to retrace one's steps; andante - errant; un caballero andante - knight-errant",
+      "Anda con Dios. - Go with God.",
+      "andar con cien ojos - to be cautious",
+      "el andar - gait; andar a gatas - to crawl, to walk on all fours",
+      "andar a caballo - to ride a horse",
+      "Dime con quién andas y te diré quién eres. - Tell me who your friends are and I will tell you who you are.",
+      "Poco a poco se anda lejos. - Little by little, one goes far."
+    ],
+    syn: [
+      "caminar - to walk",
+      "ir - to go",
+      "marchar - to walk, march"
+    ],
+    ant: [
+      "detenerse - to stop",
+      "pararse - to stop"
+    ]
+  },
+  57: {
+    related: [
+      "el, la anunciante - advertiser; el anuncio - advertisement, announcement",
+      "la Anunciación - Annunciation; el cartel anunciador - billboard",
+      "el anunciador, la anunciadora - advertiser, announcer; los anuncios por palabras - classified advertisements"
+    ],
+    syn: [
+      "adivinar - to divine, to foretell",
+      "predecir - to predict, to foretell",
+      "proclamar - to proclaim"
+    ],
+    ant: [
+      "callarse - to be silent"
+    ]
+  },
+  58: {
+    pattern_notes: ["Regular -ar verb endings with spelling change: g becomes gu before e"],
+    related: [
+      "el apagador, el extintor - fire extinguisher; el apagavelas - candle extinguisher, snuffer",
+      "el apagón - blackout",
+      "apagadizo, apagadiza - fire resistant",
+      "apagar la computadora - to shut down the computer",
+      "¡Apaga y vámonos! - Let's end this and go."
+    ],
+    syn: [
+      "extinguir - to extinguish (193)"
+    ],
+    ant: [
+      "encender - to light, to turn on"
+    ]
+  },
+  59: {
+    pattern_notes: ["Regular -er verb endings with spelling change: c becomes zc before a or o"],
+    related: [
+      "un aparecimiento - apparition; aparecerse entre sueños - to see someone in a dream",
+      "un aparecido - ghost",
+      "una aparición - apparition, appearance; parecer - to seem, to appear",
+      "aparecerse en casa - to arrive home unexpectedly",
+      "See also parecerse."
+    ],
+    syn: [
+      "surgir - to arise, appear"
+    ],
+    ant: [
+      "desaparecer - to disappear (59)"
+    ]
+  },
+  60: {
+    related: [
+      "Al fin del espectáculo, el público aplaudió con entusiasmo. - At the end of the show, the audience applauded enthusiastically.",
+      "el aplauso - applause; con el aplauso de - to the applause of",
+      "el aplaudidor, la aplaudidora - applauder; una salva de aplausos - thunderous applause"
+    ],
+    syn: [
+      "aclamar - to acclaim, applaud",
+      "felicitar - to congratulate",
+      "palmear - to clap hands (206)"
+    ],
+    ant: [
+      "abuchear - to boo (175)"
+    ]
+  },
+  61: {
+    related: [
+      "El príncipe Luis se apoderó del trono después de la abdicación de su padre Felipe V. - Prince Louis took the throne after the abdication of his father, Philip V.",
+      "poder - to be able; apoderarse de algo - to take possession of something",
+      "el poder - power; apoderado, apoderada - empowered",
+      "el apoderado - proxy, representative; apoderar - to empower, to authorize"
+    ],
+    syn: [
+      "apropiarse - to appropriate, take (106, 289)"
+    ],
+    ant: [
+      "dar - to give"
+    ]
+  },
+  62: {
+    related: [
+      "el aprecio - appreciation, esteem; preciar - to appraise, to estimate",
+      "la apreciación - appreciation, estimation; el precio - price",
+      "apreciable - appreciable, worthy",
+      "no tener precio - to be priceless",
+      "la apreciabilidad - appreciability; un precio fijo - set price, fixed price"
+    ],
+    syn: [
+      "estimar - to estimate, esteem"
+    ],
+    ant: [
+      "despreciar - to despise, scorn (57)"
+    ]
+  },
+  63: {
+    related: [
+      "Aprender is an important verb to learn because it is regular and appears in many everyday expressions.",
+      "En la clase de español estamos aprendiendo a hablar, a leer y a escribir en español. - In Spanish class we are learning to speak, read and write in Spanish.",
+      "Machacando se aprende el oficio. - Practice makes perfect.",
+      "Mi abuela aprendió a navegar en Internet. - My grandmother learned to surf the Internet.",
+      "Estoy aprendiendo el diseño web para ser administrador de web. - I am learning web design to become a webmaster.",
+      "el aprendizaje - apprenticeship; el aprendizaje en línea - online learning, e-learning",
+      "el aprendiz, la aprendiza - apprentice",
+      "aprender a + infinitive - to learn + infinitive",
+      "aprender de memoria - to memorize",
+      "aprender con - to study with",
+      "desaprender - to unlearn",
+      "aprendiz de todo, oficial de nada - Jack of all trades, master of none"
+    ]
+  },
+  64: {
+    related: [
+      "Mateo se apresuró a la tienda de teléfonos celulares. - Matthew hurried to the cell phone store.",
+      "apresurado, apresurada - hasty, quick; el apresuramiento - hastiness",
+      "apresuradamente - hastily; apresurar - to accelerate, to rush",
+      "la prisa - haste, hurry; tener prisa - to be in a hurry",
+      "apresurarse a + infinitive - to hurry + infinitive"
+    ],
+    syn: [
+      "acelerar - to accelerate, hasten",
+      "tener prisa - to be in a hurry"
+    ],
+    ant: [
+      "detenerse - to stop",
+      "pararse - to stop"
+    ]
+  },
+  65: {
+    pattern_notes: ["Regular -ar verb endings with stem change: Tenses 1, 6, Imperative"],
+    related: [
+      "la aprobación - approbation, approval, consent; aprobado por mayoría - accepted by a majority",
+      "la desaprobación - disapproval",
+      "el aprobado - passing grade in an exam; comprobar - to verify, compare, check, prove",
+      "aprobado, aprobada - accepted, admitted, approved, passed"
+    ],
+    syn: [
+      "aceptar - to accept"
+    ],
+    ant: [
+      "negar - to deny",
+      "desaprobar - to disapprove (65)"
+    ]
+  },
+  66: {
+    pattern_notes: ["Regular -ar verb"],
+    related: [
+      "aprovechado, aprovechada - economical; aprovechar - to make use of",
+      "aprovechable - available, profitable; aprovechar la ocasión - to take the opportunity",
+      "aprovechamiento - use, utilization; aprovechón, aprovechona - opportunist",
+      "aprovecharse de - to take advantage of, to abuse"
+    ],
+    syn: [
+      "usar - to use",
+      "utilizar - to utilize"
+    ]
   }
 };
 

@@ -5,7 +5,7 @@ Goal: review and normalize Notes formatting for all core verbs (`#0001` to `#050
 ## Batch Checklist
 
 - [x] Batch 1: `#0001–#0033`
-- [ ] Batch 2: `#0034–#0066` (partial done: `#0034–#0039`)
+- [x] Batch 2: `#0034–#0066`
 - [ ] Batch 3: `#0067–#0099`
 - [ ] Batch 4: `#0100–#0132`
 - [ ] Batch 5: `#0133–#0165`
