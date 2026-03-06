@@ -111,6 +111,14 @@ function tenseCellKey(tenseNum, number, rowIndex) {
   return `s:${tenseNum}:${number}:${rowIndex}`;
 }
 
+function gerundCellKey() {
+  return "h:gerund";
+}
+
+function participleCellKey() {
+  return "h:participle";
+}
+
 function imperativeCellKey(slot) {
   return `i:${slot}`;
 }
@@ -524,6 +532,8 @@ function getDisplayVerbNumber(verb) {
 
 function buildCanonicalCellMap(verb) {
   const out = {};
+  out[gerundCellKey()] = cleanText(verb.gerund || "");
+  out[participleCellKey()] = cleanText(verb.past_participle || "");
   getOrderedTenseKeys(verb.simple).forEach(k => {
     const num = extractTenseNumber(k);
     const t = verb.simple[k] || { singular: [], plural: [] };
@@ -559,6 +569,8 @@ function getExpectedMap(verb) {
 
 function getVerbCellOrder(verb) {
   const keys = [];
+  keys.push(gerundCellKey());
+  keys.push(participleCellKey());
   getOrderedTenseKeys(verb.simple).forEach(k => {
     const num = extractTenseNumber(k);
     [0, 1, 2].forEach(i => {
@@ -584,6 +596,8 @@ function getVerbCellOrder(verb) {
 
 function getVerbNavigationCellOrder(verb) {
   const keys = [];
+  keys.push(gerundCellKey());
+  keys.push(participleCellKey());
   const pushTenseInNaturalReadingOrder = (tenseNum) => {
     // yo, tu, el, nosotros, vosotros, ellos
     [0, 1, 2].forEach(i => keys.push(tenseCellKey(tenseNum, "sg", i)));
@@ -953,6 +967,15 @@ function renderDetail(verbKey) {
   const verb = findVerbByKey(verbKey);
   if (!verb) return;
   const patternNotesForDisplay = getPatternNotesForDisplay(verb);
+  const canonical = buildCanonicalCellMap(verb);
+  const gerundKey = gerundCellKey();
+  const participleKey = participleCellKey();
+  const gerundDisplay = getDisplayCellValue(verb, gerundKey, canonical[gerundKey] || "");
+  const participleDisplay = getDisplayCellValue(verb, participleKey, canonical[participleKey] || "");
+  const gerundStatusClass = getCellStatusClass(verb._key, gerundKey);
+  const participleStatusClass = getCellStatusClass(verb._key, participleKey);
+  const gerundDraftClass = getDraftEditClass(verb, gerundKey, gerundDisplay, canonical[gerundKey] || "");
+  const participleDraftClass = getDraftEditClass(verb, participleKey, participleDisplay, canonical[participleKey] || "");
 
   CURRENT_VERB_KEY = verb._key;
   APP_STATE.ui.selected_verb_key = CURRENT_VERB_KEY;
@@ -966,8 +989,8 @@ function renderDetail(verbKey) {
         <div class="meaning">${escapeHtml(verb.meaning_en || "")}</div>
       </div>
       <div class="chips">
-        <div class="chip"><strong>Gerund</strong> ${escapeHtml(verb.gerund || "—")}</div>
-        <div class="chip"><strong>Part.</strong> ${escapeHtml(verb.past_participle || "—")}</div>
+        <div class="chip"><strong>Gerund</strong> <button class="formBtn chipFormBtn ${gerundStatusClass} ${gerundDraftClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Gerund" data-person="" data-number="" data-cell-key="${gerundKey}">${renderCellText(gerundDisplay)}</button></div>
+        <div class="chip"><strong>Part.</strong> <button class="formBtn chipFormBtn ${participleStatusClass} ${participleDraftClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Participle" data-person="" data-number="" data-cell-key="${participleKey}">${renderCellText(participleDisplay)}</button></div>
       </div>
     </div>
     <div class="panel">
@@ -1454,8 +1477,12 @@ function autoGenerateMissingCustomAnswerKeys() {
     const model = findVerbByKey(verb.model_verb_ref);
     if (!model) return;
     const missingKey = !hasAnswerKey(verb);
+    const missingHeaderForms = !missingKey && (
+      !Object.prototype.hasOwnProperty.call(verb.answer_key || {}, gerundCellKey()) ||
+      !Object.prototype.hasOwnProperty.call(verb.answer_key || {}, participleCellKey())
+    );
     const leakedKey = !missingKey && verb.source_tag === "slang_seed" && answerKeyHasModelLeak(verb, model);
-    if (!missingKey && !leakedKey) return;
+    if (!missingKey && !missingHeaderForms && !leakedKey) return;
     const previousKey = hasAnswerKey(verb) ? deepClone(verb.answer_key) : null;
     const generated = generateAnswerKeyFromModel(verb, model);
     if (!generated || !generated.map || !Object.keys(generated.map).length) return;
@@ -1635,7 +1662,7 @@ function computeGridWidths(detailRoot) {
     return Math.ceil(meas.getBoundingClientRect().width);
   }
 
-  const formSample = detailRoot.querySelector(".formBtn");
+  const formSample = detailRoot.querySelector('section.side .formBtn[data-cell-key]') || detailRoot.querySelector(".formBtn[data-cell-key]");
   const pronSample = detailRoot.querySelector("tbody tr td:nth-child(1)");
   if (!formSample || !pronSample) {
     meas.remove();
@@ -1730,13 +1757,22 @@ function showPopover(anchorEl, meta) {
   const label = meta.tense.replace(/^\d+\s*/, "");
   const key = `${meta.person}-${meta.number}`;
   const pron = PRONOUNS[key] || "";
+  const personLabel = meta.person
+    ? `${meta.person} (${meta.person === "1" ? "first" : meta.person === "2" ? "second" : "third"})${pron ? ` — ${pron}` : ""}`
+    : "—";
+  const numberLabel = meta.number === "sg" ? "singular" : meta.number === "pl" ? "plural" : "—";
+  const hint = meta.tense === "Gerund"
+    ? "Gerund form."
+    : meta.tense === "Participle"
+      ? "Past participle form."
+      : (num ? (TENSE_HINTS[num] || "Tip: Add a short explanation here for this tense.") : "Imperative form.");
 
   document.getElementById("popWord").textContent = meta.form;
   document.getElementById("popVerb").textContent = meta.verb;
   document.getElementById("popTense").textContent = num ? `${num} · ${label}` : label;
-  document.getElementById("popPerson").textContent = `${meta.person} (${meta.person === "1" ? "first" : meta.person === "2" ? "second" : "third"}) — ${pron}`;
-  document.getElementById("popNumber").textContent = meta.number === "sg" ? "singular" : "plural";
-  document.getElementById("popHint").innerHTML = num ? (TENSE_HINTS[num] || "Tip: Add a short explanation here for this tense.") : "Imperative form.";
+  document.getElementById("popPerson").textContent = personLabel;
+  document.getElementById("popNumber").textContent = numberLabel;
+  document.getElementById("popHint").innerHTML = hint;
 
   pop.style.display = "block";
   pop.setAttribute("aria-hidden", "false");
