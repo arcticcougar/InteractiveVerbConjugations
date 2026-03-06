@@ -143,10 +143,29 @@
   }
   .pad { padding: 8px; }
   .search {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    display: grid;
+    gap: 6px;
     padding: 5px 7px;
+  }
+  .filterRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .filterSelect {
+    width: 100%;
+    padding: 4px 8px;
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    outline: none;
+    background: var(--input-bg);
+    color: var(--text);
+    font-size: 10.5px;
+    line-height: 1.2;
+  }
+  .filterSelect option {
+    background: #1e1e1e;
+    color: var(--text);
   }
   input[type="search"] {
     width: 100%;
@@ -242,6 +261,8 @@
   .tagRow {
     display: flex;
     justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 4px;
     margin-top: 4px;
   }
   .tagRow .pill {
@@ -249,6 +270,22 @@
     line-height: 1.15;
     text-align: right;
     white-space: normal;
+  }
+  .tagPill {
+    font-size: 10px;
+    padding: 3px 7px;
+  }
+  .tagCore {
+    color: #b3b3b3;
+  }
+  .tagCustom {
+    color: #ffe08a;
+  }
+  .tagSlang {
+    color: #85f4fb;
+  }
+  .tagExplicit {
+    color: #ff8c00;
   }
   .pill {
     display: inline-flex;
@@ -773,6 +810,22 @@
   <section class="card listCard" aria-label="Verb list">
     <div class="search">
       <input id="q" type="search" placeholder="Search verbs (e.g., abrir, hug, burn)..." />
+      <div class="filterRow">
+        <select id="filterPattern" class="filterSelect" aria-label="Pattern filter">
+          <option value="all">Pattern: all</option>
+          <option value="regular-ar">Regular -ar</option>
+          <option value="regular-er">Regular -er</option>
+          <option value="regular-ir">Regular -ir</option>
+          <option value="irregular">Irregular</option>
+        </select>
+        <select id="filterTag" class="filterSelect" aria-label="Tag filter">
+          <option value="all">Tag: all</option>
+          <option value="core501">501 source</option>
+          <option value="custom">Custom</option>
+          <option value="slang">Slang</option>
+          <option value="explicit">Explicit</option>
+        </select>
+      </div>
     </div>
     <div id="list" class="list"></div>
   </section>

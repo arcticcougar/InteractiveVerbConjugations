@@ -12,7 +12,9 @@ const DEFAULT_STATE = {
   snapshots: [],
   ui: {
     selected_verb_key: null,
-    search_text: ""
+    search_text: "",
+    pattern_filter: "all",
+    tag_filter: "all"
   },
   seed_imported: {
     slang12: false
@@ -332,7 +334,9 @@ function coerceState(raw) {
     snapshots: Array.isArray(src.snapshots) ? src.snapshots : [],
     ui: {
       selected_verb_key: src.ui?.selected_verb_key || null,
-      search_text: src.ui?.search_text || ""
+      search_text: src.ui?.search_text || "",
+      pattern_filter: src.ui?.pattern_filter || "all",
+      tag_filter: src.ui?.tag_filter || "all"
     },
     seed_imported: {
       slang12: !!src.seed_imported?.slang12
@@ -695,15 +699,77 @@ function renderCellText(value) {
   return v ? escapeHtml(v) : "&nbsp;";
 }
 
+function inferPatternCategory(verb) {
+  const notes = getPatternNotesForDisplay(verb);
+  const primary = normalize(notes[0] || "");
+  if (primary.includes("irregular")) return "irregular";
+  if (primary.includes("regular") && primary.includes("-ar")) return "regular-ar";
+  if (primary.includes("regular") && primary.includes("-er")) return "regular-er";
+  if (primary.includes("regular") && primary.includes("-ir")) return "regular-ir";
+  return "other";
+}
+
+function isExplicitVerb(verb) {
+  const text = normalize(`${verb.infinitive || ""} ${verb.meaning_en || ""}`);
+  const markers = [
+    "follar", "joder", "cagarla", "fuck", "sex", "explicit", "rude"
+  ];
+  return markers.some(m => text.includes(m));
+}
+
+function getVerbTags(verb) {
+  const tags = [];
+  if (verb._source === "core") tags.push("core501");
+  if (verb._source === "custom") tags.push("custom");
+  if (verb.source_tag === "slang_seed") tags.push("slang");
+  if (isExplicitVerb(verb)) tags.push("explicit");
+  return tags;
+}
+
+function renderTagPills(tags) {
+  const seen = new Set();
+  const ordered = (tags || []).filter(t => {
+    if (!t || seen.has(t)) return false;
+    seen.add(t);
+    return true;
+  });
+  return ordered.map(tag => {
+    const labelMap = {
+      core501: "501",
+      custom: "Custom",
+      slang: "Slang",
+      explicit: "Explicit"
+    };
+    const clsMap = {
+      core501: "tagCore",
+      custom: "tagCustom",
+      slang: "tagSlang",
+      explicit: "tagExplicit"
+    };
+    return `<div class="pill tagPill ${clsMap[tag] || ""}">${labelMap[tag] || escapeHtml(tag)}</div>`;
+  }).join("");
+}
+
 function renderList(filterText) {
   const list = document.getElementById("list");
   list.innerHTML = "";
   APP_STATE.ui.search_text = filterText || "";
+  const patternFilter = document.getElementById("filterPattern")?.value || "all";
+  const tagFilter = document.getElementById("filterTag")?.value || "all";
+  APP_STATE.ui.pattern_filter = patternFilter;
+  APP_STATE.ui.tag_filter = tagFilter;
   scheduleSave();
 
   const q = normalize(filterText || "");
   const verbs = getAllVerbs();
-  const items = verbs.filter(v => normalize(`${v.infinitive} ${v.meaning_en}`).includes(q));
+  const items = verbs.filter(v => {
+    if (!normalize(`${v.infinitive} ${v.meaning_en}`).includes(q)) return false;
+    const patternCat = inferPatternCategory(v);
+    if (patternFilter !== "all" && patternCat !== patternFilter) return false;
+    const tags = getVerbTags(v);
+    if (tagFilter !== "all" && !tags.includes(tagFilter)) return false;
+    return true;
+  });
   let selectedVisible = false;
 
   items.forEach(v => {
@@ -713,13 +779,17 @@ function renderList(filterText) {
     btn.dataset.key = v._key;
     btn.setAttribute("aria-selected", v._key === CURRENT_VERB_KEY ? "true" : "false");
     if (v._key === CURRENT_VERB_KEY) selectedVisible = true;
+    const tags = getVerbTags(v);
+    const patternLabel = ((getPatternNotesForDisplay(v)[0]) || "").replace("verb", "").trim();
+    const patternPill = patternLabel ? `<div class="pill typePill">${escapeHtml(patternLabel)}</div>` : "";
     btn.innerHTML = `
       <div class="verbTop">
         <div class="verbTitle"><span class="pill">#${getDisplayVerbNumber(v)}</span> ${escapeHtml(v.infinitive)}</div>
       </div>
       <div class="verbMeta">${escapeHtml(v.meaning_en || "")}</div>
       <div class="tagRow">
-        <div class="pill typePill">${escapeHtml((v.pattern_notes && v.pattern_notes[0]) ? v.pattern_notes[0].replace("verb", "").trim() : "")}</div>
+        ${patternPill}
+        ${renderTagPills(tags)}
       </div>
     `;
     btn.addEventListener("click", () => {
@@ -1855,10 +1925,20 @@ document.addEventListener("click", (e) => {
 document.getElementById("q").addEventListener("input", (e) => {
   renderList(e.target.value);
 });
+document.getElementById("filterPattern")?.addEventListener("change", () => {
+  renderList(document.getElementById("q").value || "");
+});
+document.getElementById("filterTag")?.addEventListener("change", () => {
+  renderList(document.getElementById("q").value || "");
+});
 
 document.addEventListener("DOMContentLoaded", () => {
   const q = document.getElementById("q");
+  const patternFilter = document.getElementById("filterPattern");
+  const tagFilter = document.getElementById("filterTag");
   q.value = APP_STATE.ui.search_text || "";
+  if (patternFilter) patternFilter.value = APP_STATE.ui.pattern_filter || "all";
+  if (tagFilter) tagFilter.value = APP_STATE.ui.tag_filter || "all";
   renderList(q.value || "");
   syncSidebarHeight();
   window.addEventListener("load", () => {
