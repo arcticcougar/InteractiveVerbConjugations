@@ -2478,14 +2478,6 @@ function renderRelatedLines(lines) {
       return out;
     }
 
-    // conservative fallback only for simple "X to Y" lines
-    const toMatch = t.match(/^(.*?)\s+\bto\b\s+(.+)$/i);
-    if (toMatch) {
-      const es = cleanText(toMatch[1]);
-      const en = `to ${cleanText(toMatch[2])}`;
-      if (es && !looksMostlyEnglish(es)) return [{ es, en }];
-    }
-
     return [{ raw: t }];
   };
 

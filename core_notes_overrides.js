@@ -6375,10 +6375,11 @@ window.CORE_NOTES_OVERRIDES = {
       "Regular -ir verb"
     ],
     "related": [
-      "Subí todas mis fotos a la nube. I uploaded all my photos to the cloud. - subir a to get on (a train, etc.) súbito, súbita sudden",
-      "súbitamente, subitáneamente all of a sudden, suddenly subirse a una escalera to climb a ladder",
-      "Han subido los precios. Prices have gone up.",
-      "la subida ascent, increase subir la voz - to raise one’s voice"
+      "Subí todas mis fotos a la nube. - I uploaded all my photos to the cloud.",
+      "subir a - to get on (a train, etc.); súbito, súbita - sudden",
+      "súbitamente, súbitáneamente - all of a sudden, suddenly; subirse a una escalera - to climb a ladder",
+      "Han subido los precios. - Prices have gone up.",
+      "la subida - ascent, increase; subir la voz - to raise one’s voice"
     ],
     "syn": [
       "alzar - to lift",
@@ -6535,10 +6536,10 @@ window.CORE_NOTES_OVERRIDES = {
       "Regular -ar verb"
     ],
     "related": [
-      "suspirar por - to long for el espíritu spirit",
-      "el suspiro sigh, breath",
-      "exhalar el último exasperar to exasperate - suspiro to breathe one’s last breath inspirar to inspire, to inhale",
-      "la inspiración inspiration"
+      "suspirar por - to long for; el espíritu - spirit",
+      "el suspiro - sigh, breath",
+      "exhalar el último suspiro - to breathe one’s last breath; exasperar - to exasperate",
+      "inspirar - to inspire, to inhale; la inspiración - inspiration"
     ],
     "syn": [
       "espirar - to exhale (409)"
@@ -6823,9 +6824,10 @@ window.CORE_NOTES_OVERRIDES = {
       "Regular -ar verb"
     ],
     "related": [
-      "el trabajo work trabajar en + inf. to strive + inf. - el trabajador, la trabajadora worker tener trabajo que hacer to have work to do",
-      "trabajar de manos - to do manual work trabajar a tiempo parcial to work part-time",
-      "el trabajo de media jornada part-time employment los trabajos forzados hard labor, forced labor"
+      "el trabajo - work; trabajar en + infinitive - to strive + infinitive",
+      "el trabajador, la trabajadora - worker; tener trabajo que hacer - to have work to do",
+      "trabajar de manos - to do manual work; trabajar a tiempo parcial - to work part-time",
+      "el trabajo de media jornada - part-time employment; los trabajos forzados - hard labor, forced labor"
     ],
     "syn": [
       "ganar la vida, el pan - to earn a living",
