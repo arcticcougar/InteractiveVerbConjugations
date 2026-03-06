@@ -572,5 +572,169 @@ window.CORE_NOTES_MANUAL_FIXES = {
       "dedicar - to dedicate, consecrate; dedicar algo a - to dedicate something to",
       "dedicado, dedicada - dedicated"
     ]
+  },
+  "164": {
+    "related": [
+      "defendible - defensible; el defensor público, la defensora pública - public defender",
+      "la defensa - defense; estar a la defensiva - to be on the defensive",
+      "defensivo, defensiva - defensive; en defensa propia - in self-defense",
+      "el defensor, la defensora - defender, supporter, protector"
+    ]
+  },
+  "165": {
+    "related": [
+      "dejar caer - to drop; ¡No deje Ud. de llamarme! - Don’t fail to call me.",
+      "el dejo - abandonment; dejarse - to neglect oneself",
+      "dejado, dejada - dejected; dejar atrás - to leave behind",
+      "El alumno dejó sus libros en la sala de clase. - The pupil left his books in the classroom.",
+      "¡Déjelo! - Leave it.",
+      "dejar de + infinitive - to stop, to fail to"
+    ]
+  },
+  "170": {
+    "related": [
+      "derribar a tiros - to shoot down; los derribos - rubble",
+      "derribado, derribada - demolished, humiliated; derribar al criminal - to bring the criminal down",
+      "el derribador, la derribadora - overthrower"
+    ]
+  },
+  "171": {
+    "related": [
+      "¿A qué hora te desayunas? - At what time do you have breakfast?",
+      "Me desayuno a las ocho. Tomo café y tostado. - I have breakfast at eight. I have coffee and toast.",
+      "desayunar - to have breakfast; el desayuno - breakfast",
+      "ayunar - to fast; el ayuno - fasting"
+    ]
+  },
+  "172": {
+    "related": [
+      "¡Qué semana tan agotadora! Descansemos este sábado. - What an exhausting week. Let’s rest this Saturday.",
+      "el descanso - rest, relief, break; el descansillo - landing on a staircase",
+      "el descansadero - resting place; el descanso a discreción - at ease (military)",
+      "la cansera - fatigue; cansarse de esperar - to be tired of waiting",
+      "cansar - to fatigue, tire, weary; el descanso por enfermedad - sick leave"
+    ]
+  },
+  "174": {
+    "related": [
+      "descubrirse - to be discovered, to take off one’s hat; cubrir - to cover",
+      "el descubrimiento - discovery; cubrir el costo - to cover the cost",
+      "descubridor, descubridora - discoverer; cubrir la mesa - to cover the table",
+      "a la descubierta - clearly, openly; descubrir un nuevo antibiótico - to discover a new antibiotic"
+    ]
+  },
+  "175": {
+    "related": [
+      "¿Qué desea usted? - What do you want? May I help you?",
+      "el deseo - desire; el deseador, la deseadora - desirer, wisher",
+      "deseoso, deseosa - desirous; deseablemente - desirably",
+      "tener deseo de + infinitive - to be eager to + infinitive",
+      "poco deseable - undesirable; deseable - desirable; desear hacer algo - to wish to do something"
+    ]
+  },
+  "177": {
+    "related": [
+      "Todos los sábados, deshacemos las camas y hacemos la colada. - Every Saturday, we strip the beds and do the laundry.",
+      "deshecho, deshecha - destroyed, wasted, undone; hacer la deshecha - to pretend, to feign",
+      "el deshechizo - breaking off a magic spell; deshacerse - to break up, to come undone"
+    ]
+  },
+  "179": {
+    "related": [
+      "despegar los labios - to speak; despegarse - to become distant, indifferent",
+      "despegarse - to grow displeased",
+      "el despegue - take-off (airplane)",
+      "despegadamente - without concern; el despego, el despegamiento - aversion, indifference",
+      "See also pegar."
+    ]
+  },
+  "180": {
+    "related": [
+      "Esta mañana, me desperecé y salí de la cama. - This morning, I stretched and got out of bed.",
+      "el desperezo - stretching one’s arms and legs; perezosamente - lazily",
+      "perezoso, perezosa - lazy; la pereza - laziness"
+    ]
+  },
+  "181": {
+    "related": [
+      "despertar - to awaken, to enliven; despierto, despierta - wide awake, alert",
+      "un despertador - alarm clock; María sueña despierta. - Mary daydreams.",
+      "el despertamiento - awakening, arousal; despertarse a las siete de la mañana - to wake up at seven in the morning",
+      "See also levantarse."
+    ]
+  },
+  "186": {
+    "related": [
+      "¿Ha devuelto Ud. los libros a la biblioteca? - Have you returned the books to the library?",
+      "Sí, señora, los devolví ayer. - Yes, ma’am, I returned them yesterday.",
+      "devolutivo, devolutiva - returnable; devolver - to vomit",
+      "volver - to return, to go back; la devolución - return, giving back",
+      "See also revolver and volver."
+    ]
+  },
+  "188": {
+    "related": [
+      "el director, la directora - director; dirigible - manageable",
+      "director de orquesta - orchestra conductor; el dirigible - blimp (aviation)",
+      "el dirigente, la dirigente - leader; dirigirse a - to make one’s way to, to go to",
+      "dirigir la palabra a - to address, to speak to; dirigir el baile - to run the show"
+    ]
+  },
+  "189": {
+    "related": [
+      "Discúlpeme, por favor, ¿dónde está la farmacia? - Excuse me, please, where is the pharmacy?",
+      "disculpar - to excuse, to pardon; pedir disculpas - to apologize",
+      "disculparse con - to apologize to; la culpa - fault, blame, guilt",
+      "disculparse de - to apologize for; tener la culpa - to be guilty",
+      "una disculpa - excuse, apology; culpar - to blame, to accuse"
+    ]
+  },
+  "190": {
+    "related": [
+      "Los analistas discutieron de todos los asuntos que le importaban al público. - The commentators discussed all the subjects that interested the public.",
+      "discutir sobre - to argue about; la discusión - discussion, argument",
+      "discutible - debatable, disputable; discutir el precio - to argue over the price"
+    ]
+  },
+  "191": {
+    "related": [
+      "el disfrute - enjoyment; Después de cenar, Magdalena disfrutó de un baño caliente. - After dinner, Magdalena enjoyed a warm bath.",
+      "disfrutar de - to enjoy"
+    ]
+  },
+  "192": {
+    "related": [
+      "¡Dispénseme! - Excuse me!",
+      "dispensar de + infinitive - to excuse from + present participle",
+      "la dispensación - dispensation; la dispensa - privilege, exemption",
+      "el dispensario - dispensary, clinic"
+    ]
+  },
+  "196": {
+    "related": [
+      "dolerse de - to complain about, to regret; tener dolor de cabeza - to have a headache",
+      "un dolor - ache, hurt, pain, regret; tener dolor de muelas - to have a toothache",
+      "causar dolor - to cause pain; tener dolor de oído - to have an earache",
+      "estar con dolores - to be in labor; un dolor sordo - dull nagging pain",
+      "Me duelo de haber dicho tales cosas. - I regret having said such things.",
+      "dolerse de sus pecados - to repent of one’s sins",
+      "Doler is usually conjugated in the third person with an indirect object pronoun: Me duele el pie. - My foot hurts."
+    ]
+  },
+  "197": {
+    "related": [
+      "Dormir is an extremely useful verb for beginning students.",
+      "Note the stem change in Tenses 1, 3, 6, 7, and in imperative and gerundio.",
+      "Yo duermo mal. - I don’t sleep well.",
+      "Si tomas una tisana antes de acostarte, dormirás como una piedra. - If you take herbal tea before bed, you’ll sleep like a log.",
+      "El que mucho duerme poco aprende. - Whoever sleeps a lot learns little."
+    ]
+  },
+  "198": {
+    "related": [
+      "Me ducho todas las mañanas. - I take a shower every morning.",
+      "una ducha - shower, douche; tomar una ducha - to take a shower",
+      "¡Dúchate! - Take a shower!; darse una ducha - to have a shower"
+    ]
   }
 };
