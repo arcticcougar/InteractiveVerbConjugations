@@ -436,6 +436,7 @@ function persistCustomData() {
 }
 
 hydrateCustomData();
+autoBackfillMissingCustomPatternNotes();
 autoGenerateMissingCustomAnswerKeys();
 
 function getAllVerbs() {
@@ -483,6 +484,38 @@ function createCustomVerbRecord(infinitive, sourceTag) {
     updated_at: now,
     finalized_at: null
   };
+}
+
+function getPatternNotesForDisplay(verb) {
+  const ownNotes = (verb?.pattern_notes || []).map(cleanText).filter(Boolean);
+  if (ownNotes.length) return ownNotes;
+  if (verb?._source === "custom" && verb.model_verb_ref) {
+    const model = findVerbByKey(verb.model_verb_ref);
+    const modelNotes = (model?.pattern_notes || []).map(cleanText).filter(Boolean);
+    if (modelNotes.length) return modelNotes;
+  }
+  return [];
+}
+
+function autoBackfillMissingCustomPatternNotes() {
+  let updatedCount = 0;
+  CUSTOM_DATA.forEach(verb => {
+    if (!verb || verb._source !== "custom" || verb.locked) return;
+    const ownNotes = (verb.pattern_notes || []).map(cleanText).filter(Boolean);
+    if (ownNotes.length) return;
+    if (!verb.model_verb_ref) return;
+    const model = findVerbByKey(verb.model_verb_ref);
+    const modelNotes = (model?.pattern_notes || []).map(cleanText).filter(Boolean);
+    if (!modelNotes.length) return;
+    verb.pattern_notes = deepClone(modelNotes);
+    verb.updated_at = new Date().toISOString();
+    updatedCount += 1;
+  });
+  if (updatedCount) {
+    persistCustomData();
+    scheduleSave();
+    console.info(`Backfilled pattern notes for ${updatedCount} custom verbs.`);
+  }
 }
 
 function getDisplayVerbNumber(verb) {
@@ -895,6 +928,7 @@ function renderSynAntLines(syn, ant) {
 function renderDetail(verbKey) {
   const verb = findVerbByKey(verbKey);
   if (!verb) return;
+  const patternNotesForDisplay = getPatternNotesForDisplay(verb);
 
   CURRENT_VERB_KEY = verb._key;
   APP_STATE.ui.selected_verb_key = CURRENT_VERB_KEY;
@@ -933,7 +967,7 @@ function renderDetail(verbKey) {
           <div class="seamAnchor">
             <div class="seamCenter">
               <div class="sectionLabel">Pattern notes</div>
-              <div class="mutedBlock">${escapeHtml((verb.pattern_notes || []).join("\n") || "—")}</div>
+              <div class="mutedBlock">${escapeHtml(patternNotesForDisplay.join("\n") || "—")}</div>
               <div class="stackGapMd"></div>
               <div class="sectionLabel">Related words / expressions / examples</div>
               ${renderRelatedLines((verb.extras?.related || []).slice(0, 24))}
@@ -1459,6 +1493,10 @@ function importSlangStarterSet() {
     const model = findVerbByInfinitive(item.model);
     if (model) {
       hydrated.model_verb_ref = model._key;
+      const modelNotes = (model.pattern_notes || []).map(cleanText).filter(Boolean);
+      if (modelNotes.length && !(hydrated.pattern_notes || []).length) {
+        hydrated.pattern_notes = deepClone(modelNotes);
+      }
       const generated = generateAnswerKeyFromModel(hydrated, model);
       if (generated && generated.map && Object.keys(generated.map).length) {
         hydrated.answer_key = generated.map;
