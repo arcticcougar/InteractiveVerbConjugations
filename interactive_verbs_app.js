@@ -999,6 +999,485 @@ const CORE_NOTES_OVERRIDES = {
       "usar - to use",
       "utilizar - to utilize"
     ]
+  },
+  67: {
+    related: [
+      "No te apures. Me ocuparé de todo. - Don't worry. I'll take care of everything.",
+      "apurar - to purify, to exhaust, to consume, to annoy, to tease",
+      "apurar la paciencia de uno - to wear out someone's patience",
+      "apurar todos los recursos - to exhaust every recourse; apurarse por poco - to worry over trivialities",
+      "el apuro - difficulty, trouble; estar en un apuro - to be in a fix"
+    ],
+    syn: [
+      "preocuparse - to worry, be concerned"
+    ],
+    ant: [
+      "despreocuparse - to stop worrying (372)",
+      "tranquilizarse - to calm down (339, 289)"
+    ]
+  },
+  68: {
+    pattern_notes: ["Regular -ar verb endings with spelling change: c becomes qu before e"],
+    related: [
+      "Si tu computadora se bloquea, apágala y arráncala de nuevo. - If your computer freezes up, shut it down and boot it up again.",
+      "un arrancarraíces - tool to pull out roots; la arrancadura - extraction",
+      "arrancar a - to snatch away from; el arranque - starter (engine)",
+      "arrancar de raíz - to cut up, to pull out by the root",
+      "arrancar la computadora - to turn on, boot up the computer"
+    ],
+    syn: [
+      "desarraigar - to uproot (341)",
+      "extirpar - to extirpate (332)",
+      "extraer - to extract (477)"
+    ],
+    ant: [
+      "apagar (un motor) - to shut down (an engine)"
+    ]
+  },
+  69: {
+    related: [
+      "Es muy tarde. Arreglemos la factura y salgamos. - It's very late. Let's settle the bill and leave.",
+      "arregladamente - regularly; arreglar una factura - to pay a bill",
+      "arreglarse con - to settle with, to reach an agreement; con arreglo a - according to",
+      "un reglamento - rule, regulation; un arreglo - agreement, solution",
+      "arreglarse por las buenas - to settle a matter in a friendly way",
+      "arreglado, arreglada - neat, orderly; arreglar una cuenta - to settle an account"
+    ],
+    syn: [
+      "ajustar - to adjust (259)",
+      "reparar - to repair"
+    ],
+    ant: [
+      "desarreglar - to make untidy, disarrange (69)"
+    ]
+  },
+  70: {
+    related: [
+      "Un buen competidor no arroja nunca la esponja. - A good competitor never throws in the towel.",
+      "el arrojador, la arrojadora - thrower; arrojar la esponja - to throw in the towel",
+      "arrojado, arrojada - fearless",
+      "el arrojo - fearlessness"
+    ],
+    syn: [
+      "echar - to throw, cast",
+      "lanzar - to throw",
+      "tirar - to pitch, to throw"
+    ],
+    ant: [
+      "atrapar - to catch (332)",
+      "coger - to catch"
+    ]
+  },
+  71: {
+    related: [
+      "Cuando contestes una pregunta, primero piensa y luego articula claramente. - When you answer a question, first think and then articulate clearly.",
+      "articuladamente - clearly, distinctly; el, la articulista - someone who writes articles",
+      "la articulación - articulation, pronunciation; articular claramente - to articulate clearly"
+    ],
+    syn: [
+      "pronunciar - to pronounce"
+    ],
+    ant: [
+      "desarticular - to take apart (71)"
+    ]
+  },
+  72: {
+    related: [
+      "el seguro - insurance; seguramente - surely, securely",
+      "asegurable - insurable; ¡Ya puede usted asegurarlo! - You can be sure of it!",
+      "el asegurado, la asegurada - insured person",
+      "la seguridad - security, surety; tener por seguro - to be sure, confident"
+    ],
+    syn: [
+      "afirmar - to affirm, assert (243)",
+      "asegurarse - to make sure (64)",
+      "certificar - to certify",
+      "confirmar - to confirm (243)"
+    ]
+  },
+  73: {
+    pattern_notes: ["Irregular -ir verb in Tenses 1, 6, and Imperative"],
+    related: [
+      "Afortunadamente, el buen samaritano me asió del brazo para que no me cayera. - Fortunately, the Good Samaritan grabbed my arm so that I would not fall.",
+      "asir de los cabellos - to grab by the hair; asirse - to quarrel with each other",
+      "asirse a, asirse de - to take hold of, seize, grab",
+      "asirse con - to grapple with; asir del brazo - to get hold of by the arm"
+    ],
+    syn: [
+      "agarrar - to grasp",
+      "coger - to seize, grasp (Spain: see note in coger)"
+    ],
+    ant: [
+      "desasir - to undo (73)",
+      "soltar - to let go (138)"
+    ]
+  },
+  74: {
+    related: [
+      "asistir a - to attend, to be present at; la asistencia social - social welfare",
+      "la asistencia - attendance, presence; la asistencia técnica - technical assistance, tech support",
+      "Habríamos asistido a la boda si hubiéramos estado invitados. - We would have attended the wedding if we had been invited."
+    ],
+    syn: [
+      "acudir - to attend"
+    ],
+    ant: [
+      "faltar - to miss"
+    ]
+  },
+  75: {
+    related: [
+      "asustado, asustada - frightened, scared; un susto - fright, scare",
+      "asustadizo, asustadiza - easily frightened, shy; asustarse de + infinitive - to be afraid to + infinitive",
+      "asustador, asustadora - frightening; asustarse por nada - to be frightened by the slightest thing",
+      "asustar - to frighten, to scare",
+      "Me asusto de pensarlo. - It frightens me to think about it."
+    ],
+    syn: [
+      "espantarse - to be frightened (292)"
+    ],
+    ant: [
+      "tranquilizarse - to calm down (339, 289)"
+    ]
+  },
+  76: {
+    pattern_notes: ["Regular -ar verb endings with spelling change: c becomes qu before e"],
+    related: [
+      "Cuando Francesca tiene una dificultad, ella ataca el problema valientemente. - When Francesca has trouble, she attacks the problem bravely.",
+      "el ataque - attack; el, la atacante - attacker",
+      "atacado, atacada - attacked; el atacador, la atacadora - aggressor",
+      "un ataque al corazón - a heart attack"
+    ],
+    syn: [
+      "asaltar - to assault, attack (427)"
+    ],
+    ant: [
+      "defender - to defend",
+      "proteger - to protect"
+    ]
+  },
+  77: {
+    related: [
+      "mantener - to maintain; atenerse al convenio - to abide by the agreement",
+      "atenerse a - to depend on, rely on; atenerse a las reglas - to abide by the rules"
+    ],
+    syn: [
+      "amoldarse - to adapt oneself, to conform (289)",
+      "obedecer - to obey"
+    ]
+  },
+  78: {
+    related: [
+      "la atracción - attraction; atracción sexual - sex appeal",
+      "las atracciones - entertainment; atrayentemente - attractively",
+      "atrayente - appealing, attractive; atractivo, atractiva - attractive",
+      "el parque de atracciones - amusement park",
+      "atraer las miradas - to attract attention"
+    ],
+    syn: [
+      "encantar - to enchant (Def. and Imp.)",
+      "seducir - to seduce (381)"
+    ],
+    ant: [
+      "rechazar - to repel (81)",
+      "repulsar - to repulse (2)"
+    ]
+  },
+  79: {
+    pattern_notes: ["Regular -ar verb endings with stem change: Tenses 1, 6, Imperative"],
+    related: [
+      "atravesar con - to run through, to pierce; atravesado, atravesada - cross-eyed, lying across",
+      "travesar - to cross; atravesable - traversable",
+      "atravesar la calle - to cross the street; a través de - across, through",
+      "la travesía - crossing, voyage"
+    ],
+    syn: [
+      "cruzar - to cross",
+      "pasar - to go over"
+    ]
+  },
+  80: {
+    related: [
+      "atrevido, atrevida - daring, bold; ¡Atrévete! - You just dare!",
+      "el atrevimiento - audacity, boldness; Hazlo si te atreves. - Do it if you dare.",
+      "atrevidamente - boldly, daringly; atreverse a + infinitive - to dare to + infinitive",
+      "atreverse con, atreverse contra - to be insolent to, to be offensive toward"
+    ],
+    syn: [
+      "osar - to dare, to venture"
+    ],
+    ant: [
+      "acobardarse - to turn cowardly (39, 289)"
+    ]
+  },
+  81: {
+    pattern_notes: ["Regular -ar verb endings with spelling change: z becomes c before e"],
+    related: [
+      "¿Puede usted avanzarme un poco de dinero? - Could you advance me a little money?",
+      "avanzado, avanzada - advanced; de edad avanzada - advanced in years",
+      "la avanzada - advance guard; los avances tecnológicos - technological advances",
+      "el avance - advance; el avanzo - balance sheet"
+    ],
+    syn: [
+      "adelantar - to advance",
+      "progresar - to progress (235)"
+    ],
+    ant: [
+      "retrasar - to delay, to retard"
+    ]
+  },
+  82: {
+    pattern_notes: ["Regular -ar verb endings with spelling changes: z becomes c before e; gu becomes gü before e"],
+    related: [
+      "avergonzado, avergonzada - ashamed; avergonzarse - to be ashamed",
+      "tener vergüenza - to be ashamed; la desvergüenza - shamelessness",
+      "la vergüenza - shame, embarrassment; desvergonzado, desvergonzada - shameless, unashamed",
+      "sin vergüenza - shameless"
+    ],
+    syn: [
+      "humillar - to humiliate (261)"
+    ]
+  },
+  83: {
+    pattern_notes: ["Regular -ar verb endings with spelling change: gu becomes gü before e"],
+    related: [
+      "Antes de enviar un mensaje de texto, averiguo si hay faltas de ortografía. - Before sending a text, I check if there are spelling errors.",
+      "el averiguador, la averiguadora - investigator; averiguable - investigable, verifiable",
+      "la averiguación - inquiry, investigation; averiguadamente - surely, certainly"
+    ],
+    syn: [
+      "inquirir - to inquire, investigate (33)",
+      "investigar - to investigate (421)"
+    ]
+  },
+  84: {
+    related: [
+      "la ayuda - aid, assistance, help; la ayuda financiera - financial aid",
+      "el ayuda de cámara - valet; A quien madruga, Dios le ayuda. - The early bird catches the worm.",
+      "un ayudador, una ayudadora - helper; ayudante - assistant",
+      "¡Ayúdame! - Help me!",
+      "el menú de ayuda - help menu"
+    ],
+    syn: [
+      "asistir - to assist",
+      "auxiliar - to help (106)",
+      "proteger - to protect",
+      "socorrer - to help"
+    ],
+    ant: [
+      "abandonar - to abandon (473)",
+      "impedir - to hinder, impede"
+    ]
+  },
+  85: {
+    related: [
+      "Cuando el gato va a sus devociones, bailan los ratones. - When the cat is away, the mice will play.",
+      "un bailarín, una bailarina - dancer (professional); un bailador, una bailadora - dancer",
+      "la música bailable - danceable music",
+      "un baile - dance; un bailete - ballet"
+    ],
+    syn: [
+      "danzar - to dance (81)"
+    ]
+  },
+  86: {
+    related: [
+      "la baja - reduction, fall in prices; rebajar - to reduce",
+      "la bajada - descent; bajar de - to get off",
+      "en voz baja - in a low voice; el piso bajo - ground floor",
+      "bajar, bajarse el correo electrónico - to download e-mail; bajo - down, below",
+      "¿En qué estación debo bajar? - At what station do I need to get off?"
+    ],
+    syn: [
+      "descender - to descend (354)",
+      "telecargar - to download (111)",
+      "descargar - to download (111)"
+    ],
+    ant: [
+      "levantar - to raise",
+      "subir - to go up"
+    ]
+  },
+  87: {
+    related: [
+      "Cuando vi al ladrón en mi casa, balbuceé: ¿Qué quieres aquí? - When I saw the burglar in my house, I stammered: What do you want here?",
+      "balbuciente - stammering, stuttering",
+      "el balbuceo, la balbucencia - stuttering, stammering"
+    ],
+    syn: [
+      "balbucir - to stammer (386)",
+      "tartamudear - to stammer (206)"
+    ]
+  },
+  88: {
+    related: [
+      "Me baño antes de acostarme. Me ayuda a relajarme. - I take a bath before going to bed. It helps me relax.",
+      "una bañera, una bañadera - bathtub; un baño de vapor - steam bath",
+      "un bañador, una bañadora - bather; bañar a la luz - to light up, illuminate",
+      "un baño - bath, bathing; bañar - to bathe"
+    ],
+    syn: [
+      "ducharse - to take a shower",
+      "lavarse - to wash oneself",
+      "limpiarse - to clean oneself",
+      "mojarse - to get wet"
+    ],
+    ant: [
+      "ensuciarse - to get dirty (195)"
+    ]
+  },
+  89: {
+    related: [
+      "Miguel, tráigame la escoba, barreremos la cocina antes de la fiesta. - Michael, bring me the broom, we'll sweep the kitchen before the party.",
+      "la barredora de calle - street sweeper; la barredora eléctrica, la aspiradora - vacuum cleaner",
+      "la barredura - sweeping"
+    ],
+    syn: [
+      "cepillar - to brush",
+      "limpiar - to clean"
+    ]
+  },
+  90: {
+    pattern_notes: ["Regular -ar verb endings with spelling change: z becomes c before e"],
+    related: [
+      "Un buque argentino fue bautizado Francisco en 2013 en honor al Papa Francisco. - An Argentine vessel was christened Francis in 2013 in honor of Pope Francis.",
+      "el bautisterio - baptistery; el, la Bautista - Baptist",
+      "el bautismo - baptism, christening; bautizar una calle - to name a street",
+      "bautismal - baptismal"
+    ],
+    syn: [
+      "cristianar - to baptize, to christen (249)"
+    ]
+  },
+  91: {
+    related: [
+      "una bebida - drink, beverage; embebedor, embebedora - absorbent",
+      "beber de - to drink from; beber como una esponja - to drink like a fish",
+      "beber a la salud - to drink to health",
+      "embeber - to soak in, soak up, imbibe",
+      "embeberse en - to absorb oneself in, immerse oneself in"
+    ],
+    syn: [
+      "tomar una bebida - to take a drink, to drink"
+    ]
+  },
+  92: {
+    pattern_notes: ["Irregular verb"],
+    related: [
+      "la bendición - benediction, blessing; el pan bendito - communion bread (blessed)",
+      "las bendiciones nupciales - marriage blessings",
+      "Dormí como un bendito. - I slept like a baby.",
+      "See also maldecir."
+    ],
+    syn: [
+      "consagrar - to consecrate (259)"
+    ],
+    ant: [
+      "maldecir - to curse"
+    ]
+  },
+  93: {
+    related: [
+      "Yo lo borré todo y recomencé el trabajo. - I erased everything and started the job again.",
+      "la goma de borrar - eraser; desborrar - to clean off knots from cloth",
+      "la borradura - erasure",
+      "el borrador - eraser, rough draft; emborrar - to pad, to stuff, to wad, to gulp down food",
+      "la tecla de borrado - delete key"
+    ],
+    syn: [
+      "eliminar - to eliminate (107)",
+      "obliterar - to erase, obliterate (227)",
+      "suprimir - to delete, suppress"
+    ]
+  },
+  94: {
+    pattern_notes: ["Regular -ar verb endings with spelling change: z becomes c before e"],
+    related: [
+      "¡Qué película tan aburrida! Bostezamos de principio a fin. - What a boring movie! We yawned from beginning to end.",
+      "un bostezo - yawn; bostezante - yawning, gaping"
+    ],
+    syn: [
+      "aburrirse - to be bored"
+    ]
+  },
+  95: {
+    related: [
+      "Al escuchar las buenas noticias, Alejandro botó de alegría. - Upon hearing the good news, Alexander jumped for joy.",
+      "un bote - thrust, blow, jump, leap; la botadura - launching",
+      "rebotar - to bend back, repel, bounce back, rebound",
+      "un rebote - bounce, rebound; de rebote - indirectly"
+    ],
+    syn: [
+      "lanzar - to throw, launch",
+      "tirar - to throw"
+    ]
+  },
+  96: {
+    related: [
+      "el bronce - bronze",
+      "bronceado, bronceada - bronze-colored, sunburned, tanned",
+      "broncearse - to tan, bronze oneself",
+      "el bronceador - suntan lotion",
+      "la bronceadura - bronzing",
+      "bronquíneo, bronquínea - bronze"
+    ],
+    syn: [
+      "tostarse - to tan, to turn brown",
+      "tostar - to tan, toast"
+    ],
+    ant: [
+      "palidecer - to turn pale (344)"
+    ]
+  },
+  97: {
+    pattern_notes: ["Irregular verb (Tenses 3 and 7)"],
+    related: [
+      "Me gusta la ciudad de Quito, en Ecuador; es un lugar que bulle de actividad. - I like the city of Quito, Ecuador; it's a place bustling with activity.",
+      "el bullicio - noise, bustle; bullente - bubbling",
+      "bulliciosamente - noisily; la bulla - bustle, noise, mob",
+      "la ebullición - boiling; el punto de ebullición - boiling point",
+      "un bullaje - noisy crowd"
+    ],
+    syn: [
+      "burbujear - to bubble (54)",
+      "hervir - to boil (370)"
+    ]
+  },
+  98: {
+    related: [
+      "el burlador, la burladora - practical joker, jester; burlarse de alguien - to make fun of someone",
+      "burlar a alguien - to deceive someone",
+      "de burlas - for fun; hacer burla de - to make fun of",
+      "la burlería - trick, mockery; una burla - jeer",
+      "burlesco, burlesca - burlesque"
+    ],
+    syn: [
+      "escarnecer - to ridicule (344)",
+      "reírse - to laugh"
+    ],
+    ant: [
+      "respetar - to respect (54)"
+    ]
+  },
+  99: {
+    pattern_notes: ["Regular -ar verb endings with spelling change: c becomes qu before e"],
+    related: [
+      "¿Qué busca Ud.? - What are you looking for?; la búsqueda - search",
+      "Busco mis libros. - I'm looking for my books.; rebuscar - to search meticulously",
+      "Busco a mi padre. - I'm looking for my father. Don't forget personal a before a person.",
+      "el rebuscamiento - meticulous searching",
+      "un buscador - search engine",
+      "la busca, la buscada - research, search"
+    ],
+    syn: [
+      "explorar - to explore (32)"
+    ],
+    ant: [
+      "descubrir - to discover",
+      "encontrar - to find",
+      "hallar - to find",
+      "perder - to lose"
+    ]
   }
 };
 
