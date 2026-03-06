@@ -1352,6 +1352,17 @@ function answerKeyHasModelLeak(verb, modelVerb) {
   });
 }
 
+function draftExactlyMatchesAnswerKey(verbKey, answerKeyMap) {
+  const inputs = APP_STATE.drafts?.[verbKey]?.inputs;
+  if (!inputs || !answerKeyMap) return false;
+  const keys = Object.keys(answerKeyMap);
+  if (!keys.length) return false;
+  return keys.every(cellKey => {
+    if (!Object.prototype.hasOwnProperty.call(inputs, cellKey)) return false;
+    return normalizeForMatch(inputs[cellKey] || "") === normalizeForMatch(answerKeyMap[cellKey] || "");
+  });
+}
+
 function autoGenerateMissingCustomAnswerKeys() {
   let generatedCount = 0;
   let repairedCount = 0;
@@ -1363,12 +1374,21 @@ function autoGenerateMissingCustomAnswerKeys() {
     const missingKey = !hasAnswerKey(verb);
     const leakedKey = !missingKey && verb.source_tag === "slang_seed" && answerKeyHasModelLeak(verb, model);
     if (!missingKey && !leakedKey) return;
+    const previousKey = hasAnswerKey(verb) ? deepClone(verb.answer_key) : null;
     const generated = generateAnswerKeyFromModel(verb, model);
     if (!generated || !generated.map || !Object.keys(generated.map).length) return;
+    const shouldRefreshDraft = leakedKey && previousKey && draftExactlyMatchesAnswerKey(verb._key, previousKey);
     verb.answer_key = generated.map;
     verb.key_confidence = generated.confidence;
     verb.key_needs_review = generated.confidence < 0.85;
     verb.updated_at = new Date().toISOString();
+    if (shouldRefreshDraft) {
+      APP_STATE.drafts[verb._key] = {
+        inputs: deepClone(generated.map),
+        updated_at: verb.updated_at
+      };
+      delete APP_STATE.check_results[verb._key];
+    }
     if (missingKey) generatedCount += 1;
     if (leakedKey) repairedCount += 1;
   });
