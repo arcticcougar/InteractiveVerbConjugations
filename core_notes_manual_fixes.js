@@ -736,5 +736,175 @@ window.CORE_NOTES_MANUAL_FIXES = {
       "una ducha - shower, douche; tomar una ducha - to take a shower",
       "¡Dúchate! - Take a shower!; darse una ducha - to have a shower"
     ]
+  },
+  "199": {
+    "related": [
+      "la duda - doubt; No cabe duda. - There is no doubt.",
+      "sin duda - undoubtedly, without a doubt; No lo dudo. - I don’t doubt it.",
+      "dudoso, dudosa - doubtful; dudar de algo - to doubt something",
+      "dudosamente - doubtfully, hesitantly; dudar entre los dos - to be unable to decide between the two",
+      "poner en duda - to doubt, to question"
+    ]
+  },
+  "201": {
+    "related": [
+      "un ejecutivo, una ejecutiva - executive; ejecutar un ajuste - to make an adjustment",
+      "un ejecutor de la justicia - executioner; ejecutar un contrato - to carry out a contract",
+      "ejecutor, ejecutora - executor, executant; la ejecución - execution",
+      "ejecución de un asesino condenado - execution of a condemned murderer",
+      "ejecución de un plan, de una representación teatral - execution of a plan, theatrical performance",
+      "ejecutar un programa - to run a program"
+    ]
+  },
+  "202": {
+    "related": [
+      "el ejercicio - exercise; los ejercicios escritos - written exercises, tests",
+      "hacer ejercicios - to drill, to exercise; ejercer el derecho de voto - to exercise one’s right to vote",
+      "el ejército - army; ejercitar - to drill, exercise, train",
+      "ejercitar a un estudiante en inglés - to drill a student in English",
+      "ejercer la medicina - to practice medicine"
+    ]
+  },
+  "204": {
+    "related": [
+      "una columna embebida - embedded column; embeberse en - to absorb oneself in, immerse oneself in",
+      "embebedor, embebedora - absorbent, imbibing; embeberse en un libro - to become absorbed in a book",
+      "beber - to drink; una bebida - drink, beverage",
+      "embeber algo en agua - to soak something in water"
+    ]
+  },
+  "205": {
+    "related": [
+      "empezar por + infinitive - to begin by + present participle",
+      "empezar a + infinitive - to begin + infinitive",
+      "Ricardo empieza a escribir en inglés. - Richard is beginning to write in English.",
+      "para empezar - to begin with"
+    ]
+  },
+  "208": {
+    "related": [
+      "Zacarías se encerró en una casa embrujada para ver si había fantasmas. - Zachary locked himself in a haunted house to see if there were ghosts.",
+      "encerrado, encerrada - closed, locked, shut",
+      "encerrarse - to live in seclusion; to be locked up, closeted, shut in",
+      "See also cerrar."
+    ]
+  },
+  "211": {
+    "related": [
+      "la enfermedad - illness, sickness; enfermizo, enfermiza - sickly, ailing, unhealthy",
+      "la enfermería - infirmary; enfermo interno - in-patient",
+      "enfermo de amor - lovesick; estar enfermo, enferma - to be sick",
+      "un enfermo, una enferma - patient; enfermoso, enfermosa - sickly",
+      "enfermero ambulante, enfermera ambulante - visiting nurse; un enfermero, una enfermera - nurse",
+      "enfermar - to fall sick, to make sick"
+    ]
+  },
+  "214": {
+    "related": [
+      "dar a entender - to insinuate, to hint; ¿Qué entiende Ud. por eso? - What do you mean by that?",
+      "Yo me entiendo. - I have my reasons.",
+      "según mi entender - according to my opinion; entenderse bien - to get along well with each other",
+      "el entendimiento - comprehension, understanding; desentenderse de - to have nothing to do with"
+    ]
+  },
+  "215": {
+    "related": [
+      "Entrar is an essential regular -ar verb used in many everyday expressions.",
+      "Yo estudiaba cuando mi hermana entró en mi cuarto. - I was studying when my sister entered my room.",
+      "¿Dónde está la entrada? - Where is the entrance?",
+      "En boca cerrada no entran moscas. - Flies do not enter a closed mouth."
+    ]
+  },
+  "216": {
+    "related": [
+      "entregarse - to surrender, to give in; entregar al profesor los ejercicios - to hand in the exercises to the teacher",
+      "entregarse en brazos de uno - to trust someone completely; entregar a domicilio - to deliver to a residence",
+      "entregado, entregada - delivered",
+      "la entrega - delivery, installment, handing over"
+    ]
+  },
+  "218": {
+    "related": [
+      "enviar a alguien a pasear - to send someone to take a walk; un enviado especial - special correspondent, envoy",
+      "el envío - dispatch; un enviado - envoy; enviar un mensaje de texto - to send a text message",
+      "la enviada - shipment; reenviar - to send back",
+      "reenviar - to forward; enviar por correo electrónico - to e-mail, send by e-mail",
+      "enviar un fax - to send a fax"
+    ]
+  },
+  "220": {
+    "related": [
+      "Discúlpeme. Me equivoqué de número. - Excuse me. I dialed the wrong number.",
+      "equivoquista - quibbler; estar equivocado, equivocada - to be mistaken",
+      "equivocado, equivocada - mistaken",
+      "una equivocación - error, mistake, equivocation; cometer una equivocación - to make a mistake",
+      "equivocarse de fecha - to be mistaken about the date"
+    ]
+  },
+  "221": {
+    "related": [
+      "Margarita se irguió con orgullo al recibir el premio. - Margaret swelled up with pride upon receiving the prize.",
+      "erguirse - to swell up with pride; to stand or sit up straight, to rear up",
+      "erguido, erguida - erect, proud",
+      "erguir las orejas - to prick up one’s ears",
+      "un erguimiento - straightening, raising up; erguirse de repente - to stand up suddenly"
+    ]
+  },
+  "223": {
+    "related": [
+      "No recuerdo si escogí el vestido rojo o el azul. - I don’t remember whether I chose the red dress or the blue one.",
+      "un escogimiento - choice, selection; las obras escogidas - selected works",
+      "escogedor, escogedora - chooser",
+      "escogido, escogida - chosen",
+      "See also coger."
+    ]
+  },
+  "224": {
+    "related": [
+      "Escribir is an essential -ir verb used in many everyday expressions and situations.",
+      "Pay attention to the irregular past participle.",
+      "Mi padre está escribiendo una novela. - My father is writing a novel."
+    ]
+  },
+  "227": {
+    "related": [
+      "Mientras hay vida hay esperanza. - When there is life, there is hope.",
+      "dar esperanzas - to give encouragement, hope; desesperar - to despair",
+      "la esperanza - hope; la espera - wait, waiting",
+      "No hay esperanza. - There is no hope.; la sala de espera - waiting room",
+      "Espere, por favor. - Please wait."
+    ]
+  },
+  "229": {
+    "related": [
+      "Mi tía estableció su tienda en línea en 2002. - My aunt set up her online shop in 2002.",
+      "establecer normas - to set up standards; un establecimiento comercial - commercial establishment",
+      "un establecedor, una establecedora - founder; establecerse - to set oneself up, to settle down",
+      "establemente - firmly, stably",
+      "establecer un campamento - to set up camp"
+    ]
+  },
+  "230": {
+    "related": [
+      "Estar is one of the most important verbs for beginning students.",
+      "In addition to the countless expressions with estar, there is a distinction between estar and ser, which also means to be.",
+      "Generally speaking, use ser for identity and inherent qualities; use estar for state, condition, and location."
+    ]
+  },
+  "231": {
+    "related": [
+      "la estima - esteem, respect; estimar con exceso - to overestimate",
+      "la estimabilidad - worthiness, worth; estimar en menos - to underestimate",
+      "la estimación - estimation, esteem; estimar oportuno - to deem fit"
+    ]
+  },
+  "232": {
+    "related": [
+      "Estudiar is an essential regular -ar verb used in many everyday expressions and situations.",
+      "Estudio mis lecciones de español todos los días. - I study my Spanish lessons every day.",
+      "Es necesario estudiar para aprender. - It is necessary to study in order to learn.",
+      "Estudiamos español porque es un idioma muy hermoso. - We are studying Spanish because it is a very beautiful language.",
+      "Estoy estudiando en mi cuarto y no puedo mirar la televisión. - I am studying in my room and I cannot watch television."
+    ]
   }
 };
