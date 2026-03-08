@@ -60,6 +60,7 @@
     --close-border: rgb(255 255 255 / 0%);
     --form-hover-bg: rgba(255, 255, 255, 0.05);
     --form-hover-text: #ffd700;
+    --pick-bg: rgba(255, 255, 0, 0.3);
   }
   * { box-sizing: border-box; }
   html,
@@ -69,7 +70,7 @@
   }
   body {
     padding-top: var(--header-offset);
-    overflow-x: auto;
+    overflow-x: hidden;
     font-family: "Montserrat", ui-sans-serif, system-ui, sans-serif;
     font-size: 10px;
     background: var(--bg);
@@ -120,7 +121,7 @@
   .row {
     display: grid;
     width: fit-content;
-    grid-template-columns: 290px max-content;
+    grid-template-columns: 290px max-content minmax(0, 425px);
     align-items: start;
     gap: 10px;
     padding: 2px 6px 10px;
@@ -141,6 +142,99 @@
     width: fit-content;
     justify-self: start;
   }
+  .helperCard {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+  }
+  .tenseHelper {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    min-height: 0;
+    overflow: auto;
+    padding: 8px 10px;
+  }
+  .tenseHelper::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  .tenseHelper::-webkit-scrollbar-track {
+    background: #2b2b2b;
+  }
+  .tenseHelper::-webkit-scrollbar-thumb {
+    border: 2px solid #2b2b2b;
+    border-radius: 999px;
+    background: #1f1f1f;
+  }
+  .tenseHelper::-webkit-scrollbar-thumb:hover {
+    background: #161616;
+  }
+  .helperEyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--table-header);
+  }
+  .helperTopRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .helperTitle {
+    font-size: 18px;
+    line-height: 1.15;
+    font-weight: 800;
+    color: var(--section-color);
+  }
+  .helperMeta {
+    font-size: 13px;
+    line-height: 1.2;
+    color: var(--subhead);
+  }
+  .helperPanel {
+    padding: 7px 8px;
+    border: 1px solid var(--tense-border);
+    border-radius: 12px;
+    background: var(--tense-bg);
+  }
+  .helperSectionTitle {
+    margin: 0 0 5px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--note-subhead-color);
+  }
+  .helperList {
+    margin: 0;
+    padding-left: 16px;
+    font-size: 14px;
+    line-height: 1.25;
+    color: var(--muted);
+  }
+  .helperList li + li {
+    margin-top: 5px;
+  }
+  .helperFormula {
+    font-size: 14px;
+    line-height: 1.25;
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+  .helperCue {
+    font-size: 14px;
+    line-height: 1.25;
+    color: var(--muted);
+  }
+  .helperSource {
+    font-size: 11px;
+    line-height: 1.2;
+    color: var(--table-header);
+  }
   .pad { padding: 8px; }
   .search {
     display: grid;
@@ -151,6 +245,8 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 6px;
+    position: relative;
+    z-index: 5;
   }
   .filterSelect {
     width: 100%;
@@ -166,6 +262,119 @@
   .filterSelect option {
     background: #1e1e1e;
     color: var(--text);
+  }
+  .filterDropdown {
+    position: relative;
+    min-width: 0;
+  }
+  .filterDropdownBtn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    padding: 4px 8px;
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    background: var(--input-bg);
+    color: var(--text);
+    font-size: 10.5px;
+    line-height: 1.2;
+    cursor: pointer;
+    text-align: left;
+  }
+  .filterDropdownBtn:hover {
+    background: var(--hover-bg);
+    border-color: var(--hover-border);
+  }
+  .filterDropdownBtn:focus-visible {
+    outline: 1px solid var(--selected-border);
+    outline-offset: 1px;
+  }
+  .filterDropdownBtn[aria-expanded="true"] {
+    border-color: var(--selected-border);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 5%);
+  }
+  .filterDropdownText {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .filterDropdownCaret {
+    flex: 0 0 auto;
+    font-size: 10px;
+    color: var(--subhead);
+    transition: transform 120ms ease;
+  }
+  .filterDropdownBtn[aria-expanded="true"] .filterDropdownCaret {
+    transform: rotate(180deg);
+  }
+  .filterDropdownMenu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    display: none;
+    max-height: 220px;
+    overflow: auto;
+    padding: 4px;
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    background: #1f1f1f;
+    box-shadow: 0 12px 24px rgb(0 0 0 / 38%);
+    z-index: 20;
+  }
+  .filterDropdownMenu.open {
+    display: grid;
+    gap: 3px;
+  }
+  .filterDropdownMenu::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  .filterDropdownMenu::-webkit-scrollbar-track {
+    background: #2b2b2b;
+  }
+  .filterDropdownMenu::-webkit-scrollbar-thumb {
+    border: 1px solid #2b2b2b;
+    border-radius: 999px;
+    background: #1f1f1f;
+  }
+  .filterDropdownMenu::-webkit-scrollbar-thumb:hover {
+    background: #161616;
+  }
+  .filterDropdownOption {
+    width: 100%;
+    padding: 5px 7px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: #2b2b2b;
+    color: var(--text);
+    font-size: 10.5px;
+    line-height: 1.2;
+    text-align: left;
+    cursor: pointer;
+  }
+  .filterDropdownOption:hover {
+    background: var(--hover-bg);
+    border-color: var(--hover-border);
+  }
+  .filterDropdownOption:focus-visible {
+    outline: 1px solid var(--selected-border);
+    outline-offset: 1px;
+  }
+  .filterDropdownOption.is-active {
+    background: var(--selected-bg);
+    border-color: var(--selected-border);
+    color: var(--big-color);
+  }
+  .filterSelectNative {
+    position: absolute;
+    inset: 0;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
   }
   input[type="search"] {
     width: 100%;
@@ -394,14 +603,70 @@
     gap: 10px;
     padding: 2px 6px;
     list-style: none;
-    cursor: pointer;
+    cursor: default;
   }
   .tense summary::-webkit-details-marker { display: none; }
+  .tenseHead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+  }
+  .tenseTitleBtn {
+    display: inline-block;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    color: inherit;
+    line-height: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .tenseTitleBtn:focus-visible {
+    outline: 1px solid var(--selected-border);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  .tenseCollapseBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: 1px solid var(--input-border);
+    border-radius: 999px;
+    background: var(--hover-bg);
+    color: #ffffff;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.8;
+  }
+  .tenseCollapseBtn:hover {
+    border-color: var(--selected-border);
+    background: var(--input-bg);
+    opacity: 1;
+  }
+  .tenseCollapseBtn:focus-visible {
+    outline: 1px solid var(--selected-border);
+    outline-offset: 1px;
+  }
   .tenseTitle {
     font-size: 16.5px;
     font-weight: 600;
     line-height: 1.15;
     color: var(--accent);
+  }
+  .activeTenseHighlight {
+    display: inline;
+    padding: 0 4px;
+    border-radius: 4px;
+    background: var(--pick-bg);
+    color: #00bfff;
+    box-shadow: none;
   }
   .tenseSub {
     font-size: 11px;
@@ -653,7 +918,25 @@
     line-height: 1;
   }
   .notesPanel .notesList {
+    width: 100%;
     justify-items: center;
+  }
+  .notesPanel .notesRow {
+    width: 100%;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .notesPanel .seamCenter {
+    width: calc((2 * min(var(--simpleSideW), var(--compoundSideW))) + var(--sideGap) - 10px);
+    max-width: min(
+      calc(var(--simpleSideW) + var(--sideGap) + var(--compoundSideW) - 10px),
+      calc(100vw - 36px)
+    );
+    box-sizing: border-box;
+    padding-left: 0;
+    padding-right: 0;
   }
   .seamAnchor {
     display: grid;
@@ -668,6 +951,8 @@
   }
   .tense--centerHead summary {
     display: block;
+    position: relative;
+    padding-right: 30px;
   }
   .tense--centerHead .summarySeam {
     display: grid;
@@ -679,6 +964,12 @@
     grid-column: 2;
     justify-self: center;
     width: max-content;
+  }
+  .tense--centerHead .tenseCollapseBtn {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
   }
   #detail {
     --sideGap: 8px;
@@ -781,6 +1072,12 @@
     .tense--centerHead .summarySeamInner {
       grid-column: 1;
     }
+    .notesPanel .seamCenter {
+      width: 100%;
+      max-width: 100%;
+      padding-left: 0;
+      padding-right: 0;
+    }
     .imperativeLabel,
     .imperativeForm {
       text-align: left;
@@ -788,6 +1085,9 @@
   }
   @media (max-width: 900px) {
     .row { grid-template-columns: 1fr; }
+    .tenseHelper {
+      max-height: 320px;
+    }
   }
   @media (hover: none) {
     .headerHotspot { display: none; }
@@ -811,20 +1111,34 @@
     <div class="search">
       <input id="q" type="search" placeholder="Search verbs (e.g., abrir, hug, burn)..." />
       <div class="filterRow">
-        <select id="filterPattern" class="filterSelect" aria-label="Pattern filter">
-          <option value="all">Pattern: all</option>
-          <option value="regular-ar">-ar</option>
-          <option value="regular-er">-er</option>
-          <option value="regular-ir">-ir</option>
-          <option value="irregular">Irregular</option>
-        </select>
-        <select id="filterTag" class="filterSelect" aria-label="Tag filter">
-          <option value="all">Tag: all</option>
-          <option value="core501">501 source</option>
-          <option value="custom">Custom</option>
-          <option value="slang">Slang</option>
-          <option value="explicit">Explicit</option>
-        </select>
+        <div class="filterDropdown" data-select-id="filterPattern">
+          <button type="button" class="filterDropdownBtn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="filterDropdownText">Pattern: all</span>
+            <span class="filterDropdownCaret">&#9662;</span>
+          </button>
+          <div class="filterDropdownMenu" role="listbox" aria-label="Pattern filter options"></div>
+          <select id="filterPattern" class="filterSelectNative" aria-label="Pattern filter">
+            <option value="all">Pattern: all</option>
+            <option value="regular-ar">-ar</option>
+            <option value="regular-er">-er</option>
+            <option value="regular-ir">-ir</option>
+            <option value="irregular">Irregular</option>
+          </select>
+        </div>
+        <div class="filterDropdown" data-select-id="filterTag">
+          <button type="button" class="filterDropdownBtn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="filterDropdownText">Tag: all</span>
+            <span class="filterDropdownCaret">&#9662;</span>
+          </button>
+          <div class="filterDropdownMenu" role="listbox" aria-label="Tag filter options"></div>
+          <select id="filterTag" class="filterSelectNative" aria-label="Tag filter">
+            <option value="all">Tag: all</option>
+            <option value="core501">501 source</option>
+            <option value="custom">Custom</option>
+            <option value="slang">Slang</option>
+            <option value="explicit">Explicit</option>
+          </select>
+        </div>
       </div>
     </div>
     <div id="list" class="list"></div>
@@ -833,6 +1147,10 @@
   <main class="card" aria-label="Verb details">
     <div id="detail"></div>
   </main>
+
+  <aside class="card helperCard" aria-label="Tense helper">
+    <div id="tenseHelper" class="tenseHelper"></div>
+  </aside>
 </div>
 
 <div id="popover" class="popover" role="dialog" aria-modal="false" aria-hidden="true">

@@ -71,6 +71,409 @@ const TENSE_HINTS = {
   "14": "Pluperfect subjunctive: <strong>had + past participle</strong> in subjunctive contexts."
 };
 
+const TENSE_HELP_CONTENT = {
+  gerund: {
+    title: "Gerund (gerundio)",
+    usage: [
+      "Use with estar for actions in progress (estoy hablando).",
+      "Also used for manner/by + ing ideas (trabajando, se gana dinero)."
+    ],
+    build: "-ar -> -ando; -er / -ir -> -iendo. Common irregulars include yendo, diciendo, durmiendo.",
+    cue: "In Spanish, this form is not used as a noun subject the way English gerunds are.",
+    source: "501 Spanish Verbs, Sec. 1.1 to 1.4"
+  },
+  participle: {
+    title: "Past participle",
+    usage: [
+      "Build all compound tenses with haber + past participle.",
+      "Also used as an adjective in many contexts."
+    ],
+    build: "-ar -> -ado; -er / -ir -> -ido, with many common irregular participles.",
+    cue: "Match this form exactly in compound tenses (especially accents).",
+    source: "501 Spanish Verbs, Sec. 1.5 to 1.7"
+  },
+  imperative: {
+    title: "Imperative (command mood)",
+    usage: [
+      "Used to give commands/instructions.",
+      "No first-person singular command form in standard usage (yo is --).",
+      "Negative familiar commands use subjunctive forms."
+    ],
+    build: "Affirmative tu often uses the 3rd-person present form; usted/ustedes/nosotros commands are subjunctive based.",
+    cue: "Focus on positive/negative pairs, especially tu and vosotros.",
+    source: "501 Spanish Verbs, Sec. 6.3"
+  },
+  "1": {
+    title: "1 - Presente de indicativo",
+    usage: [
+      "Current actions or states.",
+      "Habitual actions and general truths.",
+      "Can express near future and vivid present narration."
+    ],
+    build: "Stem + present endings (-ar: o/as/a/amos/ais/an; -er/-ir: o/es/e/emos|imos/eis|is/en).",
+    cue: "Core everyday tense: now, habits, facts.",
+    source: "501 Spanish Verbs, Sec. 6.1 (Tense 1)"
+  },
+  "2": {
+    title: "2 - Imperfecto de indicativo",
+    usage: [
+      "Ongoing/background past actions.",
+      "Habitual past actions (used to).",
+      "Past descriptions and past conditions."
+    ],
+    build: "-ar: aba/abas/aba/abamos/abais/aban; -er/-ir: ia/ias/ia/iamos/iais/ian.",
+    cue: "Unfinished or descriptive past context.",
+    source: "501 Spanish Verbs, Sec. 6.1 (Tense 2)"
+  },
+  "3": {
+    title: "3 - Preterito",
+    usage: [
+      "Completed actions at a definite point in the past.",
+      "Event sequencing in narration."
+    ],
+    build: "-ar: e/aste/o/amos/asteis/aron; -er/-ir: i/iste/io/imos/isteis/ieron.",
+    cue: "Finished past events.",
+    source: "501 Spanish Verbs, Sec. 6.1 (Tense 3)"
+  },
+  "4": {
+    title: "4 - Futuro",
+    usage: [
+      "Future actions/states.",
+      "Also used for present conjecture/probability."
+    ],
+    build: "Add endings to full infinitive: e/as/a/emos/eis/an.",
+    cue: "Future timeline or probability right now.",
+    source: "501 Spanish Verbs, Sec. 6.1 (Tense 4)"
+  },
+  "5": {
+    title: "5 - Potencial simple (conditional)",
+    usage: [
+      "Would + verb in hypothetical conditions.",
+      "Courtesy/polite requests (me gustaria...).",
+      "Reported speech from a past frame."
+    ],
+    build: "Add to infinitive: ia/ias/ia/iamos/iais/ian.",
+    cue: "Would happen if something else were possible.",
+    source: "501 Spanish Verbs, Sec. 6.1 (Tense 5)"
+  },
+  "6": {
+    title: "6 - Presente de subjuntivo",
+    usage: [
+      "After triggers of wish, doubt, emotion, request, purpose, etc.",
+      "Command forms for usted/ustedes and negative familiar commands.",
+      "Also used for nosotros command forms."
+    ],
+    build: "From yo present stem: -ar verbs take e-series; -er/-ir verbs take a-series endings.",
+    cue: "Triggered mood, not a standalone time tense.",
+    source: "501 Spanish Verbs, Sec. 6.1 (Tense 6)"
+  },
+  "7": {
+    title: "7 - Imperfecto de subjuntivo",
+    usage: [
+      "Same subjunctive triggers as tense 6, but in past/hypothetical frames.",
+      "Common after verbs in imperfect, preterite, conditional, pluperfect."
+    ],
+    build: "From 3rd-person plural preterite minus -ron + ra-series or se-series endings.",
+    cue: "Past-subjunctive environment.",
+    source: "501 Spanish Verbs, Sec. 6.1 (Tense 7)"
+  },
+  "8": {
+    title: "8 - Perfecto de indicativo",
+    usage: [
+      "Past action with present relevance.",
+      "No specific finished time reference."
+    ],
+    build: "Present indicative of haber + past participle.",
+    cue: "have + participle meaning.",
+    source: "501 Spanish Verbs, Sec. 6.2 (Tense 8)"
+  },
+  "9": {
+    title: "9 - Pluscuamperfecto de indicativo",
+    usage: [
+      "Action that happened before another past action.",
+      "Often paired with a preterite event."
+    ],
+    build: "Imperfect indicative of haber + past participle.",
+    cue: "had + participle (earlier past).",
+    source: "501 Spanish Verbs, Sec. 6.2 (Tense 9)"
+  },
+  "10": {
+    title: "10 - Preterito anterior",
+    usage: [
+      "Literary/formal past-before-past relation.",
+      "Rare in spoken modern Spanish."
+    ],
+    build: "Preterite of haber + past participle.",
+    cue: "Usually replaced by tense 9 in speech.",
+    source: "501 Spanish Verbs, Sec. 6.2 (Tense 10)"
+  },
+  "11": {
+    title: "11 - Futuro perfecto",
+    usage: [
+      "Action completed before another future action.",
+      "Can express conjecture about a recent past event."
+    ],
+    build: "Future of haber + past participle.",
+    cue: "will have + participle.",
+    source: "501 Spanish Verbs, Sec. 6.2 (Tense 11)"
+  },
+  "12": {
+    title: "12 - Potencial compuesto",
+    usage: [
+      "Would have + participle in counterfactual past conditions.",
+      "Can mark conjecture/probability in a past frame."
+    ],
+    build: "Conditional of haber + past participle.",
+    cue: "would have + participle.",
+    source: "501 Spanish Verbs, Sec. 6.2 (Tense 12)"
+  },
+  "13": {
+    title: "13 - Perfecto de subjuntivo",
+    usage: [
+      "Subjunctive context where the dependent action is already completed.",
+      "Common after present/future main-clause triggers."
+    ],
+    build: "Present subjunctive of haber + past participle.",
+    cue: "Subjunctive trigger + completed action.",
+    source: "501 Spanish Verbs, Sec. 6.2 (Tense 13)"
+  },
+  "14": {
+    title: "14 - Pluscuamperfecto de subjuntivo",
+    usage: [
+      "Past-subjunctive context with completed prior action.",
+      "Often tied to past main clauses and hypotheticals."
+    ],
+    build: "Imperfect subjunctive of haber + past participle.",
+    cue: "Subjunctive equivalent of had + participle.",
+    source: "501 Spanish Verbs, Sec. 6.2 (Tense 14)"
+  }
+};
+
+const TENSE_HELP_DETAILS = {
+  gerund: {
+    english_map: [
+      "Closest to English present participle in progressive forms: am/is/are + -ing.",
+      "Not used as a noun-subject the same way English gerunds are."
+    ],
+    examples: [
+      "Estoy estudiando. - I am studying.",
+      "Trabajando, se aprende. - By working, one learns."
+    ],
+    pitfalls: [
+      "Use infinitive for subject ideas: Leer es util (not Leyendo es util)."
+    ]
+  },
+  participle: {
+    english_map: [
+      "Matches English past participle in have + participle structures.",
+      "Also behaves like an adjective in Spanish."
+    ],
+    examples: [
+      "He hablado. - I have spoken.",
+      "La puerta esta abierta. - The door is open."
+    ],
+    pitfalls: [
+      "Do not mix gerund and participle: use he comido, not he comiendo."
+    ]
+  },
+  imperative: {
+    english_map: [
+      "Maps to direct commands in English: Speak!, Do not speak!, Let us speak!",
+      "Spanish command system is person-specific (tu, usted, nosotros, vosotros, ustedes)."
+    ],
+    examples: [
+      "Habla. - Speak. / No hables. - Do not speak.",
+      "Hable usted. - Please speak. / Hablemos. - Let us speak."
+    ],
+    pitfalls: [
+      "There is no standard yo command form.",
+      "Negative familiar commands use subjunctive forms."
+    ]
+  },
+  "1": {
+    english_map: [
+      "Usually English simple present: I speak, you work.",
+      "Can also map to do-support emphasis: I do speak."
+    ],
+    examples: [
+      "Hablo espanol. - I speak Spanish.",
+      "Llego manana. - I arrive tomorrow."
+    ],
+    pitfalls: [
+      "Do not force progressive for all present actions."
+    ]
+  },
+  "2": {
+    english_map: [
+      "Maps to was/were + -ing and used to/would for past habits.",
+      "Often used for background, description, and ongoing past context."
+    ],
+    examples: [
+      "Estudiaba cuando llamaste. - I was studying when you called.",
+      "De nino, jugaba aqui. - As a child, I used to play here."
+    ],
+    pitfalls: [
+      "Use preterite (3) for single completed events."
+    ]
+  },
+  "3": {
+    english_map: [
+      "Maps to English simple past: I spoke, we arrived.",
+      "Also covers did + verb emphasis."
+    ],
+    examples: [
+      "Ayer termine. - Yesterday I finished.",
+      "Salio, tomo el bus y llego tarde. - He left, took the bus, and arrived late."
+    ],
+    pitfalls: [
+      "Do not use for background descriptions; use imperfect (2)."
+    ]
+  },
+  "4": {
+    english_map: [
+      "Maps to will + verb for future statements.",
+      "Also used for present conjecture: must/probably."
+    ],
+    examples: [
+      "Mañana viajare. - Tomorrow I will travel.",
+      "Sera tarde. - It is probably late."
+    ],
+    pitfalls: [
+      "After si (if), Spanish does not use future in the if-clause."
+    ]
+  },
+  "5": {
+    english_map: [
+      "Maps to would + verb for hypothetical outcomes.",
+      "Also used for polite requests: I would like..."
+    ],
+    examples: [
+      "Iria si tuviera tiempo. - I would go if I had time.",
+      "Me gustaria ayudar. - I would like to help."
+    ],
+    pitfalls: [
+      "If-clause usually takes imperfect subjunctive, not conditional."
+    ]
+  },
+  "6": {
+    english_map: [
+      "Often English uses normal present forms where Spanish requires subjunctive.",
+      "Common after expressions of desire, doubt, emotion, and purpose."
+    ],
+    examples: [
+      "Quiero que vengas. - I want you to come.",
+      "No creo que sea facil. - I do not think it is easy."
+    ],
+    pitfalls: [
+      "Watch trigger words; this mood is trigger-driven, not time-driven."
+    ]
+  },
+  "7": {
+    english_map: [
+      "Often maps to English past-subjunctive style in hypotheticals (if I were...).",
+      "Also appears in reported/desire clauses with a past main verb."
+    ],
+    examples: [
+      "Si tuviera dinero, viajaria. - If I had money, I would travel.",
+      "Insisti en que viniera. - I insisted that he come."
+    ],
+    pitfalls: [
+      "Choose between -ra and -se forms consistently in study practice."
+    ]
+  },
+  "8": {
+    english_map: [
+      "Maps to have/has + participle for recent or relevant past actions.",
+      "Typically not tied to a closed finished time marker."
+    ],
+    examples: [
+      "He terminado. - I have finished.",
+      "Hemos visto esa pelicula. - We have seen that movie."
+    ],
+    pitfalls: [
+      "In many contexts with clear finished time, preterite may be preferred."
+    ]
+  },
+  "9": {
+    english_map: [
+      "Maps directly to had + participle.",
+      "Expresses an event that happened before another past event."
+    ],
+    examples: [
+      "Cuando llegue, ya habia salido. - When I arrived, he had already left.",
+      "No lo habia visto antes. - I had not seen it before."
+    ],
+    pitfalls: [
+      "Keep event order clear: earlier action in 9, later action often in 3."
+    ]
+  },
+  "10": {
+    english_map: [
+      "Also maps to had + participle, but literary/formal register.",
+      "Mostly appears after time connectors in formal writing."
+    ],
+    examples: [
+      "Apenas hubo llegado, salio. - As soon as he had arrived, he left.",
+      "Despues que hubo hablado, se fue. - After he had spoken, he went away."
+    ],
+    pitfalls: [
+      "In normal speech, tense 9 usually replaces tense 10."
+    ]
+  },
+  "11": {
+    english_map: [
+      "Maps to will have + participle for completed future-before-future actions.",
+      "Can also express present speculation about past completion."
+    ],
+    examples: [
+      "Para manana habre terminado. - By tomorrow I will have finished.",
+      "Habra llegado ya. - He must have arrived already."
+    ],
+    pitfalls: [
+      "Do not confuse with simple future when completion is not implied."
+    ]
+  },
+  "12": {
+    english_map: [
+      "Maps to would have + participle for unreal past results.",
+      "Also used for probability/conjecture in past contexts."
+    ],
+    examples: [
+      "Habria ido si hubiera podido. - I would have gone if I had been able.",
+      "Habria sido tarde cuando salieron. - It must have been late when they left."
+    ],
+    pitfalls: [
+      "Pair with pluperfect subjunctive in the if-clause for counterfactual past."
+    ]
+  },
+  "13": {
+    english_map: [
+      "Usually appears as have + participle inside a subjunctive-trigger clause.",
+      "English may not visibly mark subjunctive even when Spanish does."
+    ],
+    examples: [
+      "Dudo que haya llegado. - I doubt that he has arrived.",
+      "Me alegra que hayas venido. - I am glad that you have come."
+    ],
+    pitfalls: [
+      "Use when completion is already achieved within a present/future trigger frame."
+    ]
+  },
+  "14": {
+    english_map: [
+      "Subjunctive counterpart of had + participle in past-trigger environments.",
+      "Common in unreal past conditions and reported emotional judgments."
+    ],
+    examples: [
+      "Si hubiera sabido, habria ido. - If I had known, I would have gone.",
+      "No creia que hubieran llegado. - I did not think they had arrived."
+    ],
+    pitfalls: [
+      "Keep clause logic consistent: past trigger + completed prior action."
+    ]
+  }
+};
+
 const CORE_NOTES_OVERRIDES_BASE = {
   1: {
     related: [
@@ -1496,6 +1899,34 @@ let CUSTOM_DATA = [];
 let GLOBAL_FORM_FLOORS = null;
 let GLOBAL_HEADER_FLOORS = null;
 let CLICK_TIMER = null;
+let ACTIVE_HELP_CONTEXT = null;
+let COACH_SHOW_HELP = true;
+let FILTER_DROPDOWNS = [];
+const GROUP_CYCLE_ORDER = ["regular-ar", "regular-er", "regular-ir", "irregular", "other"];
+let MAIN_CARD_RESIZE_OBSERVER = null;
+let SIDEBAR_SYNC_RAF = 0;
+
+const SPANISH_CHAR_SHORTCUTS_BY_LETTER = {
+  a: { char: "á", base: "a" },
+  e: { char: "é", base: "e" },
+  i: { char: "í", base: "i" },
+  o: { char: "ó", base: "o" },
+  u: { char: "ú", base: "u" },
+  n: { char: "ñ", base: "n" }
+};
+
+const SPANISH_CHAR_SHORTCUTS_NUMPAD = {
+  Numpad1: { char: "á", base: "a" },
+  Numpad2: { char: "é", base: "e" },
+  Numpad3: { char: "í", base: "i" },
+  Numpad4: { char: "ó", base: "o" },
+  Numpad5: { char: "ú", base: "u" },
+  Numpad6: { char: "ñ", base: "n" },
+  Numpad7: { char: "ü", base: "u" },
+  Numpad8: { char: "¿", base: "" },
+  Numpad9: { char: "¡", base: "" },
+  Numpad0: { char: "Ñ", base: "n" }
+};
 
 function normalize(s) {
   return (s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
@@ -1524,6 +1955,277 @@ function extractTenseNumber(key) {
 
 function getOrderedTenseKeys(obj) {
   return Object.keys(obj || {}).sort((a, b) => extractTenseNumber(a) - extractTenseNumber(b));
+}
+
+function getGuideKeyFromContext(context) {
+  if (!context) return null;
+  if (context.guideKey) return context.guideKey;
+  const tenseRaw = cleanText(context.tenseRaw || "");
+  if (!tenseRaw) return null;
+  if (/^gerund$/i.test(tenseRaw)) return "gerund";
+  if (/^participle$/i.test(tenseRaw)) return "participle";
+  if (/^imperative$/i.test(tenseRaw)) return "imperative";
+  const num = String(extractTenseNumber(tenseRaw));
+  return num !== "0" ? num : null;
+}
+
+function buildHelperContextFromButton(btn) {
+  if (!btn) return null;
+  const tenseRaw = cleanText(btn.dataset.tense || "");
+  const guideKey = getGuideKeyFromContext({ tenseRaw });
+  if (!guideKey) return null;
+  return {
+    guideKey,
+    tenseRaw,
+    person: btn.dataset.person || "",
+    number: btn.dataset.number || "",
+    cellKey: btn.dataset.cellKey || "",
+    verbKey: btn.dataset.verbKey || CURRENT_VERB_KEY || ""
+  };
+}
+
+function getDefaultHelperContextForVerb(verb) {
+  if (!verb) return null;
+  const firstSimpleKey = getOrderedTenseKeys(verb.simple || {})[0];
+  if (firstSimpleKey) {
+    const num = extractTenseNumber(firstSimpleKey);
+    return {
+      guideKey: String(num || 1),
+      tenseRaw: firstSimpleKey,
+      person: "1",
+      number: "sg",
+      cellKey: tenseCellKey(num || 1, "sg", 0),
+      verbKey: verb._key
+    };
+  }
+  return {
+    guideKey: "gerund",
+    tenseRaw: "Gerund",
+    person: "",
+    number: "",
+    cellKey: gerundCellKey(),
+    verbKey: verb._key
+  };
+}
+
+function getActivePronounLabel(context) {
+  if (!context) return "";
+  const guideKey = getGuideKeyFromContext(context);
+  if (guideKey === "imperative") {
+    const slot = (context.cellKey || "").split(":")[1];
+    const meta = IMPERATIVE_META[slot];
+    return meta ? meta.label : "imperative";
+  }
+  if (guideKey === "gerund") return "gerund";
+  if (guideKey === "participle") return "participle";
+  const pKey = `${context.person || ""}-${context.number || ""}`;
+  return PRONOUNS[pKey] || "";
+}
+
+function renderTenseHelper(context) {
+  const host = document.getElementById("tenseHelper");
+  if (!host) return;
+
+  const topRow = `
+    <div class="helperTopRow">
+      <div class="helperEyebrow">Tense Coach</div>
+      <button type="button" class="close" id="coachToggleHelp">${COACH_SHOW_HELP ? "Back" : "Help"}</button>
+    </div>
+  `;
+  const bindHelpToggle = () => {
+    const btn = document.getElementById("coachToggleHelp");
+    if (!btn) return;
+    btn.addEventListener("click", () => {
+      COACH_SHOW_HELP = !COACH_SHOW_HELP;
+      renderTenseHelper(ACTIVE_HELP_CONTEXT || context || null);
+    });
+  };
+
+  if (COACH_SHOW_HELP) {
+    host.innerHTML = `
+      ${topRow}
+      <div class="helperTitle">How to use this trainer</div>
+      <div class="helperMeta">Edit in place, check quickly, and move through forms in a natural conjugation order.</div>
+      <div class="helperCue">Select a conjugation cell to resume tense guidance.</div>
+      <div class="helperPanel">
+        <div class="helperSectionTitle">Core workflow</div>
+        <ul class="helperList">
+          <li>Single-click any form cell to start typing.</li>
+          <li>Press Enter to save that cell.</li>
+          <li>Press Tab / Shift+Tab to save and jump to next/previous cell.</li>
+          <li>Double-click opens the detailed popover for that cell.</li>
+        </ul>
+      </div>
+      <div class="helperPanel">
+        <div class="helperSectionTitle">Color feedback</div>
+        <ul class="helperList">
+          <li>White: correct answer.</li>
+          <li>Orange: very close (usually accent/character mismatch).</li>
+          <li>Purple: incorrect answer.</li>
+          <li>Red-orange while typing: edited draft not yet checked.</li>
+        </ul>
+      </div>
+      <div class="helperPanel">
+        <div class="helperSectionTitle">Keyboard shortcuts</div>
+        <ul class="helperList">
+          <li>Ctrl+Shift+K - check current verb.</li>
+          <li>Ctrl+Shift+V - reveal answers for current verb.</li>
+          <li>Ctrl+Shift+X - clear current verb to blanks.</li>
+          <li>Ctrl+Shift+S - save a draft snapshot.</li>
+          <li>Ctrl+Shift+B - export your local practice state.</li>
+          <li>Ctrl+Shift+R - import a saved practice state.</li>
+          <li>Ctrl+Shift+L - import slang starter set.</li>
+          <li>Ctrl+Shift+M - set model verb for current custom verb.</li>
+          <li>Ctrl+Shift+G - generate model-based key for custom verb.</li>
+          <li>Ctrl+Shift+F - finalize current custom verb (locks draft).</li>
+          <li>Ctrl+Shift+J - next verb in current group.</li>
+          <li>Ctrl+Shift+H - next verb group.</li>
+        </ul>
+      </div>
+      <div class="helperPanel">
+        <div class="helperSectionTitle">Spanish character shortcuts (while editing)</div>
+        <ul class="helperList">
+          <li>Ctrl+Shift+A / E / I / O / U -> á / é / í / ó / ú.</li>
+          <li>Ctrl+Shift+N -> ñ.</li>
+          <li>Ctrl+Shift+Numpad1..0 -> á, é, í, ó, ú, ñ, ü, ¿, ¡, Ñ.</li>
+        </ul>
+      </div>
+      <div class="helperPanel">
+        <div class="helperSectionTitle">Useful tip</div>
+        <div class="helperCue">Use search + filters in the left panel to isolate a verb pattern, then fill one full tense block before moving on.</div>
+      </div>
+    `;
+    bindHelpToggle();
+    return;
+  }
+
+  const guideKey = getGuideKeyFromContext(context);
+  const guide = guideKey ? TENSE_HELP_CONTENT[guideKey] : null;
+  if (!guide) {
+    host.innerHTML = `
+      ${topRow}
+      <div class="helperTitle">Select a conjugation cell</div>
+      <div class="helperMeta">The panel updates with usage and pattern notes for your active tense.</div>
+      <div class="helperPanel">
+        <div class="helperSectionTitle">Quick use</div>
+        <ul class="helperList">
+          <li>Single-click any form cell to enter edit mode.</li>
+          <li>Tab moves to the next cell in conjugation order.</li>
+          <li>Ctrl+Shift+K checks your current verb.</li>
+        </ul>
+      </div>
+      <div class="helperSource">Source references: 501 Spanish Verbs, Sec. 1 and Sec. 6.</div>
+    `;
+    bindHelpToggle();
+    return;
+  }
+
+  const pronoun = getActivePronounLabel(context);
+  const activeMeta = pronoun ? `Active cell: ${pronoun}` : "Active focus";
+  const details = TENSE_HELP_DETAILS[guideKey] || {};
+  const englishMap = details.english_map || [];
+  const examples = details.examples || [];
+  const pitfalls = details.pitfalls || [];
+  host.innerHTML = `
+    ${topRow}
+    <div class="helperTitle">${escapeHtml(guide.title)}</div>
+    <div class="helperMeta">${escapeHtml(activeMeta)}</div>
+    <div class="helperPanel">
+      <div class="helperSectionTitle">When to use</div>
+      <ul class="helperList">
+        ${(guide.usage || []).map(item => `<li>${escapeHtml(item)}</li>`).join("")}
+      </ul>
+    </div>
+    <div class="helperPanel">
+      <div class="helperSectionTitle">Build pattern</div>
+      <div class="helperFormula">${escapeHtml(guide.build || "")}</div>
+    </div>
+    ${englishMap.length ? `
+    <div class="helperPanel">
+      <div class="helperSectionTitle">English mapping</div>
+      <ul class="helperList">
+        ${englishMap.map(item => `<li>${escapeHtml(item)}</li>`).join("")}
+      </ul>
+    </div>
+    ` : ""}
+    ${examples.length ? `
+    <div class="helperPanel">
+      <div class="helperSectionTitle">Example links</div>
+      <ul class="helperList">
+        ${examples.map(item => `<li>${escapeHtml(item)}</li>`).join("")}
+      </ul>
+    </div>
+    ` : ""}
+    ${pitfalls.length ? `
+    <div class="helperPanel">
+      <div class="helperSectionTitle">Common pitfalls</div>
+      <ul class="helperList">
+        ${pitfalls.map(item => `<li>${escapeHtml(item)}</li>`).join("")}
+      </ul>
+    </div>
+    ` : ""}
+    <div class="helperPanel">
+      <div class="helperSectionTitle">Quick cue</div>
+      <div class="helperCue">${escapeHtml(guide.cue || "")}</div>
+    </div>
+    <div class="helperSource">${escapeHtml(guide.source || "")}</div>
+  `;
+  bindHelpToggle();
+}
+
+function applyActiveTenseHighlight(context) {
+  const root = document.getElementById("detail");
+  if (!root) return;
+  root.querySelectorAll(".activeTenseHighlight").forEach(el => el.classList.remove("activeTenseHighlight"));
+  const guideKey = getGuideKeyFromContext(context);
+  if (!guideKey) return;
+
+  let target = null;
+  if (guideKey === "gerund") {
+    target = root.querySelector(".chipLabel--gerund");
+  } else if (guideKey === "participle") {
+    target = root.querySelector(".chipLabel--participle");
+  } else if (guideKey === "imperative") {
+    target = root.querySelector(".imperativePanel .tenseTitle");
+  } else {
+    target = root.querySelector(`details.tnum-${guideKey} .tenseTitle`);
+  }
+  if (target) target.classList.add("activeTenseHighlight");
+}
+
+function setActiveHelperContext(context, forceRender) {
+  if (!context) return;
+  const normalized = {
+    guideKey: getGuideKeyFromContext(context) || "",
+    tenseRaw: cleanText(context.tenseRaw || ""),
+    person: context.person || "",
+    number: context.number || "",
+    cellKey: context.cellKey || "",
+    verbKey: context.verbKey || CURRENT_VERB_KEY || ""
+  };
+  const same =
+    !forceRender &&
+    ACTIVE_HELP_CONTEXT &&
+    ACTIVE_HELP_CONTEXT.guideKey === normalized.guideKey &&
+    ACTIVE_HELP_CONTEXT.tenseRaw === normalized.tenseRaw &&
+    ACTIVE_HELP_CONTEXT.person === normalized.person &&
+    ACTIVE_HELP_CONTEXT.number === normalized.number &&
+    ACTIVE_HELP_CONTEXT.cellKey === normalized.cellKey &&
+    ACTIVE_HELP_CONTEXT.verbKey === normalized.verbKey;
+  if (same) return;
+  ACTIVE_HELP_CONTEXT = normalized;
+  renderTenseHelper(ACTIVE_HELP_CONTEXT);
+  applyActiveTenseHighlight(ACTIVE_HELP_CONTEXT);
+}
+
+function clearActiveTenseSelection() {
+  ACTIVE_HELP_CONTEXT = null;
+  COACH_SHOW_HELP = true;
+  const root = document.getElementById("detail");
+  if (root) {
+    root.querySelectorAll(".activeTenseHighlight").forEach(el => el.classList.remove("activeTenseHighlight"));
+  }
+  renderTenseHelper(null);
 }
 
 function tenseCellKey(tenseNum, number, rowIndex) {
@@ -2183,6 +2885,69 @@ function inferPatternCategory(verb) {
   return "other";
 }
 
+function getSearchAndTagFilteredVerbs() {
+  const q = normalize(APP_STATE.ui.search_text || "");
+  const tagFilter = document.getElementById("filterTag")?.value || APP_STATE.ui.tag_filter || "all";
+  return getAllVerbs().filter(v => {
+    if (!normalize(`${v.infinitive} ${v.meaning_en}`).includes(q)) return false;
+    const tags = getVerbTags(v);
+    if (tagFilter !== "all" && !tags.includes(tagFilter)) return false;
+    return true;
+  });
+}
+
+function selectVerbByKey(key) {
+  const verb = findVerbByKey(key);
+  if (!verb) return;
+  CURRENT_VERB_KEY = verb._key;
+  APP_STATE.ui.selected_verb_key = CURRENT_VERB_KEY;
+  scheduleSave();
+  const q = document.getElementById("q");
+  renderList((q && q.value) || APP_STATE.ui.search_text || "");
+}
+
+function goToNextVerbInCurrentGroup() {
+  const currentVerb = findVerbByKey(CURRENT_VERB_KEY);
+  if (!currentVerb) return;
+  const currentGroup = inferPatternCategory(currentVerb);
+  const candidates = getSearchAndTagFilteredVerbs().filter(v => inferPatternCategory(v) === currentGroup);
+  if (!candidates.length) return;
+  const idx = candidates.findIndex(v => v._key === currentVerb._key);
+  const nextVerb = candidates[(idx >= 0 ? idx + 1 : 0) % candidates.length];
+  if (!nextVerb) return;
+  COACH_SHOW_HELP = false;
+  selectVerbByKey(nextVerb._key);
+}
+
+function goToNextVerbGroup() {
+  const currentVerb = findVerbByKey(CURRENT_VERB_KEY);
+  if (!currentVerb) return;
+  const currentGroup = inferPatternCategory(currentVerb);
+  const currentIdx = Math.max(0, GROUP_CYCLE_ORDER.indexOf(currentGroup));
+  const pool = getSearchAndTagFilteredVerbs();
+  if (!pool.length) return;
+
+  let targetGroup = null;
+  for (let step = 1; step <= GROUP_CYCLE_ORDER.length; step += 1) {
+    const group = GROUP_CYCLE_ORDER[(currentIdx + step) % GROUP_CYCLE_ORDER.length];
+    if (pool.some(v => inferPatternCategory(v) === group)) {
+      targetGroup = group;
+      break;
+    }
+  }
+  if (!targetGroup) return;
+
+  const patternFilter = document.getElementById("filterPattern");
+  if (patternFilter) patternFilter.value = targetGroup;
+  APP_STATE.ui.pattern_filter = targetGroup;
+  refreshFilterDropdowns();
+  scheduleSave();
+
+  const q = document.getElementById("q");
+  COACH_SHOW_HELP = false;
+  renderList((q && q.value) || APP_STATE.ui.search_text || "");
+}
+
 function isExplicitVerb(verb) {
   const text = normalize(`${verb.infinitive || ""} ${verb.meaning_en || ""}`);
   const markers = [
@@ -2367,7 +3132,23 @@ function renderTenseBlocks(obj, verb) {
     }).join("");
     return `
       <details class="tense tnum-${num}" data-tnum="${num}" open>
-        <summary><div><div class="tenseTitle">${num} · ${escapeHtml(label)}</div></div></summary>
+        <summary>
+          <div class="tenseHead">
+            <button
+              type="button"
+              class="tenseTitleBtn"
+              data-guide-key="${num}"
+              data-tense-raw="${escapeHtml(k)}"
+              data-verb-key="${verb._key}"
+            ><div class="tenseTitle">${num} · ${escapeHtml(label)}</div></button>
+            <button
+              type="button"
+              class="tenseCollapseBtn"
+              aria-label="Collapse section"
+              aria-expanded="true"
+            >&minus;</button>
+          </div>
+        </summary>
         <table>
           <colgroup><col class="p1"><col class="f1"><col class="p2"><col class="f2"></colgroup>
           ${idx === 0 ? `<thead><tr><th class="thgroup" colspan="2">SINGULAR</th><th class="thgroup" colspan="2">PLURAL</th></tr></thead>` : ``}
@@ -2556,8 +3337,8 @@ function renderDetail(verbKey) {
         <div class="meaning">${escapeHtml(meaningInfo.meaning || "")}</div>
       </div>
       <div class="chips">
-        <div class="chip"><strong>Gerund</strong> <button class="formBtn chipFormBtn chipGerundBtn ${gerundStatusClass} ${gerundDraftClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Gerund" data-person="" data-number="" data-cell-key="${gerundKey}">${renderCellText(gerundDisplay)}</button></div>
-        <div class="chip"><strong>Part.</strong> <button class="formBtn chipFormBtn chipPartBtn ${participleStatusClass} ${participleDraftClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Participle" data-person="" data-number="" data-cell-key="${participleKey}">${renderCellText(participleDisplay)}</button></div>
+        <div class="chip"><strong class="chipLabel--gerund">Gerund</strong> <button class="formBtn chipFormBtn chipGerundBtn ${gerundStatusClass} ${gerundDraftClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Gerund" data-person="" data-number="" data-cell-key="${gerundKey}">${renderCellText(gerundDisplay)}</button></div>
+        <div class="chip"><strong class="chipLabel--participle">Part.</strong> <button class="formBtn chipFormBtn chipPartBtn ${participleStatusClass} ${participleDraftClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Participle" data-person="" data-number="" data-cell-key="${participleKey}">${renderCellText(participleDisplay)}</button></div>
       </div>
     </div>
     <div class="panel">
@@ -2572,11 +3353,47 @@ function renderDetail(verbKey) {
         </section>
       </div>
       <details class="tense tense--spaced imperativePanel tense--centerHead" open>
-        <summary><div class="summarySeam"><div class="summarySeamInner"><div class="tenseTitle">Imperative</div></div></div></summary>
+        <summary>
+          <div class="summarySeam">
+            <div class="summarySeamInner">
+              <button
+                type="button"
+                class="tenseTitleBtn"
+                data-guide-key="imperative"
+                data-tense-raw="Imperative"
+                data-verb-key="${verb._key}"
+              ><div class="tenseTitle">Imperative</div></button>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="tenseCollapseBtn"
+            aria-label="Collapse section"
+            aria-expanded="true"
+          >&minus;</button>
+        </summary>
         <div class="pad"><div class="seamAnchor">${renderImperative(verb)}</div></div>
       </details>
       <details class="tense notesPanel tense--centerHead" open>
-        <summary><div class="summarySeam"><div class="summarySeamInner"><div class="tenseTitle">Notes</div></div></div></summary>
+        <summary>
+          <div class="summarySeam">
+            <div class="summarySeamInner">
+              <button
+                type="button"
+                class="tenseTitleBtn"
+                data-guide-key=""
+                data-tense-raw=""
+                data-verb-key="${verb._key}"
+              ><div class="tenseTitle">Notes</div></button>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="tenseCollapseBtn"
+            aria-label="Collapse section"
+            aria-expanded="true"
+          >&minus;</button>
+        </summary>
         <div class="pad">
           <div class="seamAnchor">
             <div class="seamCenter">
@@ -2595,17 +3412,38 @@ function renderDetail(verbKey) {
     </div>
   `;
 
+  const contextToRender = (
+    ACTIVE_HELP_CONTEXT &&
+    ACTIVE_HELP_CONTEXT.verbKey === verb._key
+  ) ? ACTIVE_HELP_CONTEXT : null;
+  if (contextToRender) {
+    setActiveHelperContext(contextToRender, true);
+  } else if (COACH_SHOW_HELP) {
+    clearActiveTenseSelection();
+  } else {
+    setActiveHelperContext(getDefaultHelperContextForVerb(verb), true);
+  }
   bindCellInteractions(detail, verb);
+  bindSectionHeaderInteractions(detail, verb);
   setTimeout(() => runAutoWidths(detail), 0);
   setTimeout(() => runAutoWidths(detail), 120);
-  setTimeout(syncSidebarHeight, 0);
-  setTimeout(syncSidebarHeight, 120);
+  queueSidebarSync();
+  setTimeout(queueSidebarSync, 0);
+  setTimeout(queueSidebarSync, 120);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(queueSidebarSync).catch(queueSidebarSync);
+  }
 }
 
 function bindCellInteractions(detailRoot, verb) {
   detailRoot.querySelectorAll(".formBtn[data-cell-key]").forEach(btn => {
     btn.addEventListener("click", () => {
       if (ACTIVE_EDITOR) return;
+      const ctx = buildHelperContextFromButton(btn);
+      if (ctx) {
+        COACH_SHOW_HELP = false;
+        setActiveHelperContext(ctx, false);
+      }
       clearTimeout(CLICK_TIMER);
       CLICK_TIMER = setTimeout(() => {
         hidePopover();
@@ -2617,6 +3455,11 @@ function bindCellInteractions(detailRoot, verb) {
       e.stopPropagation();
       clearTimeout(CLICK_TIMER);
       if (ACTIVE_EDITOR) commitInlineEdit(0);
+      const ctx = buildHelperContextFromButton(btn);
+      if (ctx) {
+        COACH_SHOW_HELP = false;
+        setActiveHelperContext(ctx, true);
+      }
       showPopover(btn, {
         verb: btn.dataset.verb,
         tense: btn.dataset.tense,
@@ -2624,6 +3467,58 @@ function bindCellInteractions(detailRoot, verb) {
         number: btn.dataset.number,
         form: btn.textContent.trim()
       });
+    });
+  });
+}
+
+function buildHelperContextFromTitleButton(btn, verb) {
+  if (!btn) return null;
+  const tenseRaw = cleanText(btn.dataset.tenseRaw || "");
+  const guideKey = cleanText(btn.dataset.guideKey || "") || getGuideKeyFromContext({ tenseRaw });
+  if (!guideKey) return null;
+  return {
+    guideKey,
+    tenseRaw: tenseRaw || guideKey,
+    person: "",
+    number: "",
+    cellKey: "",
+    verbKey: btn.dataset.verbKey || verb?._key || CURRENT_VERB_KEY || ""
+  };
+}
+
+function bindSectionHeaderInteractions(detailRoot, verb) {
+  if (!detailRoot) return;
+
+  detailRoot.querySelectorAll("details.tense > summary").forEach(summary => {
+    summary.addEventListener("click", (e) => {
+      e.preventDefault();
+    });
+    summary.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") e.preventDefault();
+    });
+  });
+
+  detailRoot.querySelectorAll(".tenseCollapseBtn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const section = btn.closest("details.tense");
+      if (!section) return;
+      section.open = !section.open;
+      btn.setAttribute("aria-expanded", section.open ? "true" : "false");
+      btn.setAttribute("aria-label", section.open ? "Collapse section" : "Expand section");
+      syncSidebarHeight();
+    });
+  });
+
+  detailRoot.querySelectorAll(".tenseTitleBtn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const ctx = buildHelperContextFromTitleButton(btn, verb);
+      if (!ctx) return;
+      COACH_SHOW_HELP = false;
+      setActiveHelperContext(ctx, true);
     });
   });
 }
@@ -2640,12 +3535,74 @@ function getEditableCellsForNavigation(verbKey) {
   return getVerbNavigationCellOrder(verb).map(cellKey => byKey.get(cellKey)).filter(Boolean);
 }
 
+function toUpperAccentChar(ch) {
+  const map = {
+    "á": "Á",
+    "é": "É",
+    "í": "Í",
+    "ó": "Ó",
+    "ú": "Ú",
+    "ñ": "Ñ",
+    "ü": "Ü"
+  };
+  return map[ch] || ch;
+}
+
+function applySpanishCharShortcut(input, shortcut) {
+  if (!input || !shortcut) return;
+  const base = (shortcut.base || "").toLowerCase();
+  let accent = shortcut.char || "";
+  const value = input.value || "";
+  const start = typeof input.selectionStart === "number" ? input.selectionStart : value.length;
+  const end = typeof input.selectionEnd === "number" ? input.selectionEnd : start;
+  const selected = value.slice(start, end);
+
+  if (selected && selected.length === 1 && base && selected.toLowerCase() === base) {
+    if (selected === selected.toUpperCase()) accent = toUpperAccentChar(accent);
+    input.value = value.slice(0, start) + accent + value.slice(end);
+    input.setSelectionRange(start + accent.length, start + accent.length);
+    return;
+  }
+
+  if (!selected && base && start > 0) {
+    const prev = value[start - 1];
+    if (prev && prev.toLowerCase() === base) {
+      if (prev === prev.toUpperCase()) accent = toUpperAccentChar(accent);
+      input.value = value.slice(0, start - 1) + accent + value.slice(start);
+      input.setSelectionRange(start, start);
+      return;
+    }
+  }
+
+  input.value = value.slice(0, start) + accent + value.slice(end);
+  const caret = start + accent.length;
+  input.setSelectionRange(caret, caret);
+}
+
+function handleSpanishCharShortcut(e, input) {
+  if (!e.ctrlKey || !e.shiftKey || !input) return false;
+  const letterKey = (e.key || "").toLowerCase();
+  const letterShortcut = SPANISH_CHAR_SHORTCUTS_BY_LETTER[letterKey] || null;
+  const numpadShortcut = SPANISH_CHAR_SHORTCUTS_NUMPAD[e.code || ""] || null;
+  const shortcut = letterShortcut || numpadShortcut;
+  if (!shortcut) return false;
+  e.preventDefault();
+  e.stopPropagation();
+  applySpanishCharShortcut(input, shortcut);
+  return true;
+}
+
 function startInlineEdit(btn, verb) {
   if (!btn || !verb) return;
   if (ACTIVE_EDITOR) commitInlineEdit(0);
   if (verb._source === "custom" && verb.locked) {
     alert("This custom verb is finalized (pending review) and locked for editing.");
     return;
+  }
+  const ctx = buildHelperContextFromButton(btn);
+  if (ctx) {
+    COACH_SHOW_HELP = false;
+    setActiveHelperContext(ctx, true);
   }
 
   const rect = btn.getBoundingClientRect();
@@ -2673,6 +3630,7 @@ function startInlineEdit(btn, verb) {
 
   ACTIVE_EDITOR = { input, btn, verbKey: verb._key, cellKey: btn.dataset.cellKey };
   input.addEventListener("keydown", (e) => {
+    if (handleSpanishCharShortcut(e, input)) return;
     if (e.key === "Enter") {
       e.preventDefault();
       commitInlineEdit(0);
@@ -3321,23 +4279,181 @@ function runAutoWidths(detailEl) {
   else setTimeout(doIt, 0);
 }
 
+function queueSidebarSync() {
+  if (SIDEBAR_SYNC_RAF) cancelAnimationFrame(SIDEBAR_SYNC_RAF);
+  SIDEBAR_SYNC_RAF = requestAnimationFrame(() => {
+    SIDEBAR_SYNC_RAF = 0;
+    syncSidebarHeight();
+  });
+}
+
+function ensureMainCardLayoutObserver() {
+  if (MAIN_CARD_RESIZE_OBSERVER || typeof ResizeObserver === "undefined") return;
+  const mainCard = document.querySelector("main.card");
+  if (!mainCard) return;
+  MAIN_CARD_RESIZE_OBSERVER = new ResizeObserver(() => {
+    queueSidebarSync();
+  });
+  MAIN_CARD_RESIZE_OBSERVER.observe(mainCard);
+}
+
 function syncSidebarHeight() {
   const listCard = document.querySelector(".listCard");
   const mainCard = document.querySelector("main.card");
+  const helperCard = document.querySelector(".helperCard");
+  const row = document.querySelector(".row");
   const search = listCard?.querySelector(".search");
   const list = document.getElementById("list");
   if (!listCard || !mainCard || !search || !list) return;
   if (window.matchMedia("(max-width: 900px)").matches) {
     listCard.style.height = "";
+    listCard.style.maxHeight = "";
     list.style.height = "";
     list.style.maxHeight = "";
+    if (helperCard) {
+      helperCard.style.height = "";
+      helperCard.style.width = "";
+    }
     return;
   }
-  const targetHeight = Math.ceil(mainCard.getBoundingClientRect().height);
-  const listHeight = Math.max(120, targetHeight - Math.ceil(search.getBoundingClientRect().height));
+
+  // First, settle helper width to the remaining horizontal space.
+  if (helperCard) {
+    const rowGap = row ? (parseFloat(window.getComputedStyle(row).columnGap || "10") || 10) : 10;
+    const rowRect = row ? row.getBoundingClientRect() : null;
+    const available = Math.max(0, document.documentElement.clientWidth - (rowRect ? rowRect.left : 0) - 12);
+    const used = Math.ceil(listCard.getBoundingClientRect().width) + Math.ceil(mainCard.getBoundingClientRect().width) + (rowGap * 2);
+    const helperWidth = Math.max(0, Math.min(425, available - used));
+    helperCard.style.width = `${Math.floor(helperWidth)}px`;
+  }
+
+  // Then lock sidebar and helper heights to the final rendered main-card height.
+  const targetHeight = Math.ceil(mainCard.getBoundingClientRect().height || mainCard.offsetHeight || 0);
+  if (!targetHeight) return;
+  const searchHeight = Math.ceil(search.getBoundingClientRect().height || search.offsetHeight || 0);
+  const listHeight = Math.max(120, targetHeight - searchHeight);
+
   listCard.style.height = `${targetHeight}px`;
+  listCard.style.maxHeight = `${targetHeight}px`;
   list.style.height = `${listHeight}px`;
   list.style.maxHeight = `${listHeight}px`;
+  if (helperCard) helperCard.style.height = `${targetHeight}px`;
+}
+
+function closeFilterDropdowns(exceptRoot = null) {
+  FILTER_DROPDOWNS.forEach(ctx => {
+    if (exceptRoot && ctx.root === exceptRoot) return;
+    ctx.menu.classList.remove("open");
+    ctx.button.setAttribute("aria-expanded", "false");
+  });
+}
+
+function updateFilterDropdownUI(ctx) {
+  if (!ctx || !ctx.select) return;
+  const selected = Array.from(ctx.select.options).find(opt => opt.value === ctx.select.value) || ctx.select.options[0];
+  ctx.label.textContent = selected ? (selected.textContent || "") : "";
+  ctx.menu.querySelectorAll(".filterDropdownOption").forEach(btn => {
+    const isActive = btn.dataset.value === ctx.select.value;
+    btn.classList.toggle("is-active", isActive);
+    btn.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+}
+
+function setupFilterDropdown(root) {
+  const selectId = root.dataset.selectId;
+  const select = selectId ? document.getElementById(selectId) : root.querySelector("select");
+  const button = root.querySelector(".filterDropdownBtn");
+  const label = root.querySelector(".filterDropdownText");
+  const menu = root.querySelector(".filterDropdownMenu");
+  if (!select || !button || !label || !menu) return null;
+
+  menu.innerHTML = "";
+  Array.from(select.options).forEach(opt => {
+    const optionBtn = document.createElement("button");
+    optionBtn.type = "button";
+    optionBtn.className = "filterDropdownOption";
+    optionBtn.dataset.value = opt.value;
+    optionBtn.setAttribute("role", "option");
+    optionBtn.textContent = opt.textContent || "";
+    optionBtn.addEventListener("click", () => {
+      select.value = opt.value;
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+      closeFilterDropdowns();
+      button.focus();
+    });
+    menu.appendChild(optionBtn);
+  });
+
+  const ctx = { root, select, button, label, menu };
+
+  button.addEventListener("click", (e) => {
+    e.preventDefault();
+    const isOpen = menu.classList.contains("open");
+    if (isOpen) {
+      closeFilterDropdowns();
+      return;
+    }
+    closeFilterDropdowns(root);
+    menu.classList.add("open");
+    button.setAttribute("aria-expanded", "true");
+  });
+
+  button.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeFilterDropdowns();
+      return;
+    }
+    if (!["Enter", " ", "ArrowDown"].includes(e.key)) return;
+    e.preventDefault();
+    if (!menu.classList.contains("open")) {
+      closeFilterDropdowns(root);
+      menu.classList.add("open");
+      button.setAttribute("aria-expanded", "true");
+    }
+    const active = menu.querySelector(".filterDropdownOption.is-active");
+    const first = menu.querySelector(".filterDropdownOption");
+    (active || first)?.focus();
+  });
+
+  menu.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      closeFilterDropdowns();
+      button.focus();
+      return;
+    }
+    if (e.key === "Tab") {
+      closeFilterDropdowns();
+      return;
+    }
+    if (!["ArrowDown", "ArrowUp"].includes(e.key)) return;
+    e.preventDefault();
+    const options = Array.from(menu.querySelectorAll(".filterDropdownOption"));
+    if (!options.length) return;
+    const idx = options.indexOf(document.activeElement);
+    if (idx < 0) {
+      options[0].focus();
+      return;
+    }
+    const nextIdx = e.key === "ArrowDown"
+      ? (idx + 1) % options.length
+      : (idx - 1 + options.length) % options.length;
+    options[nextIdx].focus();
+  });
+
+  select.addEventListener("change", () => updateFilterDropdownUI(ctx));
+  updateFilterDropdownUI(ctx);
+  return ctx;
+}
+
+function initFilterDropdowns() {
+  FILTER_DROPDOWNS = Array.from(document.querySelectorAll(".filterDropdown"))
+    .map(setupFilterDropdown)
+    .filter(Boolean);
+}
+
+function refreshFilterDropdowns() {
+  FILTER_DROPDOWNS.forEach(updateFilterDropdownUI);
 }
 
 const pop = document.getElementById("popover");
@@ -3386,10 +4502,41 @@ function hidePopover() {
   pop.setAttribute("aria-hidden", "true");
 }
 
+function isTypingContext(target) {
+  if (!target || typeof target.closest !== "function") return false;
+  if (target.closest(".popover")) return true;
+  if (target.closest(".filterDropdown")) return true;
+  if (target.closest("input, textarea, select, button, a[href], [tabindex]:not([tabindex='-1'])")) return true;
+  if (target.closest("[contenteditable=''], [contenteditable='true']")) return true;
+  return false;
+}
+
+function focusFirstEntryFieldFromKeyboard() {
+  const verb = findVerbByKey(CURRENT_VERB_KEY);
+  if (!verb) return false;
+  const cells = getEditableCellsForNavigation(verb._key);
+  if (!cells.length) return false;
+  const first = cells.find(el => el.dataset.cellKey === gerundCellKey()) || cells[0];
+  if (!first) return false;
+  startInlineEdit(first, verb);
+  return true;
+}
+
+function shouldClearSelectionFromClick(target) {
+  if (!target || typeof target.closest !== "function") return false;
+  const detail = document.getElementById("detail");
+  if (!detail || !detail.contains(target)) return false;
+
+  if (target.closest(".formBtn, .tenseTitleBtn, .tenseCollapseBtn, .close, .chipFormBtn")) return false;
+  if (target.closest("button, input, select, textarea, a, [contenteditable=''], [contenteditable='true']")) return false;
+  if (target.closest(".popover, .filterDropdown")) return false;
+  return true;
+}
+
 function handleShortcut(e) {
   if (!e.ctrlKey || !e.shiftKey) return;
   const key = e.key.toLowerCase();
-  if (!["k", "v", "x", "s", "e", "i", "l", "m", "g", "f"].includes(key)) return;
+  if (!["k", "v", "x", "s", "b", "r", "l", "m", "g", "f", "j", "h"].includes(key)) return;
   e.preventDefault();
   if (ACTIVE_EDITOR) commitInlineEdit(0);
 
@@ -3397,22 +4544,46 @@ function handleShortcut(e) {
   if (key === "v") revealAnswersForCurrentVerb();
   if (key === "x") clearCurrentVerbToBlanks();
   if (key === "s") saveDraftSnapshot();
-  if (key === "e") exportStateBackup();
-  if (key === "i") importStateBackup();
+  if (key === "b") exportStateBackup();
+  if (key === "r") importStateBackup();
   if (key === "l") importSlangStarterSet();
   if (key === "m") setModelForCurrentCustomVerb();
   if (key === "g") generateModelKeyForCurrentCustomVerb();
   if (key === "f") finalizeCurrentCustomVerb();
+  if (key === "j") goToNextVerbInCurrentGroup();
+  if (key === "h") goToNextVerbGroup();
 }
 
 popClose.addEventListener("click", hidePopover);
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && pop.style.display !== "none") hidePopover();
+  if (
+    (e.key === "Tab" || e.code === "Tab" || e.keyCode === 9) &&
+    !e.ctrlKey &&
+    !e.altKey &&
+    !e.metaKey &&
+    !e.shiftKey &&
+    !ACTIVE_EDITOR &&
+    !ACTIVE_HELP_CONTEXT &&
+    !isTypingContext(e.target)
+  ) {
+    e.preventDefault();
+    e.stopPropagation();
+    focusFirstEntryFieldFromKeyboard();
+    return;
+  }
   handleShortcut(e);
 });
 
 document.addEventListener("click", (e) => {
+  if (shouldClearSelectionFromClick(e.target)) {
+    clearActiveTenseSelection();
+  }
+
+  const insideFilter = e.target && typeof e.target.closest === "function" && e.target.closest(".filterDropdown");
+  if (!insideFilter) closeFilterDropdowns();
+
   if (pop.style.display === "none") return;
   if (pop.contains(e.target)) return;
   if (e.target.classList && e.target.classList.contains("formBtn")) return;
@@ -3433,20 +4604,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const q = document.getElementById("q");
   const patternFilter = document.getElementById("filterPattern");
   const tagFilter = document.getElementById("filterTag");
+  renderTenseHelper(null);
   q.value = APP_STATE.ui.search_text || "";
   if (patternFilter) patternFilter.value = APP_STATE.ui.pattern_filter || "all";
   if (tagFilter) tagFilter.value = APP_STATE.ui.tag_filter || "all";
+  initFilterDropdowns();
+  refreshFilterDropdowns();
   renderList(q.value || "");
-  syncSidebarHeight();
+  ensureMainCardLayoutObserver();
+  queueSidebarSync();
   window.addEventListener("load", () => {
     const detail = document.getElementById("detail");
     if (detail) runAutoWidths(detail);
-    syncSidebarHeight();
+    ensureMainCardLayoutObserver();
+    queueSidebarSync();
   }, { once: true });
 });
 
 window.addEventListener("resize", () => {
   const detail = document.getElementById("detail");
   if (detail) runAutoWidths(detail);
-  syncSidebarHeight();
+  queueSidebarSync();
 });
