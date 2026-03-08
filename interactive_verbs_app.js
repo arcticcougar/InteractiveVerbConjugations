@@ -474,6 +474,75 @@ const TENSE_HELP_DETAILS = {
   }
 };
 
+TENSE_HELP_CONTENT["1"].build = "Stem + present endings (-ar: o/as/a/amos/\u00e1is/an; -er/-ir: o/es/e/emos|imos/\u00e9is|\u00eds/en).";
+TENSE_HELP_CONTENT["2"].build = "-ar: aba/abas/aba/\u00e1bamos/abais/aban; -er/-ir: \u00eda/\u00edas/\u00eda/\u00edamos/\u00edais/\u00edan.";
+TENSE_HELP_CONTENT["3"].title = "3 - Pret\u00e9rito";
+TENSE_HELP_CONTENT["3"].build = "-ar: \u00e9/aste/\u00f3/amos/asteis/aron; -er/-ir: \u00ed/iste/i\u00f3/imos/isteis/ieron.";
+TENSE_HELP_CONTENT["4"].build = "Add endings to full infinitive: \u00e9/\u00e1s/\u00e1/emos/\u00e9is/\u00e1n.";
+TENSE_HELP_CONTENT["5"].usage[1] = "Courtesy/polite requests (me gustar\u00eda...).";
+TENSE_HELP_CONTENT["5"].build = "Add to infinitive: \u00eda/\u00edas/\u00eda/\u00edamos/\u00edais/\u00edan.";
+TENSE_HELP_CONTENT["10"].title = "10 - Pret\u00e9rito anterior";
+
+TENSE_HELP_DETAILS.gerund.pitfalls = [
+  "Use infinitive for subject ideas: Leer es \u00fatil (not Leyendo es \u00fatil)."
+];
+TENSE_HELP_DETAILS.participle.examples = [
+  "He hablado. - I have spoken.",
+  "La puerta est\u00e1 abierta. - The door is open."
+];
+TENSE_HELP_DETAILS["1"].examples = [
+  "Hablo espa\u00f1ol. - I speak Spanish.",
+  "Llego ma\u00f1ana. - I am arriving tomorrow."
+];
+TENSE_HELP_DETAILS["2"].examples = [
+  "Estudiaba cuando llamaste. - I was studying when you called.",
+  "De ni\u00f1o, jugaba aqu\u00ed. - As a child, I used to play here."
+];
+TENSE_HELP_DETAILS["3"].examples = [
+  "Ayer termin\u00e9. - Yesterday I finished.",
+  "Sali\u00f3, tom\u00f3 el bus y lleg\u00f3 tarde. - He left, took the bus, and arrived late."
+];
+TENSE_HELP_DETAILS["4"].examples = [
+  "Ma\u00f1ana viajar\u00e9. - Tomorrow I will travel.",
+  "Ser\u00e1 tarde. - It is probably late."
+];
+TENSE_HELP_DETAILS["5"].examples = [
+  "Ir\u00eda si tuviera tiempo. - I would go if I had time.",
+  "Me gustar\u00eda ayudar. - I would like to help."
+];
+TENSE_HELP_DETAILS["6"].examples = [
+  "Quiero que vengas. - I want you to come.",
+  "No creo que sea f\u00e1cil. - I do not think it is easy."
+];
+TENSE_HELP_DETAILS["7"].examples = [
+  "Si tuviera dinero, viajar\u00eda. - If I had money, I would travel.",
+  "Insist\u00ed en que viniera. - I insisted that he come."
+];
+TENSE_HELP_DETAILS["8"].examples = [
+  "He terminado. - I have finished.",
+  "Hemos visto esa pel\u00edcula. - We have seen that movie."
+];
+TENSE_HELP_DETAILS["9"].examples = [
+  "Cuando llegu\u00e9, ya hab\u00eda salido. - When I arrived, he had already left.",
+  "No lo hab\u00eda visto antes. - I had not seen it before."
+];
+TENSE_HELP_DETAILS["10"].examples = [
+  "Apenas hubo llegado, sali\u00f3. - As soon as he had arrived, he left.",
+  "Despu\u00e9s que hubo hablado, se fue. - After he had spoken, he went away."
+];
+TENSE_HELP_DETAILS["11"].examples = [
+  "Para ma\u00f1ana habr\u00e9 terminado. - By tomorrow I will have finished.",
+  "Habr\u00e1 llegado ya. - He must have arrived already."
+];
+TENSE_HELP_DETAILS["12"].examples = [
+  "Habr\u00eda ido si hubiera podido. - I would have gone if I had been able.",
+  "Habr\u00eda sido tarde cuando salieron. - It must have been late when they left."
+];
+TENSE_HELP_DETAILS["14"].examples = [
+  "Si hubiera sabido, habr\u00eda ido. - If I had known, I would have gone.",
+  "No cre\u00eda que hubieran llegado. - I did not think they had arrived."
+];
+
 const CORE_NOTES_OVERRIDES_BASE = {
   1: {
     related: [
@@ -1927,6 +1996,28 @@ const SPANISH_CHAR_SHORTCUTS_NUMPAD = {
   Numpad9: { char: "¡", base: "" },
   Numpad0: { char: "Ñ", base: "n" }
 };
+
+PRONOUNS["2-sg"] = "t\u00fa";
+PRONOUNS["3-sg"] = "\u00e9l";
+IMPERATIVE_META.tu.label = "t\u00fa";
+
+SPANISH_CHAR_SHORTCUTS_BY_LETTER.a.char = "\u00e1";
+SPANISH_CHAR_SHORTCUTS_BY_LETTER.e.char = "\u00e9";
+SPANISH_CHAR_SHORTCUTS_BY_LETTER.i.char = "\u00ed";
+SPANISH_CHAR_SHORTCUTS_BY_LETTER.o.char = "\u00f3";
+SPANISH_CHAR_SHORTCUTS_BY_LETTER.u.char = "\u00fa";
+SPANISH_CHAR_SHORTCUTS_BY_LETTER.n.char = "\u00f1";
+
+SPANISH_CHAR_SHORTCUTS_NUMPAD.Numpad1.char = "\u00e1";
+SPANISH_CHAR_SHORTCUTS_NUMPAD.Numpad2.char = "\u00e9";
+SPANISH_CHAR_SHORTCUTS_NUMPAD.Numpad3.char = "\u00ed";
+SPANISH_CHAR_SHORTCUTS_NUMPAD.Numpad4.char = "\u00f3";
+SPANISH_CHAR_SHORTCUTS_NUMPAD.Numpad5.char = "\u00fa";
+SPANISH_CHAR_SHORTCUTS_NUMPAD.Numpad6.char = "\u00f1";
+SPANISH_CHAR_SHORTCUTS_NUMPAD.Numpad7.char = "\u00fc";
+SPANISH_CHAR_SHORTCUTS_NUMPAD.Numpad8.char = "\u00bf";
+SPANISH_CHAR_SHORTCUTS_NUMPAD.Numpad9.char = "\u00a1";
+SPANISH_CHAR_SHORTCUTS_NUMPAD.Numpad0.char = "\u00d1";
 
 function normalize(s) {
   return (s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
