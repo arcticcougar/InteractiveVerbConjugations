@@ -3,6 +3,34 @@
 const STATE_KEY = "ivc_state_v1";
 const BACKUP_VERSION = 1;
 const BASE_DATA = window.VERB_DATA || [];
+const TENSE_SELECTION_ALL_KEYS = [
+  "gerund", "participle",
+  "1", "2", "3", "4", "5", "6", "7",
+  "8", "9", "10", "11", "12", "13", "14",
+  "imperative"
+];
+const DEFAULT_BEGINNER_TENSE_KEYS = [
+  "gerund", "participle", "1", "2", "3", "4", "5", "imperative"
+];
+const TENSE_SELECTION_LABELS = {
+  gerund: "Gerund",
+  participle: "Past participle",
+  "1": "1 Present indicative",
+  "2": "2 Imperfect indicative",
+  "3": "3 Preterite",
+  "4": "4 Future",
+  "5": "5 Conditional",
+  "6": "6 Present subjunctive",
+  "7": "7 Imperfect subjunctive",
+  "8": "8 Present perfect",
+  "9": "9 Pluperfect indicative",
+  "10": "10 Preterite anterior",
+  "11": "11 Future perfect",
+  "12": "12 Conditional perfect",
+  "13": "13 Perfect subjunctive",
+  "14": "14 Pluperfect subjunctive",
+  imperative: "Imperative"
+};
 const DEFAULT_STATE = {
   version: 1,
   custom_verbs: [],
@@ -14,7 +42,8 @@ const DEFAULT_STATE = {
     selected_verb_key: null,
     search_text: "",
     pattern_filter: "all",
-    tag_filter: "all"
+    tag_filter: "all",
+    enabled_tense_keys: [...DEFAULT_BEGINNER_TENSE_KEYS]
   },
   seed_imported: {
     slang12: false
@@ -35,6 +64,16 @@ const SLANG_STARTER_12 = [
   { infinitive: "salir", meaning_en: "to leave / go out", model: "salir" },
   { infinitive: "decir", meaning_en: "to say / tell", model: "decir" }
 ];
+
+const ESSENTIAL_55_VERB_KEYS = new Set([
+  "acabar", "andar", "aprender", "caer", "caerse", "cantar", "comenzar", "comer",
+  "comprar", "conducir", "conocer", "construir", "contar", "creer", "dar", "deber",
+  "decir", "dormir", "entrar", "escribir", "estar", "estudiar", "gustar", "haber",
+  "hablar", "hacer", "ir", "irse", "leer", "llamar", "llamarse", "llevar", "mirar",
+  "mirarse", "oir", "pagar", "pensar", "perder", "poder", "poner", "ponerse",
+  "quedarse", "querer", "saber", "salir", "sentir", "sentirse", "ser", "tener",
+  "tomar", "traer", "venir", "ver", "vivir", "volver"
+]);
 
 const PRONOUNS = {
   "1-sg": "yo",
@@ -2048,6 +2087,34 @@ function getOrderedTenseKeys(obj) {
   return Object.keys(obj || {}).sort((a, b) => extractTenseNumber(a) - extractTenseNumber(b));
 }
 
+function getEnabledTenseKeys() {
+  const keys = sanitizeEnabledTenseKeys(APP_STATE?.ui?.enabled_tense_keys);
+  if (APP_STATE?.ui) APP_STATE.ui.enabled_tense_keys = keys;
+  return keys;
+}
+
+function getEnabledTenseKeySet() {
+  return new Set(getEnabledTenseKeys());
+}
+
+function isTenseSelectionEnabled(key) {
+  return getEnabledTenseKeySet().has(String(key || ""));
+}
+
+function getSelectionKeyForCellKey(cellKey) {
+  const key = String(cellKey || "");
+  if (key === gerundCellKey()) return "gerund";
+  if (key === participleCellKey()) return "participle";
+  if (key.startsWith("i:")) return "imperative";
+  const tenseMatch = key.match(/^s:(\d+):/);
+  return tenseMatch ? tenseMatch[1] : "";
+}
+
+function isGuideKeyEnabled(guideKey) {
+  const key = String(guideKey || "");
+  return !key || isTenseSelectionEnabled(key);
+}
+
 function getGuideKeyFromContext(context) {
   if (!context) return null;
   if (context.guideKey) return context.guideKey;
@@ -2077,7 +2144,28 @@ function buildHelperContextFromButton(btn) {
 
 function getDefaultHelperContextForVerb(verb) {
   if (!verb) return null;
-  const firstSimpleKey = getOrderedTenseKeys(verb.simple || {})[0];
+  if (isTenseSelectionEnabled("gerund")) {
+    return {
+      guideKey: "gerund",
+      tenseRaw: "Gerund",
+      person: "",
+      number: "",
+      cellKey: gerundCellKey(),
+      verbKey: verb._key
+    };
+  }
+  if (isTenseSelectionEnabled("participle")) {
+    return {
+      guideKey: "participle",
+      tenseRaw: "Participle",
+      person: "",
+      number: "",
+      cellKey: participleCellKey(),
+      verbKey: verb._key
+    };
+  }
+  const firstSimpleKey = getOrderedTenseKeys(verb.simple || {})
+    .find(k => isTenseSelectionEnabled(String(extractTenseNumber(k))));
   if (firstSimpleKey) {
     const num = extractTenseNumber(firstSimpleKey);
     return {
@@ -2089,14 +2177,30 @@ function getDefaultHelperContextForVerb(verb) {
       verbKey: verb._key
     };
   }
-  return {
-    guideKey: "gerund",
-    tenseRaw: "Gerund",
-    person: "",
-    number: "",
-    cellKey: gerundCellKey(),
-    verbKey: verb._key
-  };
+  const firstCompoundKey = getOrderedTenseKeys(verb.compound || {})
+    .find(k => isTenseSelectionEnabled(String(extractTenseNumber(k))));
+  if (firstCompoundKey) {
+    const num = extractTenseNumber(firstCompoundKey);
+    return {
+      guideKey: String(num || 8),
+      tenseRaw: firstCompoundKey,
+      person: "1",
+      number: "sg",
+      cellKey: tenseCellKey(num || 8, "sg", 0),
+      verbKey: verb._key
+    };
+  }
+  if (isTenseSelectionEnabled("imperative")) {
+    return {
+      guideKey: "imperative",
+      tenseRaw: "Imperative",
+      person: "2",
+      number: "sg",
+      cellKey: imperativeCellKey("tu"),
+      verbKey: verb._key
+    };
+  }
+  return null;
 }
 
 function getActivePronounLabel(context) {
@@ -2111,6 +2215,274 @@ function getActivePronounLabel(context) {
   if (guideKey === "participle") return "participle";
   const pKey = `${context.person || ""}-${context.number || ""}`;
   return PRONOUNS[pKey] || "";
+}
+
+function getVerbEndingGroup(verb) {
+  const infinitive = cleanText(verb?.infinitive || "").toLowerCase();
+  if (infinitive.endsWith("ar")) return "ar";
+  if (infinitive.endsWith("er")) return "er";
+  if (infinitive.endsWith("ir")) return "ir";
+  return "";
+}
+
+function renderFormulaRows(rows, activeKey = "") {
+  return rows.map(row => {
+    const isActive = !!row.key && row.key === activeKey;
+    const body = row.right
+      ? `
+        <span class="helperFormulaParts">
+          <span>${escapeHtml(row.left || "")}</span>
+          <span>${escapeHtml(row.right || "")}</span>
+        </span>
+      `
+      : `<span>${escapeHtml(row.text || row.left || "")}</span>`;
+    return `
+      <div class="helperFormulaRow ${isActive ? "helperFormulaRow--active" : ""}">
+        <span class="helperFormulaLabel">${escapeHtml(row.label)}:</span>
+        ${body}
+      </div>
+    `;
+  }).join("");
+}
+
+function renderFormulaStack(intro, rows, activeKey = "", note = "") {
+  return `
+    <div class="helperFormula helperFormulaStack">
+      ${intro ? `<div class="helperFormulaIntro">${escapeHtml(intro)}</div>` : ""}
+      ${renderFormulaRows(rows, activeKey)}
+      ${note ? `<div class="helperFormulaNote">${escapeHtml(note)}</div>` : ""}
+    </div>
+  `;
+}
+
+function renderBuildPatternMarkup(guideKey, guide, verb) {
+  const build = cleanText(guide?.build || "");
+  const verbEnding = getVerbEndingGroup(verb);
+
+  if (guideKey === "gerund") {
+    return renderFormulaStack(
+      "Infinitive stem + gerund ending",
+      [
+        { key: "ar", label: "-ar", text: "-ando" },
+        { key: "er", label: "-er", text: "-iendo" },
+        { key: "ir", label: "-ir", text: "-iendo" }
+      ],
+      verbEnding,
+      "Common irregulars include yendo, diciendo, and durmiendo."
+    );
+  }
+
+  if (guideKey === "participle") {
+    return renderFormulaStack(
+      "Infinitive stem + past participle ending",
+      [
+        { key: "ar", label: "-ar", text: "-ado" },
+        { key: "er", label: "-er", text: "-ido" },
+        { key: "ir", label: "-ir", text: "-ido" }
+      ],
+      verbEnding,
+      "Compound tenses use haber + this participle."
+    );
+  }
+
+  if (guideKey === "imperative") {
+    return renderFormulaStack(
+      "Command forms by person",
+      [
+        { label: "t\u00fa", left: "3rd-person present", right: "negative: present subjunctive" },
+        { label: "usted", text: "present subjunctive" },
+        { label: "nos.", text: "present subjunctive" },
+        { label: "vos.", left: "infinitive - r + d", right: "negative: present subjunctive" },
+        { label: "uds.", text: "present subjunctive" }
+      ],
+      "",
+      "There is no standard yo command form."
+    );
+  }
+
+  if (guideKey === "1") {
+    return renderFormulaStack(
+      "Stem + present endings",
+      [
+        { key: "ar", label: "-ar", left: "o/as/a/", right: "amos/\u00e1is/an" },
+        { key: "er", label: "-er", left: "o/es/e/", right: "emos/\u00e9is/en" },
+        { key: "ir", label: "-ir", left: "o/es/e/", right: "imos/\u00eds/en" }
+      ],
+      verbEnding
+    );
+  }
+
+  if (guideKey === "2") {
+    return renderFormulaStack(
+      "Stem + imperfect endings",
+      [
+        { key: "ar", label: "-ar", left: "aba/abas/aba/", right: "\u00e1bamos/abais/aban" },
+        { key: "er", label: "-er", left: "\u00eda/\u00edas/\u00eda/", right: "\u00edamos/\u00edais/\u00edan" },
+        { key: "ir", label: "-ir", left: "\u00eda/\u00edas/\u00eda/", right: "\u00edamos/\u00edais/\u00edan" }
+      ],
+      verbEnding
+    );
+  }
+
+  if (guideKey === "3") {
+    return renderFormulaStack(
+      "Stem + preterite endings",
+      [
+        { key: "ar", label: "-ar", left: "\u00e9/aste/\u00f3/", right: "amos/asteis/aron" },
+        { key: "er", label: "-er", left: "\u00ed/iste/i\u00f3/", right: "imos/isteis/ieron" },
+        { key: "ir", label: "-ir", left: "\u00ed/iste/i\u00f3/", right: "imos/isteis/ieron" }
+      ],
+      verbEnding
+    );
+  }
+
+  if (guideKey === "4") {
+    return renderFormulaStack(
+      "Full infinitive + future endings",
+      [
+        { key: "ar", label: "-ar", left: "\u00e9/\u00e1s/\u00e1/", right: "emos/\u00e9is/\u00e1n" },
+        { key: "er", label: "-er", left: "\u00e9/\u00e1s/\u00e1/", right: "emos/\u00e9is/\u00e1n" },
+        { key: "ir", label: "-ir", left: "\u00e9/\u00e1s/\u00e1/", right: "emos/\u00e9is/\u00e1n" }
+      ],
+      verbEnding,
+      "All infinitives take the same future endings."
+    );
+  }
+
+  if (guideKey === "5") {
+    return renderFormulaStack(
+      "Full infinitive + conditional endings",
+      [
+        { key: "ar", label: "-ar", left: "\u00eda/\u00edas/\u00eda/", right: "\u00edamos/\u00edais/\u00edan" },
+        { key: "er", label: "-er", left: "\u00eda/\u00edas/\u00eda/", right: "\u00edamos/\u00edais/\u00edan" },
+        { key: "ir", label: "-ir", left: "\u00eda/\u00edas/\u00eda/", right: "\u00edamos/\u00edais/\u00edan" }
+      ],
+      verbEnding,
+      "All infinitives take the same conditional endings."
+    );
+  }
+
+  if (guideKey === "6") {
+    return renderFormulaStack(
+      "Yo-present stem + subjunctive endings",
+      [
+        { key: "ar", label: "-ar", left: "e/es/e/", right: "emos/\u00e9is/en" },
+        { key: "er", label: "-er", left: "a/as/a/", right: "amos/\u00e1is/an" },
+        { key: "ir", label: "-ir", left: "a/as/a/", right: "amos/\u00e1is/an" }
+      ],
+      verbEnding,
+      "Present subjunctive flips the theme vowel from the indicative."
+    );
+  }
+
+  if (guideKey === "7") {
+    return renderFormulaStack(
+      "Ellos preterite stem (minus -ron) + endings",
+      [
+        { label: "-ra", left: "ra/ras/ra/", right: "ramos/rais/ran" },
+        { label: "-se", left: "se/ses/se/", right: "semos/seis/sen" }
+      ],
+      "",
+      "Use either the -ra or the -se series."
+    );
+  }
+
+  if (guideKey === "8") {
+    return `
+      ${renderFormulaStack(
+        "Present haber + past participle",
+        [
+          { label: "haber", left: "he/has/ha", right: "hemos/hab\u00e9is/han" },
+          { key: "ar", label: "-ar", text: "-ado" },
+          { key: "er", label: "-er", text: "-ido" },
+          { key: "ir", label: "-ir", text: "-ido" }
+        ],
+        verbEnding
+      )}
+    `;
+  }
+
+  if (guideKey === "9") {
+    return renderFormulaStack(
+      "Imperfect haber + past participle",
+      [
+        { label: "haber", left: "hab\u00eda/hab\u00edas/hab\u00eda", right: "hab\u00edamos/hab\u00edais/hab\u00edan" },
+        { key: "ar", label: "-ar", text: "-ado" },
+        { key: "er", label: "-er", text: "-ido" },
+        { key: "ir", label: "-ir", text: "-ido" }
+      ],
+      verbEnding
+    );
+  }
+
+  if (guideKey === "10") {
+    return renderFormulaStack(
+      "Preterite haber + past participle",
+      [
+        { label: "haber", left: "hube/hubiste/hubo", right: "hubimos/hubisteis/hubieron" },
+        { key: "ar", label: "-ar", text: "-ado" },
+        { key: "er", label: "-er", text: "-ido" },
+        { key: "ir", label: "-ir", text: "-ido" }
+      ],
+      verbEnding
+    );
+  }
+
+  if (guideKey === "11") {
+    return renderFormulaStack(
+      "Future haber + past participle",
+      [
+        { label: "haber", left: "habr\u00e9/habr\u00e1s/habr\u00e1", right: "habremos/habr\u00e9is/habr\u00e1n" },
+        { key: "ar", label: "-ar", text: "-ado" },
+        { key: "er", label: "-er", text: "-ido" },
+        { key: "ir", label: "-ir", text: "-ido" }
+      ],
+      verbEnding
+    );
+  }
+
+  if (guideKey === "12") {
+    return renderFormulaStack(
+      "Conditional haber + past participle",
+      [
+        { label: "haber", left: "habr\u00eda/habr\u00edas/habr\u00eda", right: "habr\u00edamos/habr\u00edais/habr\u00edan" },
+        { key: "ar", label: "-ar", text: "-ado" },
+        { key: "er", label: "-er", text: "-ido" },
+        { key: "ir", label: "-ir", text: "-ido" }
+      ],
+      verbEnding
+    );
+  }
+
+  if (guideKey === "13") {
+    return renderFormulaStack(
+      "Present subjunctive haber + past participle",
+      [
+        { label: "haber", left: "haya/hayas/haya", right: "hayamos/hay\u00e1is/hayan" },
+        { key: "ar", label: "-ar", text: "-ado" },
+        { key: "er", label: "-er", text: "-ido" },
+        { key: "ir", label: "-ir", text: "-ido" }
+      ],
+      verbEnding
+    );
+  }
+
+  if (guideKey === "14") {
+    return `
+      <div class="helperFormula helperFormulaStack">
+        <div class="helperFormulaIntro">Imperfect subjunctive haber + past participle</div>
+        ${renderFormulaRows([
+          { label: "-ra", left: "hubiera/hubieras/hubiera", right: "hubi\u00e9ramos/hubierais/hubieran" },
+          { label: "-se", left: "hubiese/hubieses/hubiese", right: "hubi\u00e9semos/hubieseis/hubiesen" },
+          { key: "ar", label: "-ar", text: "-ado" },
+          { key: "er", label: "-er", text: "-ido" },
+          { key: "ir", label: "-ir", text: "-ido" }
+        ], verbEnding)}
+      </div>
+    `;
+  }
+
+  return `<div class="helperFormula">${escapeHtml(build)}</div>`;
 }
 
 function renderTenseHelper(context) {
@@ -2217,6 +2589,7 @@ function renderTenseHelper(context) {
   const englishMap = details.english_map || [];
   const examples = details.examples || [];
   const pitfalls = details.pitfalls || [];
+  const currentVerb = findVerbByKey(context?.verbKey || CURRENT_VERB_KEY);
   host.innerHTML = `
     ${topRow}
     <div class="helperTitle">${escapeHtml(guide.title)}</div>
@@ -2226,10 +2599,6 @@ function renderTenseHelper(context) {
       <ul class="helperList">
         ${(guide.usage || []).map(item => `<li>${escapeHtml(item)}</li>`).join("")}
       </ul>
-    </div>
-    <div class="helperPanel">
-      <div class="helperSectionTitle">Build pattern</div>
-      <div class="helperFormula">${escapeHtml(guide.build || "")}</div>
     </div>
     ${englishMap.length ? `
     <div class="helperPanel">
@@ -2258,6 +2627,10 @@ function renderTenseHelper(context) {
     <div class="helperPanel">
       <div class="helperSectionTitle">Quick cue</div>
       <div class="helperCue">${escapeHtml(guide.cue || "")}</div>
+    </div>
+    <div class="helperPanel">
+      <div class="helperSectionTitle">Build pattern</div>
+      ${renderBuildPatternMarkup(guideKey, guide, currentVerb)}
     </div>
     <div class="helperSource">${escapeHtml(guide.source || "")}</div>
   `;
@@ -2554,6 +2927,18 @@ function applyCoreNotesOverride(v) {
   return v;
 }
 
+function sanitizeEnabledTenseKeys(keys) {
+  const source = Array.isArray(keys) ? keys : DEFAULT_BEGINNER_TENSE_KEYS;
+  const allowed = new Set(TENSE_SELECTION_ALL_KEYS);
+  const out = [];
+  source.forEach(key => {
+    const value = String(key || "");
+    if (!allowed.has(value) || out.includes(value)) return;
+    out.push(value);
+  });
+  return out.length ? out : [...DEFAULT_BEGINNER_TENSE_KEYS];
+}
+
 function coerceState(raw) {
   const src = raw && typeof raw === "object" ? raw : {};
   return {
@@ -2567,7 +2952,8 @@ function coerceState(raw) {
       selected_verb_key: src.ui?.selected_verb_key || null,
       search_text: src.ui?.search_text || "",
       pattern_filter: src.ui?.pattern_filter || "all",
-      tag_filter: src.ui?.tag_filter || "all"
+      tag_filter: src.ui?.tag_filter || "all",
+      enabled_tense_keys: sanitizeEnabledTenseKeys(src.ui?.enabled_tense_keys)
     },
     seed_imported: {
       slang12: !!src.seed_imported?.slang12
@@ -2803,12 +3189,16 @@ function getExpectedMap(verb) {
   return null;
 }
 
-function getVerbCellOrder(verb) {
+function getVerbCellOrder(verb, options = {}) {
+  const visibleOnly = !!options.visibleOnly;
+  const enabled = visibleOnly ? getEnabledTenseKeySet() : null;
+  const includeKey = (key) => !enabled || enabled.has(String(key));
   const keys = [];
-  keys.push(gerundCellKey());
-  keys.push(participleCellKey());
+  if (includeKey("gerund")) keys.push(gerundCellKey());
+  if (includeKey("participle")) keys.push(participleCellKey());
   getOrderedTenseKeys(verb.simple).forEach(k => {
     const num = extractTenseNumber(k);
+    if (!includeKey(num)) return;
     [0, 1, 2].forEach(i => {
       keys.push(tenseCellKey(num, "sg", i));
       keys.push(tenseCellKey(num, "pl", i));
@@ -2816,25 +3206,30 @@ function getVerbCellOrder(verb) {
   });
   getOrderedTenseKeys(verb.compound).forEach(k => {
     const num = extractTenseNumber(k);
+    if (!includeKey(num)) return;
     [0, 1, 2].forEach(i => {
       keys.push(tenseCellKey(num, "sg", i));
       keys.push(tenseCellKey(num, "pl", i));
     });
   });
-  keys.push(imperativeCellKey("yo"));
-  keys.push(imperativeCellKey("tu"));
-  keys.push(imperativeCellKey("usted"));
-  keys.push(imperativeCellKey("nosotros"));
-  keys.push(imperativeCellKey("vosotros"));
-  keys.push(imperativeCellKey("ustedes"));
+  if (includeKey("imperative")) {
+    keys.push(imperativeCellKey("yo"));
+    keys.push(imperativeCellKey("tu"));
+    keys.push(imperativeCellKey("usted"));
+    keys.push(imperativeCellKey("nosotros"));
+    keys.push(imperativeCellKey("vosotros"));
+    keys.push(imperativeCellKey("ustedes"));
+  }
   return keys;
 }
 
 function getVerbNavigationCellOrder(verb) {
+  const enabled = getEnabledTenseKeySet();
   const keys = [];
-  keys.push(gerundCellKey());
-  keys.push(participleCellKey());
+  if (enabled.has("gerund")) keys.push(gerundCellKey());
+  if (enabled.has("participle")) keys.push(participleCellKey());
   const pushTenseInNaturalReadingOrder = (tenseNum) => {
+    if (!enabled.has(String(tenseNum))) return;
     // yo, tu, el, nosotros, vosotros, ellos
     [0, 1, 2].forEach(i => keys.push(tenseCellKey(tenseNum, "sg", i)));
     [0, 1, 2].forEach(i => keys.push(tenseCellKey(tenseNum, "pl", i)));
@@ -2847,12 +3242,14 @@ function getVerbNavigationCellOrder(verb) {
     pushTenseInNaturalReadingOrder(extractTenseNumber(k));
   });
 
-  keys.push(imperativeCellKey("yo"));
-  keys.push(imperativeCellKey("tu"));
-  keys.push(imperativeCellKey("usted"));
-  keys.push(imperativeCellKey("nosotros"));
-  keys.push(imperativeCellKey("vosotros"));
-  keys.push(imperativeCellKey("ustedes"));
+  if (enabled.has("imperative")) {
+    keys.push(imperativeCellKey("yo"));
+    keys.push(imperativeCellKey("tu"));
+    keys.push(imperativeCellKey("usted"));
+    keys.push(imperativeCellKey("nosotros"));
+    keys.push(imperativeCellKey("vosotros"));
+    keys.push(imperativeCellKey("ustedes"));
+  }
   return keys;
 }
 
@@ -3047,10 +3444,15 @@ function isExplicitVerb(verb) {
   return markers.some(m => text.includes(m));
 }
 
+function isEssential55Verb(verb) {
+  return ESSENTIAL_55_VERB_KEYS.has(normalize(verb?.infinitive || ""));
+}
+
 function getVerbTags(verb) {
   const tags = [];
   if (verb._source === "core") tags.push("core501");
   if (verb._source === "custom") tags.push("custom");
+  if (isEssential55Verb(verb)) tags.push("essential55");
   if (verb.source_tag === "slang_seed") tags.push("slang");
   if (isExplicitVerb(verb)) tags.push("explicit");
   return tags;
@@ -3067,17 +3469,63 @@ function renderTagPills(tags) {
     const labelMap = {
       core501: "501",
       custom: "Custom",
+      essential55: "55 Essential",
       slang: "Slang",
       explicit: "Explicit"
     };
     const clsMap = {
       core501: "tagCore",
       custom: "tagCustom",
+      essential55: "tagEssential55",
       slang: "tagSlang",
       explicit: "tagExplicit"
     };
     return `<div class="pill tagPill ${clsMap[tag] || ""}">${labelMap[tag] || escapeHtml(tag)}</div>`;
   }).join("");
+}
+
+function renderTenseSelectionControls() {
+  const host = document.getElementById("tenseSelectionOptions");
+  if (!host) return;
+  const enabled = getEnabledTenseKeySet();
+  host.innerHTML = TENSE_SELECTION_ALL_KEYS.map(key => `
+    <label class="tenseOption">
+      <input
+        type="checkbox"
+        data-tense-select-key="${escapeHtml(key)}"
+        ${enabled.has(key) ? "checked" : ""}
+      />
+      <span>${escapeHtml(TENSE_SELECTION_LABELS[key] || key)}</span>
+    </label>
+  `).join("");
+
+  const count = document.getElementById("tenseSelectionCount");
+  if (count) count.textContent = `${enabled.size}/${TENSE_SELECTION_ALL_KEYS.length}`;
+
+  host.querySelectorAll("input[data-tense-select-key]").forEach(input => {
+    input.addEventListener("change", () => {
+      const nextKeys = Array.from(host.querySelectorAll("input[data-tense-select-key]"))
+        .filter(cb => cb.checked)
+        .map(cb => cb.dataset.tenseSelectKey || "");
+      if (!nextKeys.length) {
+        input.checked = true;
+        return;
+      }
+      APP_STATE.ui.enabled_tense_keys = sanitizeEnabledTenseKeys(nextKeys);
+      scheduleSave();
+      renderTenseSelectionControls();
+      if (CURRENT_VERB_KEY) renderDetail(CURRENT_VERB_KEY);
+      queueSidebarSync();
+    });
+  });
+}
+
+function setTenseSelection(keys) {
+  APP_STATE.ui.enabled_tense_keys = sanitizeEnabledTenseKeys(keys);
+  scheduleSave();
+  renderTenseSelectionControls();
+  if (CURRENT_VERB_KEY) renderDetail(CURRENT_VERB_KEY);
+  queueSidebarSync();
 }
 
 function renderList(filterText) {
@@ -3196,11 +3644,16 @@ function createCustomVerbFromSearch(rawInput) {
 }
 
 function renderTenseBlocks(obj, verb) {
+  const enabled = getEnabledTenseKeySet();
   const keys = getOrderedTenseKeys(obj || {});
   const canonicalMap = buildCanonicalCellMap(verb);
   return keys.map((k, idx) => {
     const table = obj[k];
     const num = extractTenseNumber(k);
+    const tenseEnabled = enabled.has(String(num));
+    const inactiveClass = tenseEnabled ? "" : " inactiveTenseBlock";
+    const inactiveFormClass = tenseEnabled ? "" : " inactiveTenseForm";
+    const inactiveAttrs = tenseEnabled ? "" : ` tabindex="-1" aria-disabled="true"`;
     const label = k.replace(/^\d+\s*/, "");
     const persons = ["1", "2", "3"];
     const rowHtml = persons.map((p, i) => {
@@ -3215,14 +3668,14 @@ function renderTenseBlocks(obj, verb) {
       return `
         <tr>
           <td><span class="k">${PRONOUNS[`${p}-sg`]}</span></td>
-          <td><button class="formBtn ${sgClass} ${sgDraftClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="${escapeHtml(k)}" data-person="${p}" data-number="sg" data-cell-key="${sgCellKey}">${renderCellText(sgDisplay)}</button></td>
+          <td><button class="formBtn ${sgClass} ${sgDraftClass}${inactiveFormClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="${escapeHtml(k)}" data-person="${p}" data-number="sg" data-cell-key="${sgCellKey}"${inactiveAttrs}>${renderCellText(sgDisplay)}</button></td>
           <td><span class="k">${PRONOUNS[`${p}-pl`]}</span></td>
-          <td><button class="formBtn ${plClass} ${plDraftClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="${escapeHtml(k)}" data-person="${p}" data-number="pl" data-cell-key="${plCellKey}">${renderCellText(plDisplay)}</button></td>
+          <td><button class="formBtn ${plClass} ${plDraftClass}${inactiveFormClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="${escapeHtml(k)}" data-person="${p}" data-number="pl" data-cell-key="${plCellKey}"${inactiveAttrs}>${renderCellText(plDisplay)}</button></td>
         </tr>
       `;
     }).join("");
     return `
-      <details class="tense tnum-${num}" data-tnum="${num}" open>
+      <details class="tense tnum-${num}${inactiveClass}" data-tnum="${num}" open>
         <summary>
           <div class="tenseHead">
             <button
@@ -3251,6 +3704,9 @@ function renderTenseBlocks(obj, verb) {
 }
 
 function renderImperative(verb) {
+  const imperativeEnabled = isTenseSelectionEnabled("imperative");
+  const inactiveFormClass = imperativeEnabled ? "" : " inactiveTenseForm";
+  const inactiveAttrs = imperativeEnabled ? "" : ` tabindex="-1" aria-disabled="true"`;
   const imp = verb.imperativeParsed || {};
   const canonical = {
     yo: "--",
@@ -3267,7 +3723,7 @@ function renderImperative(verb) {
     const display = getDisplayCellValue(verb, cellKey, canonical[slot] || "");
     const cls = getCellStatusClass(verb._key, cellKey);
     const draftCls = getDraftEditClass(verb, cellKey, display, canonical[slot] || "");
-    return `<button class="formBtn imperativeForm imperativeFormBtn ${cls} ${draftCls}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Imperative" data-person="${meta.person}" data-number="${meta.number}" data-cell-key="${cellKey}">${renderCellText(display)}</button>`;
+    return `<button class="formBtn imperativeForm imperativeFormBtn ${cls} ${draftCls}${inactiveFormClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Imperative" data-person="${meta.person}" data-number="${meta.number}" data-cell-key="${cellKey}"${inactiveAttrs}>${renderCellText(display)}</button>`;
   }
 
   return `
@@ -3415,6 +3871,19 @@ function renderDetail(verbKey) {
   const participleStatusClass = getCellStatusClass(verb._key, participleKey);
   const gerundDraftClass = getDraftEditClass(verb, gerundKey, gerundDisplay, canonical[gerundKey] || "");
   const participleDraftClass = getDraftEditClass(verb, participleKey, participleDisplay, canonical[participleKey] || "");
+  const showGerund = isTenseSelectionEnabled("gerund");
+  const showParticiple = isTenseSelectionEnabled("participle");
+  const simpleBlocks = renderTenseBlocks(verb.simple, verb);
+  const compoundBlocks = renderTenseBlocks(verb.compound, verb);
+  const showImperative = isTenseSelectionEnabled("imperative");
+  const gerundInactiveClass = showGerund ? "" : " inactiveTenseForm";
+  const participleInactiveClass = showParticiple ? "" : " inactiveTenseForm";
+  const gerundInactiveAttrs = showGerund ? "" : ` tabindex="-1" aria-disabled="true"`;
+  const participleInactiveAttrs = showParticiple ? "" : ` tabindex="-1" aria-disabled="true"`;
+  const chipHtml = `
+    <div class="chip"><strong class="chipLabel--gerund">Gerund</strong> <button class="formBtn chipFormBtn chipGerundBtn ${gerundStatusClass} ${gerundDraftClass}${gerundInactiveClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Gerund" data-person="" data-number="" data-cell-key="${gerundKey}"${gerundInactiveAttrs}>${renderCellText(gerundDisplay)}</button></div>
+    <div class="chip"><strong class="chipLabel--participle">Part.</strong> <button class="formBtn chipFormBtn chipPartBtn ${participleStatusClass} ${participleDraftClass}${participleInactiveClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Participle" data-person="" data-number="" data-cell-key="${participleKey}"${participleInactiveAttrs}>${renderCellText(participleDisplay)}</button></div>
+  `;
 
   CURRENT_VERB_KEY = verb._key;
   APP_STATE.ui.selected_verb_key = CURRENT_VERB_KEY;
@@ -3427,23 +3896,20 @@ function renderDetail(verbKey) {
         <div class="big">${escapeHtml(verb.infinitive)} <span class="pill">#${getDisplayVerbNumber(verb)}</span></div>
         <div class="meaning">${escapeHtml(meaningInfo.meaning || "")}</div>
       </div>
-      <div class="chips">
-        <div class="chip"><strong class="chipLabel--gerund">Gerund</strong> <button class="formBtn chipFormBtn chipGerundBtn ${gerundStatusClass} ${gerundDraftClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Gerund" data-person="" data-number="" data-cell-key="${gerundKey}">${renderCellText(gerundDisplay)}</button></div>
-        <div class="chip"><strong class="chipLabel--participle">Part.</strong> <button class="formBtn chipFormBtn chipPartBtn ${participleStatusClass} ${participleDraftClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Participle" data-person="" data-number="" data-cell-key="${participleKey}">${renderCellText(participleDisplay)}</button></div>
-      </div>
+      <div class="chips">${chipHtml}</div>
     </div>
     <div class="panel">
       <div class="twoCol">
-        <section class="side" data-side="simple">
+        <section class="side" data-side="simple" ${simpleBlocks ? "" : "hidden"}>
           <div class="colHeader"><div class="h">Simple tenses (1–7)</div></div>
-          ${renderTenseBlocks(verb.simple, verb)}
+          ${simpleBlocks}
         </section>
-        <section class="side" data-side="compound">
+        <section class="side" data-side="compound" ${compoundBlocks ? "" : "hidden"}>
           <div class="colHeader"><div class="h">Compound tenses (8–14)</div></div>
-          ${renderTenseBlocks(verb.compound, verb)}
+          ${compoundBlocks}
         </section>
       </div>
-      <details class="tense tense--spaced imperativePanel tense--centerHead" open>
+      <details class="tense tense--spaced imperativePanel tense--centerHead ${showImperative ? "" : "inactiveTenseBlock"}" open>
         <summary>
           <div class="summarySeam">
             <div class="summarySeamInner">
@@ -3505,7 +3971,8 @@ function renderDetail(verbKey) {
 
   const contextToRender = (
     ACTIVE_HELP_CONTEXT &&
-    ACTIVE_HELP_CONTEXT.verbKey === verb._key
+    ACTIVE_HELP_CONTEXT.verbKey === verb._key &&
+    isGuideKeyEnabled(getGuideKeyFromContext(ACTIVE_HELP_CONTEXT))
   ) ? ACTIVE_HELP_CONTEXT : null;
   if (contextToRender) {
     setActiveHelperContext(contextToRender, true);
@@ -3529,6 +3996,7 @@ function renderDetail(verbKey) {
 function bindCellInteractions(detailRoot, verb) {
   detailRoot.querySelectorAll(".formBtn[data-cell-key]").forEach(btn => {
     btn.addEventListener("click", () => {
+      if (btn.classList.contains("inactiveTenseForm")) return;
       if (ACTIVE_EDITOR) return;
       const ctx = buildHelperContextFromButton(btn);
       if (ctx) {
@@ -3542,6 +4010,7 @@ function bindCellInteractions(detailRoot, verb) {
       }, 220);
     });
     btn.addEventListener("dblclick", (e) => {
+      if (btn.classList.contains("inactiveTenseForm")) return;
       e.preventDefault();
       e.stopPropagation();
       clearTimeout(CLICK_TIMER);
@@ -3685,6 +4154,7 @@ function handleSpanishCharShortcut(e, input) {
 
 function startInlineEdit(btn, verb) {
   if (!btn || !verb) return;
+  if (btn.classList.contains("inactiveTenseForm")) return;
   if (ACTIVE_EDITOR) commitInlineEdit(0);
   if (verb._source === "custom" && verb.locked) {
     alert("This custom verb is finalized (pending review) and locked for editing.");
@@ -3808,7 +4278,7 @@ function checkCurrentVerb() {
   const canonical = buildCanonicalCellMap(verb);
   const statusByCell = {};
   const summary = { correct: 0, accent_warning: 0, incorrect: 0, empty: 0, total: 0 };
-  getVerbCellOrder(verb).forEach(cellKey => {
+  getVerbCellOrder(verb, { visibleOnly: true }).forEach(cellKey => {
     const exp = expected[cellKey] || "";
     const user = getDisplayCellValue(verb, cellKey, canonical[cellKey] || "");
     const status = compareUserToExpected(user, exp);
@@ -3835,7 +4305,11 @@ function revealAnswersForCurrentVerb() {
     alert("No answer key available to reveal for this verb.");
     return;
   }
-  setDraftValues(verb._key, expected);
+  const visibleExpected = {};
+  getVerbCellOrder(verb, { visibleOnly: true }).forEach(cellKey => {
+    visibleExpected[cellKey] = expected[cellKey] || "";
+  });
+  setDraftValues(verb._key, visibleExpected);
   renderDetail(verb._key);
 }
 
@@ -3843,7 +4317,7 @@ function clearCurrentVerbToBlanks() {
   const verb = findVerbByKey(CURRENT_VERB_KEY);
   if (!verb) return;
   const blankMap = {};
-  getVerbCellOrder(verb).forEach(cellKey => {
+  getVerbCellOrder(verb, { visibleOnly: true }).forEach(cellKey => {
     if (cellKey === imperativeCellKey("yo")) return;
     blankMap[cellKey] = "";
   });
@@ -4550,6 +5024,56 @@ function refreshFilterDropdowns() {
 const pop = document.getElementById("popover");
 const popClose = document.getElementById("popClose");
 
+function getPopoverEnglishTranslation(meta, tenseNumber) {
+  const infinitive = cleanText(meta?.verb || "").toLowerCase();
+  if (infinitive !== "abatir" || tenseNumber !== "1") return "";
+
+  const key = `${meta.person || ""}-${meta.number || ""}`;
+  const translations = {
+    "1-sg": {
+      simple: "I knock down / overthrow / throw down.",
+      progressive: "I am knocking down / overthrowing / throwing down."
+    },
+    "2-sg": {
+      simple: "You knock down / overthrow / throw down.",
+      progressive: "You are knocking down / overthrowing / throwing down."
+    },
+    "3-sg": {
+      simple: "He / she knocks down / overthrows / throws down.",
+      progressive: "He / she is knocking down / overthrowing / throwing down."
+    },
+    "1-pl": {
+      simple: "We knock down / overthrow / throw down.",
+      progressive: "We are knocking down / overthrowing / throwing down."
+    },
+    "2-pl": {
+      simple: "You all knock down / overthrow / throw down.",
+      progressive: "You all are knocking down / overthrowing / throwing down."
+    },
+    "3-pl": {
+      simple: "They knock down / overthrow / throw down.",
+      progressive: "They are knocking down / overthrowing / throwing down."
+    }
+  };
+
+  const entry = translations[key];
+  if (!entry) return "";
+
+  return `
+    <div class="popSectionTitle">English translation</div>
+    <div class="popTranslationRows">
+      <div class="popTranslationRow">
+        <div class="popTranslationLabel">Simple</div>
+        <div>${escapeHtml(entry.simple)}</div>
+      </div>
+      <div class="popTranslationRow">
+        <div class="popTranslationLabel">Ongoing</div>
+        <div>${escapeHtml(entry.progressive)}</div>
+      </div>
+    </div>
+  `;
+}
+
 function showPopover(anchorEl, meta) {
   const rect = anchorEl.getBoundingClientRect();
   const pad = 10;
@@ -4566,6 +5090,8 @@ function showPopover(anchorEl, meta) {
     : meta.tense === "Participle"
       ? "Past participle form."
       : (num ? (TENSE_HINTS[num] || "Tip: Add a short explanation here for this tense.") : "Imperative form.");
+  const translationHost = document.getElementById("popTranslation");
+  const translationHtml = getPopoverEnglishTranslation(meta, num);
 
   document.getElementById("popWord").textContent = meta.form;
   document.getElementById("popVerb").textContent = meta.verb;
@@ -4573,6 +5099,10 @@ function showPopover(anchorEl, meta) {
   document.getElementById("popPerson").textContent = personLabel;
   document.getElementById("popNumber").textContent = numberLabel;
   document.getElementById("popHint").innerHTML = hint;
+  if (translationHost) {
+    translationHost.hidden = !translationHtml;
+    translationHost.innerHTML = translationHtml || "";
+  }
 
   pop.style.display = "block";
   pop.setAttribute("aria-hidden", "false");
@@ -4695,10 +5225,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const q = document.getElementById("q");
   const patternFilter = document.getElementById("filterPattern");
   const tagFilter = document.getElementById("filterTag");
+  const tenseSelection = document.getElementById("tenseSelection");
+  const beginnerTensesBtn = document.getElementById("tenseSelectionBeginner");
+  const allTensesBtn = document.getElementById("tenseSelectionAll");
   renderTenseHelper(null);
   q.value = APP_STATE.ui.search_text || "";
   if (patternFilter) patternFilter.value = APP_STATE.ui.pattern_filter || "all";
   if (tagFilter) tagFilter.value = APP_STATE.ui.tag_filter || "all";
+  renderTenseSelectionControls();
+  tenseSelection?.addEventListener("toggle", queueSidebarSync);
+  beginnerTensesBtn?.addEventListener("click", () => setTenseSelection(DEFAULT_BEGINNER_TENSE_KEYS));
+  allTensesBtn?.addEventListener("click", () => setTenseSelection(TENSE_SELECTION_ALL_KEYS));
   initFilterDropdowns();
   refreshFilterDropdowns();
   renderList(q.value || "");

@@ -225,6 +225,35 @@
     color: var(--text);
     white-space: pre-wrap;
   }
+  .helperFormulaStack {
+    display: grid;
+    gap: 6px;
+  }
+  .helperFormulaIntro {
+    color: var(--text);
+  }
+  .helperFormulaNote {
+    color: var(--muted);
+  }
+  .helperFormulaRow {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 10px;
+    align-items: baseline;
+    color: var(--text);
+  }
+  .helperFormulaRow--active {
+    color: #ffd700;
+  }
+  .helperFormulaLabel {
+    font-weight: 700;
+  }
+  .helperFormulaParts {
+    display: grid;
+    grid-template-columns: max-content max-content;
+    gap: 16px;
+    align-items: baseline;
+  }
   .helperCue {
     font-size: 14px;
     line-height: 1.25;
@@ -376,6 +405,125 @@
     opacity: 0;
     pointer-events: none;
   }
+  .tenseSelection {
+    overflow: hidden;
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    background: var(--input-bg);
+  }
+  .tenseSelection summary {
+    display: grid;
+    grid-template-columns: 1fr max-content max-content;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    color: var(--text);
+    cursor: pointer;
+    user-select: none;
+  }
+  .tenseSelection summary::-webkit-details-marker {
+    display: none;
+  }
+  .tenseSelectionTitle {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .tenseSelectionCount {
+    color: var(--subhead);
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .tenseSelectionCaret {
+    color: var(--subhead);
+    font-size: 10px;
+    transition: transform 120ms ease;
+  }
+  .tenseSelection[open] .tenseSelectionCaret {
+    transform: rotate(180deg);
+  }
+  .tenseSelectionBody {
+    display: grid;
+    gap: 5px;
+    padding: 0 5px 5px;
+    border-top: 1px solid rgb(255 255 255 / 6%);
+  }
+  .tenseSelectionActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    padding-top: 5px;
+  }
+  .tenseSelectionAction {
+    width: 100%;
+    padding: 4px 7px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: #2b2b2b;
+    color: var(--text);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.2;
+    cursor: pointer;
+  }
+  .tenseSelectionAction:hover,
+  .tenseOption:hover {
+    background: var(--hover-bg);
+    border-color: var(--hover-border);
+  }
+  .tenseSelectionAction:focus-visible,
+  .tenseOption input:focus-visible + span {
+    outline: 1px solid var(--selected-border);
+    outline-offset: 2px;
+  }
+  .tenseSelectionOptions {
+    display: grid;
+    gap: 2px;
+    max-height: 238px;
+    overflow: auto;
+    padding-right: 2px;
+  }
+  .tenseSelectionOptions::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  .tenseSelectionOptions::-webkit-scrollbar-track {
+    background: #2b2b2b;
+  }
+  .tenseSelectionOptions::-webkit-scrollbar-thumb {
+    border: 1px solid #2b2b2b;
+    border-radius: 999px;
+    background: #1f1f1f;
+  }
+  .tenseOption {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    padding: 4px 5px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    color: var(--muted);
+    font-size: 11.5px;
+    line-height: 1.2;
+    cursor: pointer;
+  }
+  .tenseOption input {
+    flex: 0 0 auto;
+    width: 13px;
+    height: 13px;
+    margin: 0;
+    accent-color: var(--section-color);
+  }
+  .tenseOption span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   input[type="search"] {
     width: 100%;
     padding: 6px 8px;
@@ -497,6 +645,9 @@
   .tagSlang {
     color: #85f4fb;
   }
+  .tagEssential55 {
+    color: #b9fbc0;
+  }
   .tagExplicit {
     color: #ff8c00;
   }
@@ -563,6 +714,9 @@
   .chip strong {
     font-weight: 800;
     color: var(--accent);
+  }
+  .chip strong.activeTenseHighlight {
+    color: #ffd700;
   }
   .chipFormBtn {
     margin-left: 4px;
@@ -663,6 +817,14 @@
     font-weight: 600;
     line-height: 1.15;
     color: var(--accent);
+  }
+  .tense.inactiveTenseBlock table,
+  .tense.inactiveTenseBlock .imperativeBoard {
+    visibility: hidden;
+  }
+  .formBtn.inactiveTenseForm {
+    color: transparent !important;
+    pointer-events: none;
   }
   .activeTenseHighlight {
     display: inline;
@@ -1053,6 +1215,31 @@
     line-height: 1.45;
     color: var(--text);
   }
+  .popTranslation {
+    margin-top: 8px;
+  }
+  .popSectionTitle {
+    margin: 0 0 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--note-subhead-color);
+  }
+  .popTranslationRows {
+    display: grid;
+    gap: 6px;
+  }
+  .popTranslationRow {
+    display: grid;
+    grid-template-columns: 86px 1fr;
+    gap: 10px;
+    align-items: start;
+  }
+  .popTranslationLabel {
+    color: var(--muted);
+    font-weight: 700;
+  }
   .hint strong { color: var(--accent); }
   @media (max-width: 1100px) {
     .twoCol { grid-template-columns: 1fr; }
@@ -1139,11 +1326,26 @@
             <option value="all">Tag: all</option>
             <option value="core501">501 source</option>
             <option value="custom">Custom</option>
+            <option value="essential55">55 Essential Verbs</option>
             <option value="slang">Slang</option>
             <option value="explicit">Explicit</option>
           </select>
         </div>
       </div>
+      <details id="tenseSelection" class="tenseSelection" open>
+        <summary>
+          <span class="tenseSelectionTitle">Tense Selection</span>
+          <span id="tenseSelectionCount" class="tenseSelectionCount"></span>
+          <span class="tenseSelectionCaret">&#9662;</span>
+        </summary>
+        <div class="tenseSelectionBody">
+          <div class="tenseSelectionActions">
+            <button id="tenseSelectionBeginner" class="tenseSelectionAction" type="button">Beginner</button>
+            <button id="tenseSelectionAll" class="tenseSelectionAction" type="button">All</button>
+          </div>
+          <div id="tenseSelectionOptions" class="tenseSelectionOptions"></div>
+        </div>
+      </details>
     </div>
     <div id="list" class="list"></div>
   </section>
@@ -1169,6 +1371,7 @@
     <div class="k">Number</div><div id="popNumber"></div>
   </div>
   <div class="hint" id="popHint"></div>
+  <div class="hint popTranslation" id="popTranslation" hidden></div>
 </div>
 
 <script src="verbs-data.js"></script>
@@ -1982,7 +2185,7 @@ window.addEventListener("resize", () => {
 </script>
 <script src="core_notes_overrides.js"></script>
 <script src="core_notes_manual_fixes.js"></script>
-<script src="interactive_verbs_app.js"></script>
+<script src="interactive_verbs_app.js?v=tense-selection-2"></script>
 </body>
 </html>
 
