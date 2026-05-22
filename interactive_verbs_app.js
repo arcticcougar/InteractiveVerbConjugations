@@ -75,6 +75,33 @@ const ESSENTIAL_55_VERB_KEYS = new Set([
   "tomar", "traer", "venir", "ver", "vivir", "volver"
 ]);
 
+const ENDING_EXAMPLE_SPECS = [
+  {
+    id: 9001,
+    infinitive: "-ar",
+    meaning_en: "regular -ar endings only",
+    model: "hablar",
+    stem: "habl",
+    pattern_note: "Regular -ar verb ending example"
+  },
+  {
+    id: 9002,
+    infinitive: "-er",
+    meaning_en: "regular -er endings only",
+    model: "comer",
+    stem: "com",
+    pattern_note: "Regular -er verb ending example"
+  },
+  {
+    id: 9003,
+    infinitive: "-ir",
+    meaning_en: "regular -ir endings only",
+    model: "vivir",
+    stem: "viv",
+    pattern_note: "Regular -ir verb ending example"
+  }
+];
+
 const PRONOUNS = {
   "1-sg": "yo",
   "2-sg": "tú",
@@ -2987,12 +3014,18 @@ function scheduleSave() {
 function withVerbIdentity(v, source) {
   const idNum = Number(v.id);
   v._source = source;
-  v._key = source === "core" ? `core:${idNum}` : `custom:${idNum}`;
+  v._key = source === "core"
+    ? `core:${idNum}`
+    : source === "example"
+      ? `example:${idNum}`
+      : `custom:${idNum}`;
   return v;
 }
 
 const CORE_DATA = BASE_DATA.map(v => withVerbIdentity(applyCoreNotesOverride(normalizeVerbRecord(v)), "core"));
 const CORE_BY_KEY = new Map(CORE_DATA.map(v => [v._key, v]));
+const EXAMPLE_DATA = ENDING_EXAMPLE_SPECS.map(buildEndingExampleVerb).filter(Boolean);
+const EXAMPLE_BY_KEY = new Map(EXAMPLE_DATA.map(v => [v._key, v]));
 const SIMPLE_TENSE_KEYS = getOrderedTenseKeys(CORE_DATA[0]?.simple || {});
 const COMPOUND_TENSE_KEYS = getOrderedTenseKeys(CORE_DATA[0]?.compound || {});
 
@@ -3065,17 +3098,61 @@ function persistCustomData() {
   scheduleSave();
 }
 
+function replaceStemWithEndingDash(value, stem) {
+  const text = cleanText(value);
+  if (!text || !stem) return text;
+  return text.replace(new RegExp(escapeRegExp(stem), "gi"), "-");
+}
+
+function buildEndingExampleTenseSet(source, stem) {
+  const out = {};
+  Object.entries(source || {}).forEach(([tenseKey, tenseTable]) => {
+    out[tenseKey] = {
+      singular: (tenseTable.singular || []).map(form => replaceStemWithEndingDash(form, stem)),
+      plural: (tenseTable.plural || []).map(form => replaceStemWithEndingDash(form, stem))
+    };
+  });
+  return out;
+}
+
+function buildEndingExampleVerb(spec) {
+  const model = CORE_DATA.find(verb => normalize(verb.infinitive) === normalize(spec.model));
+  if (!model) return null;
+
+  const v = deepClone(model);
+  v.id = spec.id;
+  v.infinitive = spec.infinitive;
+  v.meaning_en = spec.meaning_en;
+  v.gerund = replaceStemWithEndingDash(model.gerund, spec.stem);
+  v.past_participle = replaceStemWithEndingDash(model.past_participle, spec.stem);
+  v.pattern_notes = [spec.pattern_note];
+  v.simple = buildEndingExampleTenseSet(model.simple, spec.stem);
+  v.compound = buildEndingExampleTenseSet(model.compound, spec.stem);
+  v.imperative = (model.imperative || []).map(line => replaceStemWithEndingDash(line, spec.stem));
+  v.imperative_raw = [...v.imperative];
+  v.imperativeParsed = parseImperativeLines(v.imperative);
+  v.extras = {
+    related: ["Stem hidden so only the regular ending pattern is visible."],
+    syn: [],
+    ant: []
+  };
+  v.source_tag = "ending_example";
+  v.model_verb_ref = model._key;
+  return withVerbIdentity(v, "example");
+}
+
 hydrateCustomData();
 autoBackfillMissingCustomPatternNotes();
 autoGenerateMissingCustomAnswerKeys();
 
 function getAllVerbs() {
-  return [...CORE_DATA, ...CUSTOM_DATA];
+  return [...CORE_DATA, ...EXAMPLE_DATA, ...CUSTOM_DATA];
 }
 
 function findVerbByKey(key) {
   if (!key) return null;
   if (CORE_BY_KEY.has(key)) return CORE_BY_KEY.get(key);
+  if (EXAMPLE_BY_KEY.has(key)) return EXAMPLE_BY_KEY.get(key);
   return CUSTOM_DATA.find(v => v._key === key) || null;
 }
 
@@ -3184,7 +3261,7 @@ function buildCanonicalCellMap(verb) {
 
 function getExpectedMap(verb) {
   if (!verb) return null;
-  if (verb._source === "core") return buildCanonicalCellMap(verb);
+  if (verb._source === "core" || verb._source === "example") return buildCanonicalCellMap(verb);
   if (verb.answer_key && Object.keys(verb.answer_key).length) return verb.answer_key;
   return null;
 }
@@ -3452,6 +3529,7 @@ function getVerbTags(verb) {
   const tags = [];
   if (verb._source === "core") tags.push("core501");
   if (verb._source === "custom") tags.push("custom");
+  if (verb._source === "example" || verb.source_tag === "ending_example") tags.push("example");
   if (isEssential55Verb(verb)) tags.push("essential55");
   if (verb.source_tag === "slang_seed") tags.push("slang");
   if (isExplicitVerb(verb)) tags.push("explicit");
@@ -3470,6 +3548,7 @@ function renderTagPills(tags) {
       core501: "501",
       custom: "Custom",
       essential55: "55 Essential",
+      example: "Example",
       slang: "Slang",
       explicit: "Explicit"
     };
@@ -3477,6 +3556,7 @@ function renderTagPills(tags) {
       core501: "tagCore",
       custom: "tagCustom",
       essential55: "tagEssential55",
+      example: "tagExample",
       slang: "tagSlang",
       explicit: "tagExplicit"
     };
