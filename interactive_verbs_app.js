@@ -102,6 +102,12 @@ const ENDING_EXAMPLE_SPECS = [
   }
 ];
 
+const REGULAR_PATTERN_MODEL_INFINITIVES = {
+  ar: { plain: "hablar", reflexive: "llamarse" },
+  er: { plain: "comer", reflexive: "atreverse" },
+  ir: { plain: "vivir", reflexive: "aburrirse" }
+};
+
 const PRONOUNS = {
   "1-sg": "yo",
   "2-sg": "tú",
@@ -3399,9 +3405,183 @@ function escapeHtml(str) {
   return (str || "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 }
 
-function renderCellText(value) {
+function formsDifferFromRegular(actualValue, regularValue) {
+  const actual = cleanText(actualValue || "");
+  const regular = cleanText(regularValue || "");
+  if (!actual || !regular) return false;
+  return normalizeForMatch(actual) !== normalizeForMatch(regular);
+}
+
+function getRegularPatternModel(verb) {
+  const parts = splitInfinitive(verb?.infinitive || "");
+  const ending = parts.ending;
+  if (!ending) return null;
+  const spec = REGULAR_PATTERN_MODEL_INFINITIVES[ending];
+  if (!spec) return null;
+  const preferred = parts.reflexive ? spec.reflexive : spec.plain;
+  const fallback = spec.plain;
+  return CORE_DATA.find(v => normalize(v.infinitive) === preferred)
+    || CORE_DATA.find(v => normalize(v.infinitive) === fallback)
+    || null;
+}
+
+function buildRegularExpectedCellMap(verb) {
+  const model = getRegularPatternModel(verb);
+  if (!verb || !model) return null;
+  const modelMap = buildCanonicalCellMap(model);
+  const out = {};
+  getVerbCellOrder(verb).forEach(cellKey => {
+    if (cellKey === imperativeCellKey("yo")) {
+      out[cellKey] = "--";
+      return;
+    }
+    const source = modelMap[cellKey] || "";
+    out[cellKey] = source
+      ? transformModelFormToTarget(source, model, verb).value
+      : "";
+  });
+  return out;
+}
+
+function buildRegularComparisonMap(verb) {
+  const regularMap = buildRegularExpectedCellMap(verb);
+  if (!regularMap) return { byCell: {}, changed: 0, comparable: 0, model: null };
+  const actualMap = getExpectedMap(verb) || buildCanonicalCellMap(verb);
+  const model = getRegularPatternModel(verb);
+  const byCell = {};
+  let changed = 0;
+  let comparable = 0;
+
+  getVerbCellOrder(verb).forEach(cellKey => {
+    const actual = cleanText(actualMap[cellKey] || "");
+    const regular = cleanText(regularMap[cellKey] || "");
+    if (!actual || !regular) return;
+    const irregular = formsDifferFromRegular(actual, regular);
+    byCell[cellKey] = { actual, regular, irregular };
+    comparable += 1;
+    if (irregular) changed += 1;
+  });
+
+  return { byCell, changed, comparable, model };
+}
+
+function getRegularCellComparison(comparison, cellKey, displayValue) {
+  const cell = comparison?.byCell?.[cellKey];
+  if (!cell || !cell.regular) return null;
+  if (!formsDifferFromRegular(displayValue, cell.regular)) return null;
+  return cell;
+}
+
+function getChangedRangeForSegment(actual, regular, offset) {
+  const actualText = actual || "";
+  const regularText = regular || "";
+  if (!formsDifferFromRegular(actualText, regularText)) return null;
+
+  const minLen = Math.min(actualText.length, regularText.length);
+  let start = 0;
+  while (start < minLen && actualText[start] === regularText[start]) start += 1;
+
+  let actualEnd = actualText.length;
+  let regularEnd = regularText.length;
+  while (
+    actualEnd > start &&
+    regularEnd > start &&
+    actualText[actualEnd - 1] === regularText[regularEnd - 1]
+  ) {
+    actualEnd -= 1;
+    regularEnd -= 1;
+  }
+
+  if (start >= actualEnd) {
+    const from = Math.max(0, Math.min(actualText.length - 1, start - 1));
+    const to = Math.min(actualText.length, Math.max(from + 1, start + 1));
+    return { start: offset + from, end: offset + to };
+  }
+
+  return { start: offset + start, end: offset + actualEnd };
+}
+
+function splitComparisonSegments(text) {
+  const value = text || "";
+  const segments = [];
+  const separatorRx = /(\s+\/\s+|;\s*|,\s*)/g;
+  let cursor = 0;
+  let match = separatorRx.exec(value);
+  while (match) {
+    if (match.index > cursor) {
+      segments.push({ text: value.slice(cursor, match.index), start: cursor });
+    }
+    cursor = match.index + match[0].length;
+    match = separatorRx.exec(value);
+  }
+  if (cursor < value.length) {
+    segments.push({ text: value.slice(cursor), start: cursor });
+  }
+  return segments;
+}
+
+function getIrregularDiffRanges(actualValue, regularValue) {
+  const actual = cleanText(actualValue || "");
+  const regular = cleanText(regularValue || "");
+  if (!formsDifferFromRegular(actual, regular)) return [];
+
+  const actualSegments = splitComparisonSegments(actual);
+  const regularSegments = splitComparisonSegments(regular);
+  if (actualSegments.length && actualSegments.length === regularSegments.length) {
+    return actualSegments
+      .map((segment, idx) => getChangedRangeForSegment(segment.text, regularSegments[idx].text, segment.start))
+      .filter(Boolean);
+  }
+
+  const singleRange = getChangedRangeForSegment(actual, regular, 0);
+  return singleRange ? [singleRange] : [];
+}
+
+function mergeRanges(ranges) {
+  const ordered = (ranges || [])
+    .filter(range => range && range.end > range.start)
+    .sort((a, b) => a.start - b.start);
+  const merged = [];
+  ordered.forEach(range => {
+    const last = merged[merged.length - 1];
+    if (last && range.start <= last.end) {
+      last.end = Math.max(last.end, range.end);
+      return;
+    }
+    merged.push({ start: range.start, end: range.end });
+  });
+  return merged;
+}
+
+function renderIrregularCellText(value, regularValue) {
+  const text = value || "";
+  const ranges = mergeRanges(getIrregularDiffRanges(text, regularValue));
+  if (!ranges.length) return escapeHtml(text);
+
+  const title = `Regular pattern: ${cleanText(regularValue || "")}`;
+  let cursor = 0;
+  let html = "";
+  ranges.forEach(range => {
+    if (range.start > cursor) html += escapeHtml(text.slice(cursor, range.start));
+    html += `<span class="irregularPart" title="${escapeHtml(title)}">${escapeHtml(text.slice(range.start, range.end))}</span>`;
+    cursor = range.end;
+  });
+  if (cursor < text.length) html += escapeHtml(text.slice(cursor));
+  return html;
+}
+
+function renderCellText(value, regularValue = "") {
   const v = value || "";
+  if (v && regularValue && formsDifferFromRegular(v, regularValue)) {
+    return renderIrregularCellText(v, regularValue);
+  }
   return v ? escapeHtml(v) : "&nbsp;";
+}
+
+function regularComparisonAttrs(comparison, cellKey, displayValue) {
+  const cell = getRegularCellComparison(comparison, cellKey, displayValue);
+  if (!cell) return "";
+  return ` data-regular-expected="${escapeHtml(cell.regular)}" data-irregular="true"`;
 }
 
 function splitMeaningAndCaution(rawMeaning) {
@@ -3723,7 +3903,7 @@ function createCustomVerbFromSearch(rawInput) {
   renderDetail(CURRENT_VERB_KEY);
 }
 
-function renderTenseBlocks(obj, verb) {
+function renderTenseBlocks(obj, verb, regularComparison) {
   const enabled = getEnabledTenseKeySet();
   const keys = getOrderedTenseKeys(obj || {});
   const canonicalMap = buildCanonicalCellMap(verb);
@@ -3745,12 +3925,18 @@ function renderTenseBlocks(obj, verb) {
       const plClass = getCellStatusClass(verb._key, plCellKey);
       const sgDraftClass = getDraftEditClass(verb, sgCellKey, sgDisplay, canonicalMap[sgCellKey] || "");
       const plDraftClass = getDraftEditClass(verb, plCellKey, plDisplay, canonicalMap[plCellKey] || "");
+      const sgRegularAttrs = regularComparisonAttrs(regularComparison, sgCellKey, sgDisplay);
+      const plRegularAttrs = regularComparisonAttrs(regularComparison, plCellKey, plDisplay);
+      const sgIrregularClass = sgRegularAttrs ? " formBtn--irregular" : "";
+      const plIrregularClass = plRegularAttrs ? " formBtn--irregular" : "";
+      const sgRegular = getRegularCellComparison(regularComparison, sgCellKey, sgDisplay)?.regular || "";
+      const plRegular = getRegularCellComparison(regularComparison, plCellKey, plDisplay)?.regular || "";
       return `
         <tr>
           <td><span class="k">${PRONOUNS[`${p}-sg`]}</span></td>
-          <td><button class="formBtn ${sgClass} ${sgDraftClass}${inactiveFormClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="${escapeHtml(k)}" data-person="${p}" data-number="sg" data-cell-key="${sgCellKey}"${inactiveAttrs}>${renderCellText(sgDisplay)}</button></td>
+          <td><button class="formBtn${sgIrregularClass} ${sgClass} ${sgDraftClass}${inactiveFormClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="${escapeHtml(k)}" data-person="${p}" data-number="sg" data-cell-key="${sgCellKey}"${sgRegularAttrs}${inactiveAttrs}>${renderCellText(sgDisplay, sgRegular)}</button></td>
           <td><span class="k">${PRONOUNS[`${p}-pl`]}</span></td>
-          <td><button class="formBtn ${plClass} ${plDraftClass}${inactiveFormClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="${escapeHtml(k)}" data-person="${p}" data-number="pl" data-cell-key="${plCellKey}"${inactiveAttrs}>${renderCellText(plDisplay)}</button></td>
+          <td><button class="formBtn${plIrregularClass} ${plClass} ${plDraftClass}${inactiveFormClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="${escapeHtml(k)}" data-person="${p}" data-number="pl" data-cell-key="${plCellKey}"${plRegularAttrs}${inactiveAttrs}>${renderCellText(plDisplay, plRegular)}</button></td>
         </tr>
       `;
     }).join("");
@@ -3783,7 +3969,7 @@ function renderTenseBlocks(obj, verb) {
   }).join("");
 }
 
-function renderImperative(verb) {
+function renderImperative(verb, regularComparison) {
   const imperativeEnabled = isTenseSelectionEnabled("imperative");
   const inactiveFormClass = imperativeEnabled ? "" : " inactiveTenseForm";
   const inactiveAttrs = imperativeEnabled ? "" : ` tabindex="-1" aria-disabled="true"`;
@@ -3803,7 +3989,10 @@ function renderImperative(verb) {
     const display = getDisplayCellValue(verb, cellKey, canonical[slot] || "");
     const cls = getCellStatusClass(verb._key, cellKey);
     const draftCls = getDraftEditClass(verb, cellKey, display, canonical[slot] || "");
-    return `<button class="formBtn imperativeForm imperativeFormBtn ${cls} ${draftCls}${inactiveFormClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Imperative" data-person="${meta.person}" data-number="${meta.number}" data-cell-key="${cellKey}"${inactiveAttrs}>${renderCellText(display)}</button>`;
+    const regularAttrs = regularComparisonAttrs(regularComparison, cellKey, display);
+    const irregularClass = regularAttrs ? " formBtn--irregular" : "";
+    const regular = getRegularCellComparison(regularComparison, cellKey, display)?.regular || "";
+    return `<button class="formBtn${irregularClass} imperativeForm imperativeFormBtn ${cls} ${draftCls}${inactiveFormClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Imperative" data-person="${meta.person}" data-number="${meta.number}" data-cell-key="${cellKey}"${regularAttrs}${inactiveAttrs}>${renderCellText(display, regular)}</button>`;
   }
 
   return `
@@ -3943,6 +4132,7 @@ function renderDetail(verbKey) {
   const patternNotesForDisplay = getPatternNotesForDisplay(verb);
   const meaningInfo = splitMeaningAndCaution(verb.meaning_en || "");
   const canonical = buildCanonicalCellMap(verb);
+  const regularComparison = buildRegularComparisonMap(verb);
   const gerundKey = gerundCellKey();
   const participleKey = participleCellKey();
   const gerundDisplay = getDisplayCellValue(verb, gerundKey, canonical[gerundKey] || "");
@@ -3953,16 +4143,28 @@ function renderDetail(verbKey) {
   const participleDraftClass = getDraftEditClass(verb, participleKey, participleDisplay, canonical[participleKey] || "");
   const showGerund = isTenseSelectionEnabled("gerund");
   const showParticiple = isTenseSelectionEnabled("participle");
-  const simpleBlocks = renderTenseBlocks(verb.simple, verb);
-  const compoundBlocks = renderTenseBlocks(verb.compound, verb);
+  const simpleBlocks = renderTenseBlocks(verb.simple, verb, regularComparison);
+  const compoundBlocks = renderTenseBlocks(verb.compound, verb, regularComparison);
   const showImperative = isTenseSelectionEnabled("imperative");
   const gerundInactiveClass = showGerund ? "" : " inactiveTenseForm";
   const participleInactiveClass = showParticiple ? "" : " inactiveTenseForm";
   const gerundInactiveAttrs = showGerund ? "" : ` tabindex="-1" aria-disabled="true"`;
   const participleInactiveAttrs = showParticiple ? "" : ` tabindex="-1" aria-disabled="true"`;
+  const gerundRegularAttrs = regularComparisonAttrs(regularComparison, gerundKey, gerundDisplay);
+  const participleRegularAttrs = regularComparisonAttrs(regularComparison, participleKey, participleDisplay);
+  const gerundIrregularClass = gerundRegularAttrs ? " formBtn--irregular" : "";
+  const participleIrregularClass = participleRegularAttrs ? " formBtn--irregular" : "";
+  const gerundRegular = getRegularCellComparison(regularComparison, gerundKey, gerundDisplay)?.regular || "";
+  const participleRegular = getRegularCellComparison(regularComparison, participleKey, participleDisplay)?.regular || "";
+  const patternChipLabel = regularComparison.comparable
+    ? (regularComparison.changed === 0
+      ? `<span class="patternRegular">regular</span>`
+      : `<span class="patternDelta">${regularComparison.changed} changed</span>`)
+    : `<span class="patternMuted">not compared</span>`;
   const chipHtml = `
-    <div class="chip"><strong class="chipLabel--gerund">Gerund</strong> <button class="formBtn chipFormBtn chipGerundBtn ${gerundStatusClass} ${gerundDraftClass}${gerundInactiveClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Gerund" data-person="" data-number="" data-cell-key="${gerundKey}"${gerundInactiveAttrs}>${renderCellText(gerundDisplay)}</button></div>
-    <div class="chip"><strong class="chipLabel--participle">Part.</strong> <button class="formBtn chipFormBtn chipPartBtn ${participleStatusClass} ${participleDraftClass}${participleInactiveClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Participle" data-person="" data-number="" data-cell-key="${participleKey}"${participleInactiveAttrs}>${renderCellText(participleDisplay)}</button></div>
+    <div class="chip patternChip"><strong>Pattern</strong> ${patternChipLabel}</div>
+    <div class="chip"><strong class="chipLabel--gerund">Gerund</strong> <button class="formBtn${gerundIrregularClass} chipFormBtn chipGerundBtn ${gerundStatusClass} ${gerundDraftClass}${gerundInactiveClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Gerund" data-person="" data-number="" data-cell-key="${gerundKey}"${gerundRegularAttrs}${gerundInactiveAttrs}>${renderCellText(gerundDisplay, gerundRegular)}</button></div>
+    <div class="chip"><strong class="chipLabel--participle">Part.</strong> <button class="formBtn${participleIrregularClass} chipFormBtn chipPartBtn ${participleStatusClass} ${participleDraftClass}${participleInactiveClass}" data-verb="${escapeHtml(verb.infinitive)}" data-verb-key="${verb._key}" data-tense="Participle" data-person="" data-number="" data-cell-key="${participleKey}"${participleRegularAttrs}${participleInactiveAttrs}>${renderCellText(participleDisplay, participleRegular)}</button></div>
   `;
 
   CURRENT_VERB_KEY = verb._key;
@@ -4009,7 +4211,7 @@ function renderDetail(verbKey) {
             aria-expanded="true"
           >&minus;</button>
         </summary>
-        <div class="pad"><div class="seamAnchor">${renderImperative(verb)}</div></div>
+        <div class="pad"><div class="seamAnchor">${renderImperative(verb, regularComparison)}</div></div>
       </details>
       <details class="tense notesPanel tense--centerHead" open>
         <summary>
@@ -4105,7 +4307,8 @@ function bindCellInteractions(detailRoot, verb) {
         tense: btn.dataset.tense,
         person: btn.dataset.person,
         number: btn.dataset.number,
-        form: btn.textContent.trim()
+        form: btn.textContent.trim(),
+        regularExpected: btn.dataset.regularExpected || ""
       });
     });
   });
@@ -4567,8 +4770,8 @@ function transformModelFormToTarget(modelForm, modelVerb, targetVerb) {
   replaceWord(modelVerb.infinitive.toLowerCase(), targetVerb.infinitive.toLowerCase());
   replaceWord(modelPart.toLowerCase(), targetPart.toLowerCase());
   if (modelParts.stem && targetParts.stem && modelParts.stem !== targetParts.stem) {
-    const stemRx = new RegExp(`\\b${escapeRegExp(modelParts.stem)}([a-záéíóúüñ]+)\\b`, "gi");
-    const next = out.replace(stemRx, (_, suffix) => `${targetParts.stem}${suffix}`);
+    const stemRx = new RegExp(`(^|[^\\p{L}])${escapeRegExp(modelParts.stem)}([\\p{L}]+)`, "giu");
+    const next = out.replace(stemRx, (_, prefix, suffix) => `${prefix}${targetParts.stem}${suffix}`);
     if (next !== out) {
       out = next;
       changed = true;
@@ -4580,8 +4783,8 @@ function transformModelFormToTarget(modelForm, modelVerb, targetVerb) {
       const modelStemVariant = applyStemMutation(modelParts.stem, type);
       const targetStemVariant = applyStemMutation(targetParts.stem, type);
       if (!modelStemVariant || !targetStemVariant || modelStemVariant === modelParts.stem) return;
-      const rx = new RegExp(`\\b${escapeRegExp(modelStemVariant)}([\\p{L}]*)\\b`, "giu");
-      const next = out.replace(rx, (_, suffix) => `${targetStemVariant}${suffix}`);
+      const rx = new RegExp(`(^|[^\\p{L}])${escapeRegExp(modelStemVariant)}([\\p{L}]*)`, "giu");
+      const next = out.replace(rx, (_, prefix, suffix) => `${prefix}${targetStemVariant}${suffix}`);
       if (next !== out) {
         out = next;
         changed = true;
@@ -5172,13 +5375,31 @@ function showPopover(anchorEl, meta) {
       : (num ? (TENSE_HINTS[num] || "Tip: Add a short explanation here for this tense.") : "Imperative form.");
   const translationHost = document.getElementById("popTranslation");
   const translationHtml = getPopoverEnglishTranslation(meta, num);
+  const regularExpected = cleanText(meta.regularExpected || "");
+  const regularCompareHtml = regularExpected && formsDifferFromRegular(meta.form, regularExpected)
+    ? `
+      <div class="popCompare">
+        <div class="popSectionTitle">Regular pattern comparison</div>
+        <div class="popCompareRows">
+          <div class="popCompareRow">
+            <div class="popCompareLabel">Actual</div>
+            <div class="popCompareValue">${renderCellText(meta.form, regularExpected)}</div>
+          </div>
+          <div class="popCompareRow">
+            <div class="popCompareLabel">Regular</div>
+            <div class="popCompareValue popCompareValue--regular">${escapeHtml(regularExpected)}</div>
+          </div>
+        </div>
+      </div>
+    `
+    : "";
 
   document.getElementById("popWord").textContent = meta.form;
   document.getElementById("popVerb").textContent = meta.verb;
   document.getElementById("popTense").textContent = num ? `${num} · ${label}` : label;
   document.getElementById("popPerson").textContent = personLabel;
   document.getElementById("popNumber").textContent = numberLabel;
-  document.getElementById("popHint").innerHTML = hint;
+  document.getElementById("popHint").innerHTML = `${hint}${regularCompareHtml}`;
   if (translationHost) {
     translationHost.hidden = !translationHtml;
     translationHost.innerHTML = translationHtml || "";
