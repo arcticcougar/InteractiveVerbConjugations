@@ -5037,7 +5037,14 @@ function computeGlobalHeaderFloors(measureWithStyle, chipSample) {
   return GLOBAL_HEADER_FLOORS;
 }
 
+function getAppLayoutZoom() {
+  const raw = window.getComputedStyle(document.body).zoom;
+  const zoom = parseFloat(raw || "1");
+  return Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
+}
+
 function computeGridWidths(detailRoot) {
+  const layoutZoom = getAppLayoutZoom();
   const meas = document.createElement("span");
   meas.style.position = "absolute";
   meas.style.left = "-99999px";
@@ -5054,7 +5061,7 @@ function computeGridWidths(detailRoot) {
     meas.style.fontStyle = cs.fontStyle;
     meas.style.fontVariant = cs.fontVariant;
     meas.textContent = text;
-    return Math.ceil(meas.getBoundingClientRect().width);
+    return Math.ceil(meas.getBoundingClientRect().width / layoutZoom);
   }
 
   const formSample = detailRoot.querySelector('section.side .formBtn[data-cell-key]') || detailRoot.querySelector(".formBtn[data-cell-key]");
@@ -5114,8 +5121,8 @@ function computeGridWidths(detailRoot) {
   const simpleSide = detailRoot.querySelector('section.side[data-side="simple"]');
   const compoundSide = detailRoot.querySelector('section.side[data-side="compound"]');
   if (simpleSide && compoundSide) {
-    detailRoot.style.setProperty("--simpleSideW", Math.ceil(simpleSide.getBoundingClientRect().width) + "px");
-    detailRoot.style.setProperty("--compoundSideW", Math.ceil(compoundSide.getBoundingClientRect().width) + "px");
+    detailRoot.style.setProperty("--simpleSideW", Math.ceil(simpleSide.getBoundingClientRect().width / layoutZoom) + "px");
+    detailRoot.style.setProperty("--compoundSideW", Math.ceil(compoundSide.getBoundingClientRect().width / layoutZoom) + "px");
   }
 
   meas.remove();
@@ -5152,6 +5159,7 @@ function syncSidebarHeight() {
   const row = document.querySelector(".row");
   const search = listCard?.querySelector(".search");
   const list = document.getElementById("list");
+  const layoutZoom = getAppLayoutZoom();
   if (!listCard || !mainCard || !search || !list) return;
   if (window.matchMedia("(max-width: 900px)").matches) {
     listCard.style.height = "";
@@ -5169,16 +5177,16 @@ function syncSidebarHeight() {
   if (helperCard) {
     const rowGap = row ? (parseFloat(window.getComputedStyle(row).columnGap || "10") || 10) : 10;
     const rowRect = row ? row.getBoundingClientRect() : null;
-    const available = Math.max(0, document.documentElement.clientWidth - (rowRect ? rowRect.left : 0) - 12);
-    const used = Math.ceil(listCard.getBoundingClientRect().width) + Math.ceil(mainCard.getBoundingClientRect().width) + (rowGap * 2);
-    const helperWidth = Math.max(0, Math.min(425, available - used));
+    const available = Math.max(0, document.documentElement.clientWidth - (rowRect ? rowRect.left : 0) - (12 * layoutZoom));
+    const used = Math.ceil(listCard.getBoundingClientRect().width) + Math.ceil(mainCard.getBoundingClientRect().width) + (rowGap * layoutZoom * 2);
+    const helperWidth = Math.max(0, Math.min(425, (available - used) / layoutZoom));
     helperCard.style.width = `${Math.floor(helperWidth)}px`;
   }
 
   // Then lock sidebar and helper heights to the final rendered main-card height.
-  const targetHeight = Math.ceil(mainCard.getBoundingClientRect().height || mainCard.offsetHeight || 0);
+  const targetHeight = Math.ceil((mainCard.getBoundingClientRect().height || mainCard.offsetHeight || 0) / layoutZoom);
   if (!targetHeight) return;
-  const searchHeight = Math.ceil(search.getBoundingClientRect().height || search.offsetHeight || 0);
+  const searchHeight = Math.ceil((search.getBoundingClientRect().height || search.offsetHeight || 0) / layoutZoom);
   const listHeight = Math.max(120, targetHeight - searchHeight);
 
   listCard.style.height = `${targetHeight}px`;
@@ -5358,6 +5366,7 @@ function getPopoverEnglishTranslation(meta, tenseNumber) {
 }
 
 function showPopover(anchorEl, meta) {
+  const layoutZoom = getAppLayoutZoom();
   const rect = anchorEl.getBoundingClientRect();
   const pad = 10;
   const num = (meta.tense.match(/^\d+/) || [""])[0];
@@ -5415,8 +5424,8 @@ function showPopover(anchorEl, meta) {
   if (x < pad) x = pad;
   if (y + popRect.height > window.innerHeight - pad) y = rect.top - popRect.height - 8;
   if (y < pad) y = pad;
-  pop.style.left = Math.round(x) + "px";
-  pop.style.top = Math.round(y) + "px";
+  pop.style.left = Math.round(x / layoutZoom) + "px";
+  pop.style.top = Math.round(y / layoutZoom) + "px";
 }
 
 function hidePopover() {
