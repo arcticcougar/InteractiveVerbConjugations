@@ -728,6 +728,38 @@
     font-weight: 900;
     letter-spacing: 0.3px;
   }
+  .verbIdentityRow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+  }
+  .practiceLaunchBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 25px;
+    height: 25px;
+    padding: 0;
+    border: 1px solid var(--pill-border);
+    border-radius: 999px;
+    background: var(--chip-bg);
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    vertical-align: middle;
+  }
+  .practiceLaunchBtn:hover {
+    border-color: var(--selected-border);
+    background: var(--hover-bg);
+    color: var(--warn);
+  }
+  .practiceLaunchBtn:focus-visible {
+    outline: 1px solid var(--selected-border);
+    outline-offset: 2px;
+  }
   .meaning {
     font-size: 16px;
     color: var(--muted);
@@ -1325,6 +1357,321 @@
     font-weight: 700;
   }
   .hint strong { color: var(--accent); }
+  .practiceOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: grid;
+    place-items: center;
+    padding: 14px;
+    background: rgba(0, 0, 0, 0.68);
+    backdrop-filter: blur(6px);
+  }
+  .practiceOverlay[hidden] {
+    display: none;
+  }
+  .practiceModal {
+    width: fit-content;
+    max-width: calc(100vw - 28px);
+    max-height: calc(100vh - 28px);
+    overflow: auto;
+    border: 1px solid var(--popover-border);
+    border-radius: 14px;
+    background: var(--card-bg);
+    box-shadow: var(--popover-shadow);
+    color: var(--text);
+  }
+  .practiceModal::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  .practiceModal::-webkit-scrollbar-track {
+    background: #2b2b2b;
+  }
+  .practiceModal::-webkit-scrollbar-thumb {
+    border: 2px solid #2b2b2b;
+    border-radius: 999px;
+    background: #1f1f1f;
+  }
+  .practiceModalHead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--table-rule);
+    background: var(--detail-head-bg);
+  }
+  .practiceTitle {
+    color: var(--big-color);
+    font-size: 20px;
+    font-weight: 900;
+    line-height: 1.1;
+  }
+  .practiceMeta {
+    margin-top: 3px;
+    color: var(--subhead);
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .practiceCloseBtn,
+  .practiceActionBtn,
+  .practiceSecondaryBtn {
+    border: 1px solid var(--close-border);
+    border-radius: 999px;
+    background: var(--close-bg);
+    color: var(--text);
+    font-family: inherit;
+    font-weight: 800;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .practiceCloseBtn {
+    padding: 6px 10px;
+    font-size: 15px;
+  }
+  .practiceActionBtn,
+  .practiceSecondaryBtn {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  .practiceActionBtn {
+    background: var(--accent);
+    color: #ffffff;
+  }
+  .practiceSecondaryBtn {
+    background: #2b2b2b;
+  }
+  .practiceCloseBtn:hover,
+  .practiceActionBtn:hover,
+  .practiceSecondaryBtn:hover {
+    border-color: var(--selected-border);
+    filter: brightness(1.08);
+  }
+  .practiceModalBody {
+    display: grid;
+    gap: 10px;
+    padding: 10px 12px 12px;
+  }
+  .practicePanel {
+    padding: 9px;
+    border: 1px solid var(--tense-border);
+    border-radius: 12px;
+    background: var(--tense-bg);
+  }
+  .practiceSectionTitle {
+    margin: 0 0 7px;
+    color: var(--note-subhead-color);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .practiceOptionsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+    gap: 6px;
+  }
+  .practiceOption {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    padding: 6px 7px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: #242424;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .practiceOption:hover {
+    background: var(--hover-bg);
+    border-color: var(--hover-border);
+  }
+  .practiceOption input {
+    flex: 0 0 auto;
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: var(--section-color);
+  }
+  .practiceActions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .practiceRunTop {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+  }
+  .practiceVerb {
+    color: var(--big-color);
+    font-size: 24px;
+    font-weight: 950;
+  }
+  .practiceScorePills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .practiceScorePill {
+    padding: 5px 8px;
+    border: 1px solid var(--pill-border);
+    border-radius: 999px;
+    background: var(--chip-bg);
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .practiceScorePill--good { color: var(--good); }
+  .practiceScorePill--warn { color: #ff8c00; }
+  .practiceScorePill--bad { color: var(--accent); }
+  .practiceColumns {
+    display: grid;
+    grid-template-columns: max-content max-content;
+    gap: 10px;
+    align-items: start;
+  }
+  .practiceImperativeGrid {
+    display: grid;
+    grid-template-columns: max-content minmax(220px, 1fr) max-content minmax(220px, 1fr);
+    gap: 7px 12px;
+    align-items: center;
+  }
+  .practiceImperativeLabel {
+    color: var(--muted);
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .practiceHeaderForms {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .practiceHeaderForm {
+    display: grid;
+    grid-template-columns: max-content minmax(120px, 1fr);
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: var(--chip-bg);
+    font-size: 14px;
+    font-weight: 800;
+  }
+  .practiceHeaderForm span {
+    color: var(--accent);
+  }
+  .practiceInput {
+    width: 100%;
+    min-width: 80px;
+    padding: 3px 6px;
+    border: 1px solid var(--input-border);
+    border-radius: 7px;
+    outline: none;
+    background: var(--input-bg);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+  .practiceInput:focus {
+    border-color: var(--selected-border);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 8%);
+  }
+  .practiceInput.practiceCorrect {
+    color: var(--good);
+  }
+  .practiceInput.practiceWarn {
+    color: #ff8c00;
+  }
+  .practiceInput.practiceBad,
+  .practiceInput.practiceEmpty {
+    color: var(--accent);
+  }
+  .practiceExpected {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+  .practiceNextControls {
+    display: grid;
+    grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr) max-content;
+    gap: 8px;
+    align-items: end;
+  }
+  .practiceField {
+    display: grid;
+    gap: 4px;
+  }
+  .practiceField label {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .practiceSelect {
+    width: 100%;
+    padding: 7px 8px;
+    border: 1px solid var(--input-border);
+    border-radius: 9px;
+    background: var(--input-bg);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .practiceSummaryTable {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .practiceSummaryTable th,
+  .practiceSummaryTable td {
+    padding: 6px 8px;
+    font-size: 13px;
+    line-height: 1.15;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .practiceSummaryTable td:nth-child(2),
+  .practiceSummaryTable td:nth-child(4) {
+    color: var(--text);
+  }
+  .practiceSummaryTable .practiceSummaryScore {
+    color: var(--good);
+    font-weight: 900;
+  }
+  .practiceEmptyState {
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 700;
+  }
+  @media (max-width: 900px) {
+    .practiceOptionsGrid,
+    .practiceColumns,
+    .practiceNextControls,
+    .practiceImperativeGrid {
+      grid-template-columns: 1fr;
+    }
+    .practiceModal {
+      width: calc(100vw - 20px);
+    }
+  }
   @media (max-width: 1100px) {
     .twoCol { grid-template-columns: 1fr; }
     .imperativeBoard,
@@ -1457,6 +1804,10 @@
   </div>
   <div class="hint" id="popHint"></div>
   <div class="hint popTranslation" id="popTranslation" hidden></div>
+</div>
+
+<div id="practiceOverlay" class="practiceOverlay" hidden>
+  <div id="practiceModal" class="practiceModal" role="dialog" aria-modal="true" aria-labelledby="practiceModalTitle"></div>
 </div>
 
 <script src="verbs-data.js"></script>
