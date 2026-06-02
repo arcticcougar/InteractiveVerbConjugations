@@ -4769,7 +4769,7 @@ function renderPracticeInput(cellKey, expectedMap) {
     ? `<div class="practiceExpected">Expected: ${escapeHtml(expected)}</div>`
     : "";
   return `
-    <div>
+    <div class="practiceInputWrap">
       <input
         class="practiceInput ${statusClass}"
         type="text"
@@ -4809,33 +4809,38 @@ function renderPracticeHeaderForms(verb, selectedKeys, expectedMap) {
 function renderPracticeTenseBlocks(source, verb, selectedKeys, expectedMap) {
   const selected = new Set(practiceSelectionKeys(selectedKeys));
   const keys = getOrderedTenseKeys(source || {}).filter(k => selected.has(String(extractTenseNumber(k))));
-  return keys.map((k, idx) => {
+  return keys.map((k) => {
     const num = extractTenseNumber(k);
     const label = k.replace(/^\d+\s*/, "");
-    const rowHtml = ["1", "2", "3"].map((p, i) => {
+    const singularHtml = ["1", "2", "3"].map((p, i) => {
       const sgCellKey = tenseCellKey(num, "sg", i);
+      return `
+        <div class="practicePronoun" style="--practice-row: ${i + 2}; --practice-pronoun-col: 1; --practice-input-col: 2;">${escapeHtml(PRONOUNS[`${p}-sg`])}</div>
+        <div class="practiceTenseInputSlot" style="--practice-row: ${i + 2}; --practice-pronoun-col: 1; --practice-input-col: 2;">${renderPracticeInput(sgCellKey, expectedMap)}</div>
+      `;
+    }).join("");
+    const pluralHtml = ["1", "2", "3"].map((p, i) => {
       const plCellKey = tenseCellKey(num, "pl", i);
       return `
-        <tr>
-          <td><span class="k">${PRONOUNS[`${p}-sg`]}</span></td>
-          <td>${renderPracticeInput(sgCellKey, expectedMap)}</td>
-          <td><span class="k">${PRONOUNS[`${p}-pl`]}</span></td>
-          <td>${renderPracticeInput(plCellKey, expectedMap)}</td>
-        </tr>
+        <div class="practicePronoun" style="--practice-row: ${i + 2}; --practice-pronoun-col: 3; --practice-input-col: 4;">${escapeHtml(PRONOUNS[`${p}-pl`])}</div>
+        <div class="practiceTenseInputSlot" style="--practice-row: ${i + 2}; --practice-pronoun-col: 3; --practice-input-col: 4;">${renderPracticeInput(plCellKey, expectedMap)}</div>
       `;
     }).join("");
     return `
       <details class="tense tnum-${num}" open>
-        <summary>
+        <summary tabindex="-1">
           <div class="tenseHead">
             <div class="tenseTitle">${num} &middot; ${escapeHtml(label)}</div>
           </div>
         </summary>
-        <table>
-          <colgroup><col class="p1"><col class="f1"><col class="p2"><col class="f2"></colgroup>
-          ${idx === 0 ? `<thead><tr><th class="thgroup" colspan="2">SINGULAR</th><th class="thgroup" colspan="2">PLURAL</th></tr></thead>` : ""}
-          <tbody>${rowHtml}</tbody>
-        </table>
+        <div class="pad">
+          <div class="practiceTenseGrid">
+            <div class="practiceTenseSideLabel practiceTenseSideLabel--singular">Singular</div>
+            <div class="practiceTenseSideLabel practiceTenseSideLabel--plural">Plural</div>
+            ${singularHtml}
+            ${pluralHtml}
+          </div>
+        </div>
       </details>
     `;
   }).join("");
@@ -4847,7 +4852,7 @@ function renderPracticeImperative(selectedKeys, expectedMap) {
   const slots = ["tu", "usted", "nosotros", "vosotros", "ustedes"];
   return `
     <details class="tense tense--spaced" open>
-      <summary>
+      <summary tabindex="-1">
         <div class="tenseHead"><div class="tenseTitle">Imperative</div></div>
       </summary>
       <div class="pad">
