@@ -5026,12 +5026,10 @@ function buildPracticeRows(verbs, selectedKeys) {
   ["simple", "compound"].forEach(sourceName => {
     getPracticeSelectedTenseDescriptors(verbs, sourceName, selectedKeys).forEach(tense => {
       rows.push({ type: "section", label: `${tense.num} &middot; ${escapeHtml(tense.label)}` });
-      rows.push({ type: "group", label: "Singular" });
       [0, 1, 2].forEach(i => {
         const cellKey = tenseCellKey(tense.num, "sg", i);
         if (hasExpected(cellKey)) rows.push({ type: "cell", label: PRONOUNS[`${i + 1}-sg`], cellKey });
       });
-      rows.push({ type: "group", label: "Plural" });
       [0, 1, 2].forEach(i => {
         const cellKey = tenseCellKey(tense.num, "pl", i);
         if (hasExpected(cellKey)) rows.push({ type: "cell", label: PRONOUNS[`${i + 1}-pl`], cellKey });
@@ -5069,9 +5067,6 @@ function renderPracticeMatrix(verbs, selectedKeys) {
       ${rows.map(row => {
         if (row.type === "section") {
           return `<div class="practiceMatrixSection">${row.label}</div>`;
-        }
-        if (row.type === "group") {
-          return `<div class="practiceMatrixGroup">${escapeHtml(row.label)}</div>`;
         }
         return `
           <div class="practiceMatrixLabel">${escapeHtml(row.label)}</div>
@@ -5180,16 +5175,15 @@ function renderPracticeRun() {
       </div>
     `;
   const title = verbs.length === 1 ? "Practice" : `${verbs.length} verb practice`;
+  const modalTitle = PRACTICE_STATE.submitted ? `${title} result` : title;
   const meta = verbs.map(verb => `${verb.infinitive} #${getDisplayVerbNumber(verb)}`).join(" / ");
+  const scoreHtml = renderPracticeScorePills(PRACTICE_STATE.summary);
   const body = `
-    <div class="practiceRunTop">
-      <div class="practiceVerb">${escapeHtml(title)}</div>
-      ${renderPracticeScorePills(PRACTICE_STATE.summary)}
-    </div>
+    ${scoreHtml ? `<div class="practiceRunTop">${scoreHtml}</div>` : ""}
     ${renderPracticeMatrix(verbs, PRACTICE_STATE.selectedKeys)}
     ${submittedControls}
   `;
-  showPracticeModal(PRACTICE_STATE.submitted ? "Practice result" : "Practice", meta, body);
+  showPracticeModal(modalTitle, meta, body);
   const firstInput = document.querySelector("#practiceModal .practiceInput:not([disabled])");
   if (firstInput) {
     setTimeout(() => {
