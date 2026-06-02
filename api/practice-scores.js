@@ -310,24 +310,23 @@ async function readBlobLeaderboard(leaderboardKey) {
   try {
     const result = await get(pathname, { access: "private", useCache: false });
     if (!result || result.statusCode !== 200) {
-      return { pathname, etag: null, doc: emptyBlobLeaderboard(leaderboardKey) };
+      return { pathname, doc: emptyBlobLeaderboard(leaderboardKey) };
     }
     const text = await streamToText(result.stream);
     const parsed = text ? JSON.parse(text) : null;
     return {
       pathname,
-      etag: result.blob?.etag || null,
       doc: normalizeBlobLeaderboard(parsed, leaderboardKey)
     };
   } catch (err) {
     if (/not.?found/i.test(err?.name || "") || /not.?found/i.test(err?.message || "")) {
-      return { pathname, etag: null, doc: emptyBlobLeaderboard(leaderboardKey) };
+      return { pathname, doc: emptyBlobLeaderboard(leaderboardKey) };
     }
     throw err;
   }
 }
 
-async function writeBlobLeaderboard(pathname, doc, etag) {
+async function writeBlobLeaderboard(pathname, doc) {
   const { put } = require("@vercel/blob");
   const options = {
     access: "private",
@@ -335,7 +334,6 @@ async function writeBlobLeaderboard(pathname, doc, etag) {
     contentType: "application/json",
     cacheControlMaxAge: 60
   };
-  if (etag) options.ifMatch = etag;
   return await put(pathname, JSON.stringify(doc), options);
 }
 
@@ -411,28 +409,18 @@ async function getBlobLeaderboard(leaderboardKey, attemptId = "") {
 }
 
 async function saveBlobScore(storedAttempt, leaderboardKey) {
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    const { pathname, etag, doc } = await readBlobLeaderboard(leaderboardKey);
-    const existingIdx = doc.attempts.findIndex(item => item.attemptId === storedAttempt.attemptId);
-    if (existingIdx >= 0) {
-      doc.attempts[existingIdx] = storedAttempt;
-    } else {
-      doc.attempts.push(storedAttempt);
-    }
-    doc.attempts = doc.attempts
-      .sort(compareRankableAttempts)
-      .slice(0, MAX_BLOB_ATTEMPTS_PER_BOARD);
-    try {
-      await writeBlobLeaderboard(pathname, doc, etag);
-      return rankedBlobLeaderboard(doc, storedAttempt.attemptId);
-    } catch (err) {
-      if (/precondition/i.test(err?.name || "") || /precondition/i.test(err?.message || "")) {
-        continue;
-      }
-      throw err;
-    }
+  const { pathname, doc } = await readBlobLeaderboard(leaderboardKey);
+  const existingIdx = doc.attempts.findIndex(item => item.attemptId === storedAttempt.attemptId);
+  if (existingIdx >= 0) {
+    doc.attempts[existingIdx] = storedAttempt;
+  } else {
+    doc.attempts.push(storedAttempt);
   }
-  throw new Error("Could not save score after concurrent leaderboard updates.");
+  doc.attempts = doc.attempts
+    .sort(compareRankableAttempts)
+    .slice(0, MAX_BLOB_ATTEMPTS_PER_BOARD);
+  await writeBlobLeaderboard(pathname, doc);
+  return rankedBlobLeaderboard(doc, storedAttempt.attemptId);
 }
 
 function getPool() {

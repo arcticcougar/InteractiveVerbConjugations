@@ -5293,6 +5293,18 @@ function formatPracticeDuration(ms) {
   return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
 }
 
+function sortPracticeLeaderboardEntries(entries) {
+  return [...(entries || [])].sort((a, b) => {
+    const pointDiff = (Number(b.points) || 0) - (Number(a.points) || 0);
+    if (pointDiff) return pointDiff;
+    const percentDiff = (Number(b.percent) || 0) - (Number(a.percent) || 0);
+    if (percentDiff) return percentDiff;
+    const durationDiff = (Number(a.durationMs) || 0) - (Number(b.durationMs) || 0);
+    if (durationDiff) return durationDiff;
+    return (Number(a.rank) || 0) - (Number(b.rank) || 0);
+  });
+}
+
 function renderPracticeLeaderboard() {
   if (!PRACTICE_STATE.submitted) return "";
   const status = PRACTICE_STATE.onlineScoreStatus || "idle";
@@ -5304,7 +5316,7 @@ function renderPracticeLeaderboard() {
   if (status === "saving") {
     content = `<div class="practiceEmptyState">Saving online score...</div>`;
   } else if (status === "saved" && leaderboard) {
-    const entries = Array.isArray(leaderboard.entries) ? leaderboard.entries : [];
+    const entries = sortPracticeLeaderboardEntries(leaderboard.entries);
     const rows = entries.map(entry => `
       <tr class="${entry.isCurrentAttempt ? "practiceLeaderboardCurrent" : ""}">
         <td>${entry.rank || ""}</td>
