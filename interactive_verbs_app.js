@@ -12,7 +12,7 @@ const TENSE_SELECTION_ALL_KEYS = [
 const DEFAULT_BEGINNER_TENSE_KEYS = [
   "gerund", "participle", "1", "2", "3", "4", "5", "imperative"
 ];
-const PRACTICE_DEFAULT_TENSE_KEYS = ["gerund", "participle", "1", "2", "3", "4"];
+const PRACTICE_DEFAULT_TENSE_KEYS = ["gerund", "participle", "1", "3", "4"];
 const TENSE_SELECTION_LABELS = {
   gerund: "Gerund",
   participle: "Past participle",
@@ -2562,6 +2562,7 @@ function renderTenseHelper(context) {
           <li>Press Enter to save that cell.</li>
           <li>Press Tab / Shift+Tab to save and jump to next/previous cell.</li>
           <li>Double-click opens the detailed popover for that cell.</li>
+          <li>Use the practice button beside the verb title for a test mode; its beginner default skips imperfect and includes preterite.</li>
         </ul>
       </div>
       <div class="helperPanel">
