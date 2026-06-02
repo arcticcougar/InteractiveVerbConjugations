@@ -1604,6 +1604,9 @@
     border-color: var(--selected-border);
     box-shadow: inset 0 0 0 1px rgb(255 255 255 / 8%);
   }
+  .practicePlayerCustom {
+    margin-top: 8px;
+  }
   .practiceColumns {
     display: grid;
     grid-template-columns: max-content max-content;
@@ -1833,6 +1836,23 @@
   .practiceSummaryTable .practiceSummaryScore {
     color: var(--good);
     font-weight: 900;
+  }
+  .practiceLeaderboardRank {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 900;
+  }
+  .practiceLeaderboardRank span {
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .practiceLeaderboardCurrent td {
+    background: rgb(139 73 255 / 14%);
   }
   .practiceEmptyState {
     color: var(--muted);

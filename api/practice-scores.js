@@ -1,0 +1,492 @@
+"use strict";
+
+const fs = require("fs");
+const path = require("path");
+const { randomUUID } = require("crypto");
+
+const TENSE_SELECTION_ALL_KEYS = [
+  "gerund", "participle",
+  "1", "2", "3", "4", "5", "6", "7",
+  "8", "9", "10", "11", "12", "13", "14",
+  "imperative"
+];
+const TENSE_SELECTION_SET = new Set(TENSE_SELECTION_ALL_KEYS);
+const SCORE_VERSION = "practice-score-v1";
+const MAX_VERBS = 3;
+const MAX_INPUTS = 240;
+const MAX_DURATION_MS = 4 * 60 * 60 * 1000;
+
+let DATA_CACHE = null;
+let POOL = null;
+let SCHEMA_READY = false;
+
+function json(res, status, payload) {
+  res.statusCode = status;
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.end(JSON.stringify(payload));
+}
+
+function cleanText(input) {
+  return (input || "").replace(/\u00ad/g, "").replace(/\s+/g, " ").trim();
+}
+
+function normalizeForMatch(s) {
+  return (s || "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/\s+([,.;:!?])/g, "$1")
+    .trim();
+}
+
+function normalize(s) {
+  return (s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+}
+
+function normalizeUserCellInput(s) {
+  return (s || "").replace(/\s+/g, " ").trim();
+}
+
+function compareUserToExpected(userValue, expectedValue) {
+  const u = normalizeForMatch(userValue);
+  const e = normalizeForMatch(expectedValue);
+  if (!u) return "empty";
+  if (!e) return "incorrect";
+  if (normalize(u) === normalize(e)) return u === e ? "correct" : "accent_warning";
+  return "incorrect";
+}
+
+function extractTenseNumber(key) {
+  const n = parseInt((key.match(/^\d+/) || ["0"])[0], 10);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function getOrderedTenseKeys(obj) {
+  return Object.keys(obj || {}).sort((a, b) => extractTenseNumber(a) - extractTenseNumber(b));
+}
+
+function tenseCellKey(tenseNum, number, rowIndex) {
+  return `s:${tenseNum}:${number}:${rowIndex}`;
+}
+
+function gerundCellKey() {
+  return "h:gerund";
+}
+
+function participleCellKey() {
+  return "h:participle";
+}
+
+function imperativeCellKey(slot) {
+  return `i:${slot}`;
+}
+
+function parseImperativeLines(lines) {
+  const cleaned = (lines || []).map(line => cleanText(line)).filter(Boolean);
+  const pairParts = cleaned[1]
+    ? cleaned[1].split(/\s+(?=[^\s;]+;\s*no\s+)/).map(part => part.trim()).filter(Boolean)
+    : [];
+  const lowerMatch = cleaned[2] ? cleaned[2].match(/^(.*\S)\s+(\S+)$/) : null;
+  return {
+    nosotros: cleaned[0] ? cleaned[0].replace(/^[-\u2014]\s*/, "").trim() : "",
+    tu: pairParts[0] || "",
+    vosotros: pairParts[1] || "",
+    usted: lowerMatch ? lowerMatch[1].trim() : (cleaned[2] || ""),
+    ustedes: lowerMatch ? lowerMatch[2].trim() : ""
+  };
+}
+
+function buildCanonicalCellMap(verb) {
+  const out = {};
+  out[gerundCellKey()] = cleanText(verb.gerund || "");
+  out[participleCellKey()] = cleanText(verb.past_participle || "");
+  getOrderedTenseKeys(verb.simple).forEach(k => {
+    const num = extractTenseNumber(k);
+    const tense = verb.simple[k] || { singular: [], plural: [] };
+    [0, 1, 2].forEach(i => {
+      out[tenseCellKey(num, "sg", i)] = cleanText(tense.singular?.[i] || "");
+      out[tenseCellKey(num, "pl", i)] = cleanText(tense.plural?.[i] || "");
+    });
+  });
+  getOrderedTenseKeys(verb.compound).forEach(k => {
+    const num = extractTenseNumber(k);
+    const tense = verb.compound[k] || { singular: [], plural: [] };
+    [0, 1, 2].forEach(i => {
+      out[tenseCellKey(num, "sg", i)] = cleanText(tense.singular?.[i] || "");
+      out[tenseCellKey(num, "pl", i)] = cleanText(tense.plural?.[i] || "");
+    });
+  });
+  const imp = parseImperativeLines(verb.imperative || []);
+  out[imperativeCellKey("tu")] = imp.tu || "";
+  out[imperativeCellKey("usted")] = imp.usted || "";
+  out[imperativeCellKey("nosotros")] = imp.nosotros || "";
+  out[imperativeCellKey("vosotros")] = imp.vosotros || "";
+  out[imperativeCellKey("ustedes")] = imp.ustedes || "";
+  return out;
+}
+
+function getPracticeCellKeys(verb, selectedKeys) {
+  const selected = new Set(selectedKeys);
+  const keys = [];
+  if (selected.has("gerund")) keys.push(gerundCellKey());
+  if (selected.has("participle")) keys.push(participleCellKey());
+  getOrderedTenseKeys(verb.simple).forEach(k => {
+    const num = extractTenseNumber(k);
+    if (!selected.has(String(num))) return;
+    [0, 1, 2].forEach(i => keys.push(tenseCellKey(num, "sg", i)));
+    [0, 1, 2].forEach(i => keys.push(tenseCellKey(num, "pl", i)));
+  });
+  getOrderedTenseKeys(verb.compound).forEach(k => {
+    const num = extractTenseNumber(k);
+    if (!selected.has(String(num))) return;
+    [0, 1, 2].forEach(i => keys.push(tenseCellKey(num, "sg", i)));
+    [0, 1, 2].forEach(i => keys.push(tenseCellKey(num, "pl", i)));
+  });
+  if (selected.has("imperative")) {
+    keys.push(imperativeCellKey("tu"));
+    keys.push(imperativeCellKey("usted"));
+    keys.push(imperativeCellKey("nosotros"));
+    keys.push(imperativeCellKey("vosotros"));
+    keys.push(imperativeCellKey("ustedes"));
+  }
+  const expected = buildCanonicalCellMap(verb);
+  return keys.filter(cellKey => cleanText(expected[cellKey] || ""));
+}
+
+function getData() {
+  if (!DATA_CACHE) {
+    const dataPath = path.join(process.cwd(), "verbs-data.json");
+    const rows = JSON.parse(fs.readFileSync(dataPath, "utf8"));
+    DATA_CACHE = {
+      byCoreKey: new Map(rows.map(verb => [`core:${Number(verb.id)}`, verb]))
+    };
+  }
+  return DATA_CACHE;
+}
+
+function sanitizePlayerName(name) {
+  return cleanText(String(name || ""))
+    .replace(/[^\p{L}\p{N} ._'-]/gu, "")
+    .replace(/\s+/g, " ")
+    .slice(0, 24)
+    .trim();
+}
+
+function sanitizeAttemptId(value) {
+  const cleaned = String(value || "").replace(/[^\w:-]/g, "").slice(0, 80);
+  return cleaned || randomUUID();
+}
+
+function normalizeVerbKeys(value) {
+  const source = Array.isArray(value)
+    ? value
+    : String(value || "").split(",");
+  const keys = source.map(key => String(key || "").trim()).filter(Boolean);
+  if (!keys.length || keys.length > MAX_VERBS) throw new Error("Select one to three verbs.");
+  if (new Set(keys).size !== keys.length) throw new Error("Duplicate verbs are not allowed.");
+  keys.forEach(key => {
+    if (!/^core:\d+$/.test(key)) {
+      throw new Error("Online scoring currently supports core verbs only.");
+    }
+  });
+  return keys;
+}
+
+function normalizeSelectedKeys(value) {
+  const source = Array.isArray(value)
+    ? value
+    : String(value || "").split(",");
+  const set = new Set(source.map(key => String(key || "").trim()).filter(key => TENSE_SELECTION_SET.has(key)));
+  const keys = TENSE_SELECTION_ALL_KEYS.filter(key => set.has(key));
+  if (!keys.length) throw new Error("Select at least one tense or form.");
+  return keys;
+}
+
+function resolveVerbs(verbKeys) {
+  const { byCoreKey } = getData();
+  return verbKeys.map(key => {
+    const verb = byCoreKey.get(key);
+    if (!verb) throw new Error(`Could not find ${key}.`);
+    return { key, verb };
+  });
+}
+
+function buildLeaderboardKey(verbKeys, selectedKeys) {
+  return [
+    SCORE_VERSION,
+    `verbs:${[...verbKeys].sort().join(",")}`,
+    `tenses:${selectedKeys.join(",")}`
+  ].join("|");
+}
+
+function summarizeAttempt(payload) {
+  const verbKeys = normalizeVerbKeys(payload.verbKeys);
+  const selectedKeys = normalizeSelectedKeys(payload.selectedKeys);
+  const verbs = resolveVerbs(verbKeys);
+  const inputs = payload.inputs && typeof payload.inputs === "object" ? payload.inputs : {};
+  if (Object.keys(inputs).length > MAX_INPUTS) throw new Error("Too many answers submitted.");
+
+  const summary = { correct: 0, accent_warning: 0, incorrect: 0, empty: 0, total: 0, points: 0, percent: 0 };
+  const perVerb = [];
+
+  verbs.forEach(({ key, verb }) => {
+    const expected = buildCanonicalCellMap(verb);
+    const verbSummary = { correct: 0, accent_warning: 0, incorrect: 0, empty: 0, total: 0, points: 0, percent: 0 };
+    getPracticeCellKeys(verb, selectedKeys).forEach(cellKey => {
+      const inputKey = `${key}::${cellKey}`;
+      const status = compareUserToExpected(normalizeUserCellInput(inputs[inputKey] || ""), expected[cellKey] || "");
+      summary[status] += 1;
+      summary.total += 1;
+      verbSummary[status] += 1;
+      verbSummary.total += 1;
+    });
+    verbSummary.points = verbSummary.correct + verbSummary.accent_warning;
+    verbSummary.percent = verbSummary.total ? Math.round((verbSummary.points / verbSummary.total) * 100) : 0;
+    perVerb.push({
+      verbKey: key,
+      infinitive: cleanText(verb.infinitive || ""),
+      displayNumber: String(Number(verb.id) || 0).padStart(4, "0"),
+      summary: verbSummary
+    });
+  });
+
+  summary.points = summary.correct + summary.accent_warning;
+  summary.percent = summary.total ? Math.round((summary.points / summary.total) * 100) : 0;
+  if (!summary.total) throw new Error("No scorable forms were submitted.");
+
+  return {
+    verbKeys,
+    selectedKeys,
+    leaderboardKey: buildLeaderboardKey(verbKeys, selectedKeys),
+    summary,
+    perVerb,
+    verbLabels: perVerb.map(item => ({
+      verbKey: item.verbKey,
+      infinitive: item.infinitive,
+      displayNumber: item.displayNumber
+    }))
+  };
+}
+
+function getConnectionString() {
+  return process.env.POSTGRES_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL_NON_POOLING || "";
+}
+
+function getPool() {
+  const connectionString = getConnectionString();
+  if (!connectionString) return null;
+  if (!POOL) {
+    const { Pool } = require("pg");
+    const useSsl = !/localhost|127\.0\.0\.1/.test(connectionString);
+    POOL = new Pool({
+      connectionString,
+      ssl: useSsl ? { rejectUnauthorized: false } : false
+    });
+  }
+  return POOL;
+}
+
+async function ensureSchema(pool) {
+  if (SCHEMA_READY) return;
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS practice_scores (
+      id BIGSERIAL PRIMARY KEY,
+      attempt_id TEXT NOT NULL UNIQUE,
+      leaderboard_key TEXT NOT NULL,
+      player_name TEXT NOT NULL,
+      verb_keys JSONB NOT NULL,
+      verb_labels JSONB NOT NULL,
+      selected_keys JSONB NOT NULL,
+      score_points INTEGER NOT NULL,
+      score_total INTEGER NOT NULL,
+      score_percent INTEGER NOT NULL,
+      correct INTEGER NOT NULL,
+      accent_warning INTEGER NOT NULL,
+      incorrect INTEGER NOT NULL,
+      empty INTEGER NOT NULL,
+      duration_ms INTEGER NOT NULL,
+      started_at TIMESTAMPTZ,
+      submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      app_version TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_practice_scores_leaderboard
+      ON practice_scores (leaderboard_key, score_points DESC, duration_ms ASC, submitted_at ASC);
+  `);
+  SCHEMA_READY = true;
+}
+
+function normalizeDurationMs(value) {
+  const n = Math.round(Number(value) || 0);
+  return Math.max(0, Math.min(n, MAX_DURATION_MS));
+}
+
+function normalizeTimestamp(value) {
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date.toISOString() : null;
+}
+
+function mapLeaderboardRow(row, attemptId) {
+  return {
+    rank: Number(row.rank) || 0,
+    playerName: row.player_name,
+    points: Number(row.score_points) || 0,
+    total: Number(row.score_total) || 0,
+    percent: Number(row.score_percent) || 0,
+    durationMs: Number(row.duration_ms) || 0,
+    submittedAt: row.submitted_at,
+    isCurrentAttempt: row.attempt_id === attemptId
+  };
+}
+
+async function getLeaderboard(pool, leaderboardKey, attemptId = "") {
+  const rowsResult = await pool.query(`
+    WITH ranked AS (
+      SELECT
+        attempt_id,
+        player_name,
+        score_points,
+        score_total,
+        score_percent,
+        duration_ms,
+        submitted_at,
+        RANK() OVER (
+          ORDER BY score_points DESC, duration_ms ASC, submitted_at ASC, id ASC
+        ) AS rank
+      FROM practice_scores
+      WHERE leaderboard_key = $1
+    )
+    SELECT *
+    FROM ranked
+    WHERE rank <= 10 OR attempt_id = $2
+    ORDER BY rank ASC, submitted_at ASC
+  `, [leaderboardKey, attemptId]);
+  const countResult = await pool.query(
+    "SELECT COUNT(*)::int AS count FROM practice_scores WHERE leaderboard_key = $1",
+    [leaderboardKey]
+  );
+  const entries = rowsResult.rows.map(row => mapLeaderboardRow(row, attemptId));
+  const current = entries.find(row => row.isCurrentAttempt) || null;
+  return {
+    leaderboardKey,
+    rank: current ? current.rank : null,
+    totalAttempts: Number(countResult.rows[0]?.count) || 0,
+    entries
+  };
+}
+
+async function readBody(req) {
+  if (req.body && typeof req.body === "object") return req.body;
+  if (typeof req.body === "string" && req.body.trim()) return JSON.parse(req.body);
+  const chunks = [];
+  for await (const chunk of req) chunks.push(chunk);
+  const raw = Buffer.concat(chunks).toString("utf8");
+  return raw ? JSON.parse(raw) : {};
+}
+
+async function handleGet(req, res) {
+  const url = new URL(req.url, "http://localhost");
+  const verbKeys = normalizeVerbKeys(url.searchParams.get("verbKeys") || "");
+  const selectedKeys = normalizeSelectedKeys(url.searchParams.get("selectedKeys") || "");
+  const leaderboardKey = buildLeaderboardKey(verbKeys, selectedKeys);
+  const pool = getPool();
+  if (!pool) {
+    return json(res, 200, {
+      ok: true,
+      configured: false,
+      message: "Online scores need a Postgres database configured on Vercel."
+    });
+  }
+  await ensureSchema(pool);
+  const leaderboard = await getLeaderboard(pool, leaderboardKey);
+  return json(res, 200, { ok: true, configured: true, leaderboard });
+}
+
+async function handlePost(req, res) {
+  const body = await readBody(req);
+  const playerName = sanitizePlayerName(body.playerName);
+  if (!playerName) throw new Error("Player name is required.");
+
+  const scored = summarizeAttempt(body);
+  const attemptId = sanitizeAttemptId(body.attemptId);
+  const durationMs = normalizeDurationMs(body.durationMs);
+  const startedAt = normalizeTimestamp(body.startedAt);
+  const submittedAt = normalizeTimestamp(body.submittedAt) || new Date().toISOString();
+  const pool = getPool();
+
+  if (!pool) {
+    return json(res, 200, {
+      ok: true,
+      configured: false,
+      message: "Online scores need a Postgres database configured on Vercel.",
+      scored
+    });
+  }
+
+  await ensureSchema(pool);
+  await pool.query(`
+    INSERT INTO practice_scores (
+      attempt_id,
+      leaderboard_key,
+      player_name,
+      verb_keys,
+      verb_labels,
+      selected_keys,
+      score_points,
+      score_total,
+      score_percent,
+      correct,
+      accent_warning,
+      incorrect,
+      empty,
+      duration_ms,
+      started_at,
+      submitted_at,
+      app_version
+    ) VALUES (
+      $1, $2, $3, $4::jsonb, $5::jsonb, $6::jsonb, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+    )
+    ON CONFLICT (attempt_id) DO NOTHING
+  `, [
+    attemptId,
+    scored.leaderboardKey,
+    playerName,
+    JSON.stringify(scored.verbKeys),
+    JSON.stringify(scored.verbLabels),
+    JSON.stringify(scored.selectedKeys),
+    scored.summary.points,
+    scored.summary.total,
+    scored.summary.percent,
+    scored.summary.correct,
+    scored.summary.accent_warning,
+    scored.summary.incorrect,
+    scored.summary.empty,
+    durationMs,
+    startedAt,
+    submittedAt,
+    SCORE_VERSION
+  ]);
+
+  const leaderboard = await getLeaderboard(pool, scored.leaderboardKey, attemptId);
+  return json(res, 200, {
+    ok: true,
+    configured: true,
+    scored,
+    leaderboard
+  });
+}
+
+module.exports = async function handler(req, res) {
+  try {
+    if (req.method === "OPTIONS") {
+      res.statusCode = 204;
+      return res.end();
+    }
+    if (req.method === "GET") return await handleGet(req, res);
+    if (req.method === "POST") return await handlePost(req, res);
+    return json(res, 405, { ok: false, message: "Method not allowed." });
+  } catch (err) {
+    return json(res, 400, {
+      ok: false,
+      message: err?.message || "Could not process practice score."
+    });
+  }
+};

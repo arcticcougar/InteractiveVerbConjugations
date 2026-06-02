@@ -1,6 +1,7 @@
 "use strict";
 
 const STATE_KEY = "ivc_state_v1";
+const PRACTICE_PLAYER_KEY = "ivc_practice_player_v1";
 const BACKUP_VERSION = 1;
 const BASE_DATA = window.VERB_DATA || [];
 const TENSE_SELECTION_ALL_KEYS = [
@@ -13,6 +14,7 @@ const DEFAULT_BEGINNER_TENSE_KEYS = [
   "gerund", "participle", "1", "2", "3", "4", "5", "imperative"
 ];
 const PRACTICE_DEFAULT_TENSE_KEYS = ["gerund", "participle", "1", "3", "4"];
+const PRACTICE_PLAYER_PRESETS = ["Mike", "Scott", "Travis"];
 const TENSE_SELECTION_LABELS = {
   gerund: "Gerund",
   participle: "Past participle",
@@ -2060,7 +2062,15 @@ let PRACTICE_STATE = {
   attempts: [],
   nextPatternFilter: "all",
   nextTagFilter: "all",
-  tabOrder: "column"
+  tabOrder: "column",
+  playerName: loadPracticePlayerName(),
+  startedAtMs: 0,
+  submittedAtMs: 0,
+  durationMs: 0,
+  onlineScoreStatus: "idle",
+  onlineScoreMessage: "",
+  onlineLeaderboard: null,
+  onlineAttemptId: ""
 };
 
 const SPANISH_CHAR_SHORTCUTS_BY_LETTER = {
@@ -4702,6 +4712,84 @@ function getPracticeSelectedKeysFromModal() {
   return practiceSelectionKeys(checked, { allowEmpty: true });
 }
 
+function sanitizePracticePlayerName(value) {
+  return cleanText(value || "")
+    .replace(/[^\p{L}\p{N} ._'-]/gu, "")
+    .replace(/\s+/g, " ")
+    .slice(0, 24)
+    .trim();
+}
+
+function loadPracticePlayerName() {
+  try {
+    return sanitizePracticePlayerName(localStorage.getItem(PRACTICE_PLAYER_KEY) || "") || "Scott";
+  } catch {
+    return "Scott";
+  }
+}
+
+function savePracticePlayerName(name) {
+  const cleaned = sanitizePracticePlayerName(name);
+  if (!cleaned) return "";
+  try {
+    localStorage.setItem(PRACTICE_PLAYER_KEY, cleaned);
+  } catch {
+    // ignore localStorage write issues
+  }
+  return cleaned;
+}
+
+function renderPracticePlayerControls(value = PRACTICE_STATE.playerName || "") {
+  const current = sanitizePracticePlayerName(value);
+  const presetMatch = PRACTICE_PLAYER_PRESETS.includes(current);
+  const customValue = presetMatch ? "" : current;
+  const options = PRACTICE_PLAYER_PRESETS.map(name => `
+    <label class="practiceOption">
+      <input
+        type="radio"
+        name="practicePlayerPreset"
+        data-practice-player-preset="${escapeHtml(name)}"
+        ${current === name ? "checked" : ""}
+      >
+      <span>${escapeHtml(name)}</span>
+    </label>
+  `).join("");
+  return `
+    <div class="practiceOptionsGrid">
+      ${options}
+      <label class="practiceOption">
+        <input
+          type="radio"
+          name="practicePlayerPreset"
+          data-practice-player-preset="custom"
+          ${presetMatch ? "" : "checked"}
+        >
+        <span>Other</span>
+      </label>
+    </div>
+    <div class="practicePlayerCustom">
+      <input
+        class="practiceTextInput"
+        type="text"
+        data-practice-player-custom
+        value="${escapeHtml(customValue)}"
+        placeholder="Player name"
+        maxlength="24"
+        autocomplete="name"
+        spellcheck="false"
+      >
+    </div>
+  `;
+}
+
+function getPracticePlayerNameFromModal() {
+  const selected = document.querySelector("#practiceModal input[data-practice-player-preset]:checked")?.dataset.practicePlayerPreset || "";
+  const rawName = selected === "custom"
+    ? document.querySelector("#practiceModal [data-practice-player-custom]")?.value || ""
+    : selected;
+  return sanitizePracticePlayerName(rawName);
+}
+
 function getPracticeTabOrderFromModal() {
   const selected = document.querySelector("#practiceModal input[data-practice-tab-order]:checked")?.dataset.practiceTabOrder;
   return selected === "row" ? "row" : "column";
@@ -4936,6 +5024,10 @@ function renderPracticeSetup(verbKey = CURRENT_VERB_KEY) {
   }
   PRACTICE_STATE.verbKey = verb._key;
   const body = `
+    <div class="practicePanel">
+      <div class="practiceSectionTitle">Player</div>
+      ${renderPracticePlayerControls(PRACTICE_STATE.playerName)}
+    </div>
     ${renderPracticeExtraVerbControls(verb)}
     <div class="practicePanel">
       <div class="practiceSectionTitle">Tenses</div>
@@ -5193,6 +5285,111 @@ function renderPracticeScorePills(summary) {
   `;
 }
 
+function formatPracticeDuration(ms) {
+  const totalSeconds = Math.max(0, Math.round((Number(ms) || 0) / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (!minutes) return `${seconds}s`;
+  return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
+}
+
+function renderPracticeLeaderboard() {
+  if (!PRACTICE_STATE.submitted) return "";
+  const status = PRACTICE_STATE.onlineScoreStatus || "idle";
+  const leaderboard = PRACTICE_STATE.onlineLeaderboard;
+  const message = PRACTICE_STATE.onlineScoreMessage || "";
+  const duration = PRACTICE_STATE.durationMs ? formatPracticeDuration(PRACTICE_STATE.durationMs) : "";
+  let content = "";
+
+  if (status === "saving") {
+    content = `<div class="practiceEmptyState">Saving online score...</div>`;
+  } else if (status === "saved" && leaderboard) {
+    const entries = Array.isArray(leaderboard.entries) ? leaderboard.entries : [];
+    const rows = entries.map(entry => `
+      <tr class="${entry.isCurrentAttempt ? "practiceLeaderboardCurrent" : ""}">
+        <td>${entry.rank || ""}</td>
+        <td>${escapeHtml(entry.playerName || "")}</td>
+        <td class="practiceSummaryScore">${entry.points || 0}/${entry.total || 0}</td>
+        <td>${formatPracticeDuration(entry.durationMs || 0)}</td>
+      </tr>
+    `).join("");
+    content = `
+      <div class="practiceLeaderboardRank">
+        ${leaderboard.rank ? `Rank ${leaderboard.rank} of ${leaderboard.totalAttempts || 0}` : "Score saved"}
+        ${duration ? `<span>${duration}</span>` : ""}
+      </div>
+      ${rows ? `
+        <table class="practiceSummaryTable practiceLeaderboardTable">
+          <thead>
+            <tr><th>Rank</th><th>Player</th><th>Score</th><th>Time</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      ` : ""}
+    `;
+  } else if (status === "unavailable") {
+    content = `<div class="practiceEmptyState">${escapeHtml(message || "Online scores need database setup.")}</div>`;
+  } else if (status === "error") {
+    content = `<div class="practiceEmptyState">${escapeHtml(message || "Online score could not be saved.")}</div>`;
+  } else {
+    content = `<div class="practiceEmptyState">Online score not submitted yet.</div>`;
+  }
+
+  return `
+    <div class="practicePanel">
+      <div class="practiceSectionTitle">Online leaderboard</div>
+      ${content}
+    </div>
+  `;
+}
+
+function buildPracticeScorePayload(verbs, inputs, scored, attemptId) {
+  const startedAtMs = Number(PRACTICE_STATE.startedAtMs) || Date.now();
+  const submittedAtMs = Number(PRACTICE_STATE.submittedAtMs) || Date.now();
+  return {
+    attemptId,
+    playerName: PRACTICE_STATE.playerName,
+    verbKeys: verbs.map(verb => verb._key),
+    selectedKeys: [...PRACTICE_STATE.selectedKeys],
+    inputs,
+    clientSummary: scored.summary,
+    startedAt: new Date(startedAtMs).toISOString(),
+    submittedAt: new Date(submittedAtMs).toISOString(),
+    durationMs: PRACTICE_STATE.durationMs || Math.max(0, submittedAtMs - startedAtMs)
+  };
+}
+
+async function submitPracticeScoreOnline(payload) {
+  try {
+    const res = await fetch("/api/practice-scores", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (PRACTICE_STATE.onlineAttemptId !== payload.attemptId) return;
+    if (!res.ok) {
+      PRACTICE_STATE.onlineScoreStatus = "error";
+      PRACTICE_STATE.onlineScoreMessage = data.message || "Online score could not be saved.";
+      PRACTICE_STATE.onlineLeaderboard = null;
+    } else if (data.configured === false) {
+      PRACTICE_STATE.onlineScoreStatus = "unavailable";
+      PRACTICE_STATE.onlineScoreMessage = data.message || "Online scores need database setup.";
+      PRACTICE_STATE.onlineLeaderboard = null;
+    } else {
+      PRACTICE_STATE.onlineScoreStatus = "saved";
+      PRACTICE_STATE.onlineScoreMessage = "";
+      PRACTICE_STATE.onlineLeaderboard = data.leaderboard || null;
+    }
+  } catch {
+    if (PRACTICE_STATE.onlineAttemptId !== payload.attemptId) return;
+    PRACTICE_STATE.onlineScoreStatus = "error";
+    PRACTICE_STATE.onlineScoreMessage = "Online score could not be reached.";
+    PRACTICE_STATE.onlineLeaderboard = null;
+  }
+  renderPracticeRun();
+}
+
 function renderPracticeNextControls() {
   return `
     <div class="practicePanel">
@@ -5241,6 +5438,7 @@ function renderPracticeRun() {
   const scoreHtml = renderPracticeScorePills(PRACTICE_STATE.summary);
   const body = `
     ${scoreHtml ? `<div class="practiceRunTop">${scoreHtml}</div>` : ""}
+    ${PRACTICE_STATE.submitted ? renderPracticeLeaderboard() : ""}
     ${renderPracticeMatrix(verbs, PRACTICE_STATE.selectedKeys)}
     ${submittedControls}
   `;
@@ -5270,6 +5468,13 @@ function startPracticeAttempt(verbKey, selectedKeys, verbKeys = null) {
   PRACTICE_STATE.statusByCell = {};
   PRACTICE_STATE.summary = null;
   PRACTICE_STATE.submitted = false;
+  PRACTICE_STATE.startedAtMs = Date.now();
+  PRACTICE_STATE.submittedAtMs = 0;
+  PRACTICE_STATE.durationMs = 0;
+  PRACTICE_STATE.onlineScoreStatus = "idle";
+  PRACTICE_STATE.onlineScoreMessage = "";
+  PRACTICE_STATE.onlineLeaderboard = null;
+  PRACTICE_STATE.onlineAttemptId = "";
   renderPracticeRun();
 }
 
@@ -5286,12 +5491,21 @@ function submitPracticeAttempt() {
   if (!verbs.length) return;
   const inputs = collectPracticeInputs();
   const scored = summarizePracticeInputs(verbs, PRACTICE_STATE.selectedKeys, inputs);
+  const attemptId = `practice_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const submittedAtMs = Date.now();
+  const startedAtMs = Number(PRACTICE_STATE.startedAtMs) || submittedAtMs;
   PRACTICE_STATE.inputs = inputs;
   PRACTICE_STATE.statusByCell = scored.statusByCell;
   PRACTICE_STATE.summary = scored.summary;
   PRACTICE_STATE.submitted = true;
+  PRACTICE_STATE.submittedAtMs = submittedAtMs;
+  PRACTICE_STATE.durationMs = Math.max(0, submittedAtMs - startedAtMs);
+  PRACTICE_STATE.onlineScoreStatus = "saving";
+  PRACTICE_STATE.onlineScoreMessage = "";
+  PRACTICE_STATE.onlineLeaderboard = null;
+  PRACTICE_STATE.onlineAttemptId = attemptId;
   PRACTICE_STATE.attempts.push({
-    id: `practice_${Date.now()}`,
+    id: attemptId,
     verbKeys: verbs.map(verb => verb._key),
     infinitive: verbs.map(verb => verb.infinitive).join(" / "),
     displayNumber: verbs.map(getDisplayVerbNumber).join(" / "),
@@ -5299,9 +5513,12 @@ function submitPracticeAttempt() {
     selectedKeys: [...PRACTICE_STATE.selectedKeys],
     summary: deepClone(scored.summary),
     perVerb: deepClone(scored.perVerb),
+    playerName: PRACTICE_STATE.playerName,
+    durationMs: PRACTICE_STATE.durationMs,
     checkedAt: new Date().toISOString()
   });
   renderPracticeRun();
+  submitPracticeScoreOnline(buildPracticeScorePayload(verbs, inputs, scored, attemptId));
 }
 
 function chooseRandomPracticeVerb() {
@@ -5419,6 +5636,13 @@ function resetPracticeSession() {
   PRACTICE_STATE.summary = null;
   PRACTICE_STATE.submitted = false;
   PRACTICE_STATE.verbKeys = PRACTICE_STATE.verbKey ? [PRACTICE_STATE.verbKey] : [];
+  PRACTICE_STATE.startedAtMs = 0;
+  PRACTICE_STATE.submittedAtMs = 0;
+  PRACTICE_STATE.durationMs = 0;
+  PRACTICE_STATE.onlineScoreStatus = "idle";
+  PRACTICE_STATE.onlineScoreMessage = "";
+  PRACTICE_STATE.onlineLeaderboard = null;
+  PRACTICE_STATE.onlineAttemptId = "";
   renderPracticeSetup(PRACTICE_STATE.verbKey || CURRENT_VERB_KEY);
 }
 
@@ -5445,6 +5669,12 @@ function bindPracticeModalInteractions() {
       alert("Select at least one form to practice.");
       return;
     }
+    const playerName = getPracticePlayerNameFromModal();
+    if (!playerName) {
+      alert("Enter a player name for online scoring.");
+      return;
+    }
+    PRACTICE_STATE.playerName = savePracticePlayerName(playerName);
     const slots = getPracticeExtraSlotsFromModal();
     PRACTICE_STATE.extraVerbSlots = slots;
     PRACTICE_STATE.tabOrder = getPracticeTabOrderFromModal();
@@ -5453,6 +5683,15 @@ function bindPracticeModalInteractions() {
     if (!verbKeys) return;
     startPracticeAttempt(baseVerbKey, selected, verbKeys);
   });
+  const customPlayerInput = modal.querySelector("[data-practice-player-custom]");
+  const customPlayerRadio = modal.querySelector('input[data-practice-player-preset="custom"]');
+  if (customPlayerInput && customPlayerRadio) {
+    const selectCustomPlayer = () => {
+      customPlayerRadio.checked = true;
+    };
+    customPlayerInput.addEventListener("focus", selectCustomPlayer);
+    customPlayerInput.addEventListener("input", selectCustomPlayer);
+  }
   modal.querySelector("[data-practice-submit]")?.addEventListener("click", submitPracticeAttempt);
   modal.querySelectorAll("[data-practice-setup]").forEach(btn => {
     btn.addEventListener("click", () => renderPracticeSetup(PRACTICE_STATE.verbKey || CURRENT_VERB_KEY));
