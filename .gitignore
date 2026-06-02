@@ -5,3 +5,5 @@ backup*.zip
 *.pptx
 
 .vercel
+.env*
+node_modules/

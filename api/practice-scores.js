@@ -2,7 +2,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const { randomUUID } = require("crypto");
+const { createHash, randomUUID } = require("crypto");
 
 const TENSE_SELECTION_ALL_KEYS = [
   "gerund", "participle",
@@ -15,6 +15,7 @@ const SCORE_VERSION = "practice-score-v1";
 const MAX_VERBS = 3;
 const MAX_INPUTS = 240;
 const MAX_DURATION_MS = 4 * 60 * 60 * 1000;
+const MAX_BLOB_ATTEMPTS_PER_BOARD = 1000;
 
 let DATA_CACHE = null;
 let POOL = null;
@@ -271,6 +272,169 @@ function getConnectionString() {
   return process.env.POSTGRES_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL_NON_POOLING || "";
 }
 
+function hasBlobStore() {
+  return !!process.env.BLOB_READ_WRITE_TOKEN;
+}
+
+function getBlobPath(leaderboardKey) {
+  const hash = createHash("sha256").update(leaderboardKey).digest("hex").slice(0, 48);
+  return `practice-leaderboards/${hash}.json`;
+}
+
+async function streamToText(stream) {
+  if (!stream) return "";
+  return await new Response(stream).text();
+}
+
+function emptyBlobLeaderboard(leaderboardKey) {
+  return {
+    version: SCORE_VERSION,
+    leaderboardKey,
+    attempts: []
+  };
+}
+
+function normalizeBlobLeaderboard(value, leaderboardKey) {
+  const doc = value && typeof value === "object" ? value : {};
+  const attempts = Array.isArray(doc.attempts) ? doc.attempts : [];
+  return {
+    version: SCORE_VERSION,
+    leaderboardKey,
+    attempts: attempts.filter(attempt => attempt && typeof attempt === "object")
+  };
+}
+
+async function readBlobLeaderboard(leaderboardKey) {
+  const { get } = require("@vercel/blob");
+  const pathname = getBlobPath(leaderboardKey);
+  try {
+    const result = await get(pathname, { access: "private", useCache: false });
+    if (!result || result.statusCode !== 200) {
+      return { pathname, etag: null, doc: emptyBlobLeaderboard(leaderboardKey) };
+    }
+    const text = await streamToText(result.stream);
+    const parsed = text ? JSON.parse(text) : null;
+    return {
+      pathname,
+      etag: result.blob?.etag || null,
+      doc: normalizeBlobLeaderboard(parsed, leaderboardKey)
+    };
+  } catch (err) {
+    if (/not.?found/i.test(err?.name || "") || /not.?found/i.test(err?.message || "")) {
+      return { pathname, etag: null, doc: emptyBlobLeaderboard(leaderboardKey) };
+    }
+    throw err;
+  }
+}
+
+async function writeBlobLeaderboard(pathname, doc, etag) {
+  const { put } = require("@vercel/blob");
+  const options = {
+    access: "private",
+    allowOverwrite: true,
+    contentType: "application/json",
+    cacheControlMaxAge: 60
+  };
+  if (etag) options.ifMatch = etag;
+  return await put(pathname, JSON.stringify(doc), options);
+}
+
+function compareRankableAttempts(a, b) {
+  const aPoints = Number(a.summary?.points) || 0;
+  const bPoints = Number(b.summary?.points) || 0;
+  if (aPoints !== bPoints) return bPoints - aPoints;
+  const aDuration = Number(a.durationMs) || 0;
+  const bDuration = Number(b.durationMs) || 0;
+  if (aDuration !== bDuration) return aDuration - bDuration;
+  const aSubmitted = Date.parse(a.submittedAt || "") || 0;
+  const bSubmitted = Date.parse(b.submittedAt || "") || 0;
+  if (aSubmitted !== bSubmitted) return aSubmitted - bSubmitted;
+  return String(a.attemptId || "").localeCompare(String(b.attemptId || ""));
+}
+
+function rankedBlobLeaderboard(doc, attemptId = "") {
+  const sorted = [...(doc.attempts || [])].sort(compareRankableAttempts);
+  let rank = 0;
+  let lastKey = "";
+  const ranked = sorted.map((attempt, idx) => {
+    const key = [
+      Number(attempt.summary?.points) || 0,
+      Number(attempt.durationMs) || 0,
+      Date.parse(attempt.submittedAt || "") || 0,
+      String(attempt.attemptId || "")
+    ].join("|");
+    if (key !== lastKey) {
+      rank = idx + 1;
+      lastKey = key;
+    }
+    return { ...attempt, rank };
+  });
+  const entries = ranked
+    .filter(attempt => attempt.rank <= 10 || attempt.attemptId === attemptId)
+    .map(attempt => ({
+      rank: attempt.rank,
+      playerName: attempt.playerName,
+      points: Number(attempt.summary?.points) || 0,
+      total: Number(attempt.summary?.total) || 0,
+      percent: Number(attempt.summary?.percent) || 0,
+      durationMs: Number(attempt.durationMs) || 0,
+      submittedAt: attempt.submittedAt,
+      isCurrentAttempt: attempt.attemptId === attemptId
+    }));
+  const current = ranked.find(attempt => attempt.attemptId === attemptId) || null;
+  return {
+    leaderboardKey: doc.leaderboardKey,
+    rank: current ? current.rank : null,
+    totalAttempts: sorted.length,
+    entries
+  };
+}
+
+function buildStoredAttempt({ attemptId, playerName, scored, durationMs, startedAt, submittedAt }) {
+  return {
+    attemptId,
+    playerName,
+    verbKeys: scored.verbKeys,
+    verbLabels: scored.verbLabels,
+    selectedKeys: scored.selectedKeys,
+    summary: scored.summary,
+    durationMs,
+    startedAt,
+    submittedAt,
+    appVersion: SCORE_VERSION
+  };
+}
+
+async function getBlobLeaderboard(leaderboardKey, attemptId = "") {
+  const { doc } = await readBlobLeaderboard(leaderboardKey);
+  return rankedBlobLeaderboard(doc, attemptId);
+}
+
+async function saveBlobScore(storedAttempt, leaderboardKey) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const { pathname, etag, doc } = await readBlobLeaderboard(leaderboardKey);
+    const existingIdx = doc.attempts.findIndex(item => item.attemptId === storedAttempt.attemptId);
+    if (existingIdx >= 0) {
+      doc.attempts[existingIdx] = storedAttempt;
+    } else {
+      doc.attempts.push(storedAttempt);
+    }
+    doc.attempts = doc.attempts
+      .sort(compareRankableAttempts)
+      .slice(0, MAX_BLOB_ATTEMPTS_PER_BOARD);
+    try {
+      await writeBlobLeaderboard(pathname, doc, etag);
+      return rankedBlobLeaderboard(doc, storedAttempt.attemptId);
+    } catch (err) {
+      if (/precondition/i.test(err?.name || "") || /precondition/i.test(err?.message || "")) {
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw new Error("Could not save score after concurrent leaderboard updates.");
+}
+
 function getPool() {
   const connectionString = getConnectionString();
   if (!connectionString) return null;
@@ -387,17 +551,21 @@ async function handleGet(req, res) {
   const verbKeys = normalizeVerbKeys(url.searchParams.get("verbKeys") || "");
   const selectedKeys = normalizeSelectedKeys(url.searchParams.get("selectedKeys") || "");
   const leaderboardKey = buildLeaderboardKey(verbKeys, selectedKeys);
+  if (hasBlobStore()) {
+    const leaderboard = await getBlobLeaderboard(leaderboardKey);
+    return json(res, 200, { ok: true, configured: true, storage: "blob", leaderboard });
+  }
   const pool = getPool();
   if (!pool) {
     return json(res, 200, {
       ok: true,
       configured: false,
-      message: "Online scores need a Postgres database configured on Vercel."
+      message: "Online scores need Vercel Blob or Postgres storage configured."
     });
   }
   await ensureSchema(pool);
   const leaderboard = await getLeaderboard(pool, leaderboardKey);
-  return json(res, 200, { ok: true, configured: true, leaderboard });
+  return json(res, 200, { ok: true, configured: true, storage: "postgres", leaderboard });
 }
 
 async function handlePost(req, res) {
@@ -410,13 +578,26 @@ async function handlePost(req, res) {
   const durationMs = normalizeDurationMs(body.durationMs);
   const startedAt = normalizeTimestamp(body.startedAt);
   const submittedAt = normalizeTimestamp(body.submittedAt) || new Date().toISOString();
+
+  if (hasBlobStore()) {
+    const storedAttempt = buildStoredAttempt({ attemptId, playerName, scored, durationMs, startedAt, submittedAt });
+    const leaderboard = await saveBlobScore(storedAttempt, scored.leaderboardKey);
+    return json(res, 200, {
+      ok: true,
+      configured: true,
+      storage: "blob",
+      scored,
+      leaderboard
+    });
+  }
+
   const pool = getPool();
 
   if (!pool) {
     return json(res, 200, {
       ok: true,
       configured: false,
-      message: "Online scores need a Postgres database configured on Vercel.",
+      message: "Online scores need Vercel Blob or Postgres storage configured.",
       scored
     });
   }
@@ -469,6 +650,7 @@ async function handlePost(req, res) {
   return json(res, 200, {
     ok: true,
     configured: true,
+    storage: "postgres",
     scored,
     leaderboard
   });

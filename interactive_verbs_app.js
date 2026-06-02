@@ -5328,7 +5328,7 @@ function renderPracticeLeaderboard() {
       ` : ""}
     `;
   } else if (status === "unavailable") {
-    content = `<div class="practiceEmptyState">${escapeHtml(message || "Online scores need database setup.")}</div>`;
+    content = `<div class="practiceEmptyState">${escapeHtml(message || "Online scores need storage setup.")}</div>`;
   } else if (status === "error") {
     content = `<div class="practiceEmptyState">${escapeHtml(message || "Online score could not be saved.")}</div>`;
   } else {
@@ -5374,7 +5374,7 @@ async function submitPracticeScoreOnline(payload) {
       PRACTICE_STATE.onlineLeaderboard = null;
     } else if (data.configured === false) {
       PRACTICE_STATE.onlineScoreStatus = "unavailable";
-      PRACTICE_STATE.onlineScoreMessage = data.message || "Online scores need database setup.";
+      PRACTICE_STATE.onlineScoreMessage = data.message || "Online scores need storage setup.";
       PRACTICE_STATE.onlineLeaderboard = null;
     } else {
       PRACTICE_STATE.onlineScoreStatus = "saved";
