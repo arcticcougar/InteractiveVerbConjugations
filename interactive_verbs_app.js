@@ -2050,6 +2050,9 @@ let SIDEBAR_SYNC_RAF = 0;
 let PRACTICE_STATE = {
   selectedKeys: [...PRACTICE_DEFAULT_TENSE_KEYS],
   verbKey: "",
+  verbKeys: [],
+  setupBaseVerbKey: "",
+  extraVerbSlots: [],
   inputs: {},
   statusByCell: {},
   summary: null,
@@ -2562,7 +2565,7 @@ function renderTenseHelper(context) {
           <li>Press Enter to save that cell.</li>
           <li>Press Tab / Shift+Tab to save and jump to next/previous cell.</li>
           <li>Double-click opens the detailed popover for that cell.</li>
-          <li>Use the practice button beside the verb title for a test mode; its beginner default skips imperfect and includes preterite.</li>
+          <li>Use the practice button beside the verb title for test mode; add up to two extra verbs, with the beginner default skipping imperfect and including preterite.</li>
         </ul>
       </div>
       <div class="helperPanel">
@@ -4698,6 +4701,208 @@ function getPracticeSelectedKeysFromModal() {
   return practiceSelectionKeys(checked, { allowEmpty: true });
 }
 
+function practiceInputKey(verbKey, cellKey) {
+  return `${verbKey}::${cellKey}`;
+}
+
+function getPracticeVerbs() {
+  const keys = PRACTICE_STATE.verbKeys?.length ? PRACTICE_STATE.verbKeys : [PRACTICE_STATE.verbKey];
+  return keys.map(findVerbByKey).filter(Boolean);
+}
+
+function defaultPracticeExtraSlots(primaryVerb) {
+  const regularPatterns = ["regular-ar", "regular-er", "regular-ir"];
+  const primaryPattern = inferPatternCategory(primaryVerb);
+  const preferred = regularPatterns.filter(pattern => pattern !== primaryPattern);
+  const order = preferred.concat(regularPatterns.filter(pattern => !preferred.includes(pattern)));
+  return [0, 1].map(idx => ({
+    enabled: false,
+    query: "",
+    pattern: order[idx] || "all",
+    tag: "core501"
+  }));
+}
+
+function ensurePracticeSetupSlots(primaryVerb) {
+  if (
+    PRACTICE_STATE.setupBaseVerbKey === primaryVerb._key &&
+    Array.isArray(PRACTICE_STATE.extraVerbSlots) &&
+    PRACTICE_STATE.extraVerbSlots.length === 2
+  ) {
+    return;
+  }
+  PRACTICE_STATE.setupBaseVerbKey = primaryVerb._key;
+  PRACTICE_STATE.extraVerbSlots = defaultPracticeExtraSlots(primaryVerb);
+}
+
+function renderPracticePatternOptions(value) {
+  const options = [
+    ["all", "Any pattern"],
+    ["regular-ar", "Regular -ar"],
+    ["regular-er", "Regular -er"],
+    ["regular-ir", "Regular -ir"],
+    ["irregular", "Irregular"],
+    ["other", "Other"]
+  ];
+  return options.map(([optionValue, label]) => (
+    `<option value="${optionValue}" ${value === optionValue ? "selected" : ""}>${label}</option>`
+  )).join("");
+}
+
+function renderPracticeTagOptions(value) {
+  const options = [
+    ["all", "Any set"],
+    ["core501", "501 source"],
+    ["essential55", "55 Essential"],
+    ["custom", "Custom"],
+    ["slang", "Slang"],
+    ["explicit", "Explicit"],
+    ["example", "Examples"]
+  ];
+  return options.map(([optionValue, label]) => (
+    `<option value="${optionValue}" ${value === optionValue ? "selected" : ""}>${label}</option>`
+  )).join("");
+}
+
+function renderPracticeVerbDatalist() {
+  const options = getAllVerbs()
+    .filter(hasPracticeAnswerKey)
+    .map(verb => `<option value="${escapeHtml(verb.infinitive)}" label="#${getDisplayVerbNumber(verb)} ${escapeHtml(verb.meaning_en || "")}"></option>`)
+    .join("");
+  return `<datalist id="practiceVerbChoices">${options}</datalist>`;
+}
+
+function renderPracticeExtraVerbControls(primaryVerb) {
+  ensurePracticeSetupSlots(primaryVerb);
+  const slots = PRACTICE_STATE.extraVerbSlots;
+  return `
+    <div class="practicePanel">
+      <div class="practiceSectionTitle">Verbs</div>
+      <div class="practiceSetupGrid">
+        <div class="practiceLockedVerb">
+          <div class="practiceSetupLabel">Active verb</div>
+          <div class="practiceSetupVerb">${escapeHtml(primaryVerb.infinitive)} <span class="pill">#${getDisplayVerbNumber(primaryVerb)}</span></div>
+        </div>
+        ${slots.map((slot, idx) => `
+          <div class="practiceExtraSlot">
+            <label class="practiceSlotToggle">
+              <input type="checkbox" data-practice-extra-enabled="${idx}" ${slot.enabled ? "checked" : ""}>
+              <span>Extra verb ${idx + 2}</span>
+            </label>
+            <div class="practiceSlotControls">
+              <div class="practiceField">
+                <label for="practiceExtraVerb${idx}">Specific verb</label>
+                <input
+                  id="practiceExtraVerb${idx}"
+                  class="practiceTextInput"
+                  type="text"
+                  list="practiceVerbChoices"
+                  data-practice-extra-query="${idx}"
+                  value="${escapeHtml(slot.query || "")}"
+                  placeholder="Random from filters"
+                  autocomplete="off"
+                  spellcheck="false"
+                >
+              </div>
+              <div class="practiceField">
+                <label for="practiceExtraPattern${idx}">Pattern</label>
+                <select id="practiceExtraPattern${idx}" class="practiceSelect" data-practice-extra-pattern="${idx}">
+                  ${renderPracticePatternOptions(slot.pattern || "all")}
+                </select>
+              </div>
+              <div class="practiceField">
+                <label for="practiceExtraTag${idx}">Set</label>
+                <select id="practiceExtraTag${idx}" class="practiceSelect" data-practice-extra-tag="${idx}">
+                  ${renderPracticeTagOptions(slot.tag || "all")}
+                </select>
+              </div>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+      ${renderPracticeVerbDatalist()}
+    </div>
+  `;
+}
+
+function getPracticeExtraSlotsFromModal() {
+  return [0, 1].map(idx => ({
+    enabled: !!document.querySelector(`#practiceModal [data-practice-extra-enabled="${idx}"]`)?.checked,
+    query: normalizeUserCellInput(document.querySelector(`#practiceModal [data-practice-extra-query="${idx}"]`)?.value || ""),
+    pattern: document.querySelector(`#practiceModal [data-practice-extra-pattern="${idx}"]`)?.value || "all",
+    tag: document.querySelector(`#practiceModal [data-practice-extra-tag="${idx}"]`)?.value || "all"
+  }));
+}
+
+function parsePracticeVerbInput(input) {
+  const cleaned = cleanText(input || "");
+  if (!cleaned) return null;
+  const idMatch = cleaned.match(/^#?(\d{1,6})$/);
+  if (idMatch) {
+    const idNum = Number(idMatch[1]);
+    return getAllVerbs().find(v => Number(v.id) === idNum) || null;
+  }
+  return findVerbByInfinitive(cleaned);
+}
+
+function getPracticeCandidateVerbs(filters = {}) {
+  const pattern = filters.pattern ?? PRACTICE_STATE.nextPatternFilter ?? "all";
+  const tag = filters.tag ?? PRACTICE_STATE.nextTagFilter ?? "all";
+  const excludeKeys = new Set(filters.excludeKeys || []);
+  return getAllVerbs().filter(verb => {
+    if (!hasPracticeAnswerKey(verb)) return false;
+    if (excludeKeys.has(verb._key)) return false;
+    if (verb._source === "example" && tag !== "example") return false;
+    if (pattern !== "all" && inferPatternCategory(verb) !== pattern) return false;
+    const tags = getVerbTags(verb);
+    if (tag !== "all" && !tags.includes(tag)) return false;
+    return true;
+  });
+}
+
+function choosePracticeCandidate(filters, excludeKeys) {
+  const candidates = getPracticeCandidateVerbs({ ...filters, excludeKeys: Array.from(excludeKeys || []) });
+  if (!candidates.length) return null;
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+function resolvePracticeVerbKeysFromSlotConfigs(baseVerbKey, slotConfigs) {
+  const primaryVerb = findVerbByKey(baseVerbKey);
+  if (!primaryVerb || !hasPracticeAnswerKey(primaryVerb)) return null;
+  const selected = [primaryVerb];
+  const usedKeys = new Set([primaryVerb._key]);
+
+  for (const slot of slotConfigs || []) {
+    if (!slot.enabled) continue;
+    let verb = null;
+    if (slot.query) {
+      verb = parsePracticeVerbInput(slot.query);
+      if (!verb) {
+        alert(`Could not find "${slot.query}".`);
+        return null;
+      }
+      if (!hasPracticeAnswerKey(verb)) {
+        alert(`No answer key is available for ${verb.infinitive} yet.`);
+        return null;
+      }
+      if (usedKeys.has(verb._key)) {
+        alert(`${verb.infinitive} is already in this practice set.`);
+        return null;
+      }
+    } else {
+      verb = choosePracticeCandidate({ pattern: slot.pattern || "all", tag: slot.tag || "all" }, usedKeys);
+      if (!verb) {
+        alert("No extra verb matches those filters.");
+        return null;
+      }
+    }
+    selected.push(verb);
+    usedKeys.add(verb._key);
+  }
+
+  return selected.map(verb => verb._key);
+}
+
 function renderPracticeSetup(verbKey = CURRENT_VERB_KEY) {
   const verb = findVerbByKey(verbKey);
   if (!verb) return;
@@ -4707,6 +4912,7 @@ function renderPracticeSetup(verbKey = CURRENT_VERB_KEY) {
   }
   PRACTICE_STATE.verbKey = verb._key;
   const body = `
+    ${renderPracticeExtraVerbControls(verb)}
     <div class="practicePanel">
       <div class="practiceSectionTitle">Tenses</div>
       <div class="practiceOptionsGrid">${renderPracticeTenseOptions(PRACTICE_STATE.selectedKeys)}</div>
@@ -4730,6 +4936,8 @@ function getPracticeCellKeys(verb, selectedKeys) {
     if (!selected.has(String(num))) return;
     [0, 1, 2].forEach(i => {
       keys.push(tenseCellKey(num, "sg", i));
+    });
+    [0, 1, 2].forEach(i => {
       keys.push(tenseCellKey(num, "pl", i));
     });
   });
@@ -4738,6 +4946,8 @@ function getPracticeCellKeys(verb, selectedKeys) {
     if (!selected.has(String(num))) return;
     [0, 1, 2].forEach(i => {
       keys.push(tenseCellKey(num, "sg", i));
+    });
+    [0, 1, 2].forEach(i => {
       keys.push(tenseCellKey(num, "pl", i));
     });
   });
@@ -4760,10 +4970,11 @@ function practiceStatusClass(status) {
   return "";
 }
 
-function renderPracticeInput(cellKey, expectedMap) {
+function renderPracticeInput(verb, cellKey, expectedMap) {
   const submitted = !!PRACTICE_STATE.submitted;
-  const status = PRACTICE_STATE.statusByCell?.[cellKey] || "";
-  const value = PRACTICE_STATE.inputs?.[cellKey] || "";
+  const inputKey = practiceInputKey(verb._key, cellKey);
+  const status = PRACTICE_STATE.statusByCell?.[inputKey] || "";
+  const value = PRACTICE_STATE.inputs?.[inputKey] || "";
   const expected = expectedMap[cellKey] || "";
   const statusClass = practiceStatusClass(status);
   const expectedHtml = submitted && status !== "correct"
@@ -4774,6 +4985,8 @@ function renderPracticeInput(cellKey, expectedMap) {
       <input
         class="practiceInput ${statusClass}"
         type="text"
+        data-practice-input-key="${escapeHtml(inputKey)}"
+        data-practice-verb-key="${escapeHtml(verb._key)}"
         data-practice-cell-key="${escapeHtml(cellKey)}"
         value="${escapeHtml(value)}"
         autocomplete="off"
@@ -4785,106 +4998,130 @@ function renderPracticeInput(cellKey, expectedMap) {
   `;
 }
 
-function renderPracticeHeaderForms(verb, selectedKeys, expectedMap) {
+function getPracticeSelectedTenseDescriptors(verbs, sourceName, selectedKeys) {
+  const selected = new Set(practiceSelectionKeys(selectedKeys));
+  const byNumber = new Map();
+  verbs.forEach(verb => {
+    getOrderedTenseKeys(verb[sourceName] || {}).forEach(key => {
+      const num = extractTenseNumber(key);
+      if (!selected.has(String(num)) || byNumber.has(num)) return;
+      byNumber.set(num, { num, label: key.replace(/^\d+\s*/, "") });
+    });
+  });
+  return Array.from(byNumber.values()).sort((a, b) => a.num - b.num);
+}
+
+function buildPracticeRows(verbs, selectedKeys) {
   const selected = new Set(practiceSelectionKeys(selectedKeys));
   const rows = [];
-  if (selected.has("gerund") && expectedMap[gerundCellKey()]) {
-    rows.push(`
-      <div class="practiceHeaderForm">
-        <span>Gerund</span>
-        ${renderPracticeInput(gerundCellKey(), expectedMap)}
-      </div>
-    `);
+  const hasExpected = cellKey => verbs.some(verb => cleanText((getExpectedMap(verb) || {})[cellKey] || ""));
+
+  if (selected.has("gerund") && hasExpected(gerundCellKey())) {
+    rows.push({ type: "cell", label: "Gerund", cellKey: gerundCellKey() });
   }
-  if (selected.has("participle") && expectedMap[participleCellKey()]) {
-    rows.push(`
-      <div class="practiceHeaderForm">
-        <span>Part.</span>
-        ${renderPracticeInput(participleCellKey(), expectedMap)}
-      </div>
-    `);
+  if (selected.has("participle") && hasExpected(participleCellKey())) {
+    rows.push({ type: "cell", label: "Part.", cellKey: participleCellKey() });
   }
-  return rows.length ? `<div class="practiceHeaderForms">${rows.join("")}</div>` : "";
+
+  ["simple", "compound"].forEach(sourceName => {
+    getPracticeSelectedTenseDescriptors(verbs, sourceName, selectedKeys).forEach(tense => {
+      rows.push({ type: "section", label: `${tense.num} &middot; ${escapeHtml(tense.label)}` });
+      rows.push({ type: "group", label: "Singular" });
+      [0, 1, 2].forEach(i => {
+        const cellKey = tenseCellKey(tense.num, "sg", i);
+        if (hasExpected(cellKey)) rows.push({ type: "cell", label: PRONOUNS[`${i + 1}-sg`], cellKey });
+      });
+      rows.push({ type: "group", label: "Plural" });
+      [0, 1, 2].forEach(i => {
+        const cellKey = tenseCellKey(tense.num, "pl", i);
+        if (hasExpected(cellKey)) rows.push({ type: "cell", label: PRONOUNS[`${i + 1}-pl`], cellKey });
+      });
+    });
+  });
+
+  if (selected.has("imperative")) {
+    const slots = ["tu", "usted", "nosotros", "vosotros", "ustedes"];
+    const imperativeRows = slots
+      .map(slot => ({ type: "cell", label: IMPERATIVE_META[slot].label, cellKey: imperativeCellKey(slot) }))
+      .filter(row => hasExpected(row.cellKey));
+    if (imperativeRows.length) {
+      rows.push({ type: "section", label: "Imperative" });
+      rows.push(...imperativeRows);
+    }
+  }
+
+  return rows;
 }
 
-function renderPracticeTenseBlocks(source, verb, selectedKeys, expectedMap) {
-  const selected = new Set(practiceSelectionKeys(selectedKeys));
-  const keys = getOrderedTenseKeys(source || {}).filter(k => selected.has(String(extractTenseNumber(k))));
-  return keys.map((k) => {
-    const num = extractTenseNumber(k);
-    const label = k.replace(/^\d+\s*/, "");
-    const singularHtml = ["1", "2", "3"].map((p, i) => {
-      const sgCellKey = tenseCellKey(num, "sg", i);
-      return `
-        <div class="practicePronoun" style="--practice-row: ${i + 2}; --practice-pronoun-col: 1; --practice-input-col: 2;">${escapeHtml(PRONOUNS[`${p}-sg`])}</div>
-        <div class="practiceTenseInputSlot" style="--practice-row: ${i + 2}; --practice-pronoun-col: 1; --practice-input-col: 2;">${renderPracticeInput(sgCellKey, expectedMap)}</div>
-      `;
-    }).join("");
-    const pluralHtml = ["1", "2", "3"].map((p, i) => {
-      const plCellKey = tenseCellKey(num, "pl", i);
-      return `
-        <div class="practicePronoun" style="--practice-row: ${i + 2}; --practice-pronoun-col: 3; --practice-input-col: 4;">${escapeHtml(PRONOUNS[`${p}-pl`])}</div>
-        <div class="practiceTenseInputSlot" style="--practice-row: ${i + 2}; --practice-pronoun-col: 3; --practice-input-col: 4;">${renderPracticeInput(plCellKey, expectedMap)}</div>
-      `;
-    }).join("");
-    return `
-      <details class="tense tnum-${num}" open>
-        <summary tabindex="-1">
-          <div class="tenseHead">
-            <div class="tenseTitle">${num} &middot; ${escapeHtml(label)}</div>
-          </div>
-        </summary>
-        <div class="pad">
-          <div class="practiceTenseGrid">
-            <div class="practiceTenseSideLabel practiceTenseSideLabel--singular">Singular</div>
-            <div class="practiceTenseSideLabel practiceTenseSideLabel--plural">Plural</div>
-            ${singularHtml}
-            ${pluralHtml}
-          </div>
-        </div>
-      </details>
-    `;
-  }).join("");
-}
-
-function renderPracticeImperative(selectedKeys, expectedMap) {
-  const selected = new Set(practiceSelectionKeys(selectedKeys));
-  if (!selected.has("imperative")) return "";
-  const slots = ["tu", "usted", "nosotros", "vosotros", "ustedes"];
+function renderPracticeMatrix(verbs, selectedKeys) {
+  const rows = buildPracticeRows(verbs, selectedKeys);
+  const expectedByVerb = new Map(verbs.map(verb => [verb._key, getExpectedMap(verb) || {}]));
+  if (!rows.length) return `<div class="practiceEmptyState">No forms selected.</div>`;
   return `
-    <details class="tense tense--spaced" open>
-      <summary tabindex="-1">
-        <div class="tenseHead"><div class="tenseTitle">Imperative</div></div>
-      </summary>
-      <div class="pad">
-        <div class="practiceImperativeGrid">
-          ${slots.map(slot => {
-            const meta = IMPERATIVE_META[slot];
-            const cellKey = imperativeCellKey(slot);
+    <div class="practiceMatrix" style="--practice-verb-count: ${verbs.length};">
+      <div class="practiceMatrixCorner"></div>
+      ${verbs.map(verb => `
+        <div class="practiceMatrixVerb">
+          <div>${escapeHtml(verb.infinitive)}</div>
+          <span class="pill">#${getDisplayVerbNumber(verb)}</span>
+        </div>
+      `).join("")}
+      ${rows.map(row => {
+        if (row.type === "section") {
+          return `<div class="practiceMatrixSection">${row.label}</div>`;
+        }
+        if (row.type === "group") {
+          return `<div class="practiceMatrixGroup">${escapeHtml(row.label)}</div>`;
+        }
+        return `
+          <div class="practiceMatrixLabel">${escapeHtml(row.label)}</div>
+          ${verbs.map(verb => {
+            const expectedMap = expectedByVerb.get(verb._key) || {};
             return `
-              <div class="practiceImperativeLabel">${escapeHtml(meta.label)}</div>
-              <div>${renderPracticeInput(cellKey, expectedMap)}</div>
+              <div class="practiceMatrixCell">
+                ${cleanText(expectedMap[row.cellKey] || "")
+                  ? renderPracticeInput(verb, row.cellKey, expectedMap)
+                  : `<div class="practiceUnavailable">-</div>`}
+              </div>
             `;
           }).join("")}
-        </div>
-      </div>
-    </details>
+        `;
+      }).join("")}
+    </div>
   `;
 }
 
-function summarizePracticeInputs(verb, selectedKeys, inputs) {
-  const expected = getExpectedMap(verb) || {};
+function summarizePracticeInputs(verbs, selectedKeys, inputs) {
   const statusByCell = {};
   const summary = { correct: 0, accent_warning: 0, incorrect: 0, empty: 0, total: 0, points: 0, percent: 0 };
-  getPracticeCellKeys(verb, selectedKeys).forEach(cellKey => {
-    const status = compareUserToExpected(inputs[cellKey] || "", expected[cellKey] || "");
-    statusByCell[cellKey] = status;
-    summary[status] += 1;
-    summary.total += 1;
+  const perVerb = [];
+
+  verbs.forEach(verb => {
+    const expected = getExpectedMap(verb) || {};
+    const verbSummary = { correct: 0, accent_warning: 0, incorrect: 0, empty: 0, total: 0, points: 0, percent: 0 };
+    getPracticeCellKeys(verb, selectedKeys).forEach(cellKey => {
+      const inputKey = practiceInputKey(verb._key, cellKey);
+      const status = compareUserToExpected(inputs[inputKey] || "", expected[cellKey] || "");
+      statusByCell[inputKey] = status;
+      summary[status] += 1;
+      summary.total += 1;
+      verbSummary[status] += 1;
+      verbSummary.total += 1;
+    });
+    verbSummary.points = verbSummary.correct + verbSummary.accent_warning;
+    verbSummary.percent = verbSummary.total ? Math.round((verbSummary.points / verbSummary.total) * 100) : 0;
+    perVerb.push({
+      verbKey: verb._key,
+      infinitive: verb.infinitive,
+      displayNumber: getDisplayVerbNumber(verb),
+      pattern: inferPatternCategory(verb),
+      summary: verbSummary
+    });
   });
+
   summary.points = summary.correct + summary.accent_warning;
   summary.percent = summary.total ? Math.round((summary.points / summary.total) * 100) : 0;
-  return { statusByCell, summary };
+  return { statusByCell, summary, perVerb };
 }
 
 function renderPracticeScorePills(summary) {
@@ -4903,46 +5140,31 @@ function renderPracticeScorePills(summary) {
 function renderPracticeNextControls() {
   return `
     <div class="practicePanel">
-      <div class="practiceSectionTitle">Next verb</div>
+      <div class="practiceSectionTitle">Next practice</div>
       <div class="practiceNextControls">
         <div class="practiceField">
           <label for="practiceNextPattern">Pattern</label>
           <select id="practiceNextPattern" class="practiceSelect" data-practice-next-pattern>
-            <option value="all" ${PRACTICE_STATE.nextPatternFilter === "all" ? "selected" : ""}>Any pattern</option>
-            <option value="regular-ar" ${PRACTICE_STATE.nextPatternFilter === "regular-ar" ? "selected" : ""}>Regular -ar</option>
-            <option value="regular-er" ${PRACTICE_STATE.nextPatternFilter === "regular-er" ? "selected" : ""}>Regular -er</option>
-            <option value="regular-ir" ${PRACTICE_STATE.nextPatternFilter === "regular-ir" ? "selected" : ""}>Regular -ir</option>
-            <option value="irregular" ${PRACTICE_STATE.nextPatternFilter === "irregular" ? "selected" : ""}>Irregular</option>
-            <option value="other" ${PRACTICE_STATE.nextPatternFilter === "other" ? "selected" : ""}>Other</option>
+            ${renderPracticePatternOptions(PRACTICE_STATE.nextPatternFilter || "all")}
           </select>
         </div>
         <div class="practiceField">
           <label for="practiceNextTag">Set</label>
           <select id="practiceNextTag" class="practiceSelect" data-practice-next-tag>
-            <option value="all" ${PRACTICE_STATE.nextTagFilter === "all" ? "selected" : ""}>Any set</option>
-            <option value="core501" ${PRACTICE_STATE.nextTagFilter === "core501" ? "selected" : ""}>501 source</option>
-            <option value="essential55" ${PRACTICE_STATE.nextTagFilter === "essential55" ? "selected" : ""}>55 Essential</option>
-            <option value="custom" ${PRACTICE_STATE.nextTagFilter === "custom" ? "selected" : ""}>Custom</option>
-            <option value="slang" ${PRACTICE_STATE.nextTagFilter === "slang" ? "selected" : ""}>Slang</option>
-            <option value="explicit" ${PRACTICE_STATE.nextTagFilter === "explicit" ? "selected" : ""}>Explicit</option>
-            <option value="example" ${PRACTICE_STATE.nextTagFilter === "example" ? "selected" : ""}>Examples</option>
+            ${renderPracticeTagOptions(PRACTICE_STATE.nextTagFilter || "all")}
           </select>
         </div>
-        <button type="button" class="practiceActionBtn" data-practice-random-next>Random next</button>
+        <button type="button" class="practiceActionBtn" data-practice-random-next>Random next set</button>
       </div>
     </div>
   `;
 }
 
-function renderPracticeRun(verbKey = PRACTICE_STATE.verbKey) {
-  const verb = findVerbByKey(verbKey);
-  if (!verb || !hasPracticeAnswerKey(verb)) return;
-  const expectedMap = getExpectedMap(verb) || {};
-  PRACTICE_STATE.verbKey = verb._key;
-  const simpleBlocks = renderPracticeTenseBlocks(verb.simple, verb, PRACTICE_STATE.selectedKeys, expectedMap);
-  const compoundBlocks = renderPracticeTenseBlocks(verb.compound, verb, PRACTICE_STATE.selectedKeys, expectedMap);
-  const headerForms = renderPracticeHeaderForms(verb, PRACTICE_STATE.selectedKeys, expectedMap);
-  const imperative = renderPracticeImperative(PRACTICE_STATE.selectedKeys, expectedMap);
+function renderPracticeRun() {
+  const verbs = getPracticeVerbs();
+  if (!verbs.length) return;
+  PRACTICE_STATE.verbKey = verbs[0]._key;
+  PRACTICE_STATE.verbKeys = verbs.map(verb => verb._key);
   const submittedControls = PRACTICE_STATE.submitted
     ? `
       ${renderPracticeNextControls()}
@@ -4957,26 +5179,17 @@ function renderPracticeRun(verbKey = PRACTICE_STATE.verbKey) {
         <button type="button" class="practiceActionBtn" data-practice-submit>Submit</button>
       </div>
     `;
+  const title = verbs.length === 1 ? "Practice" : `${verbs.length} verb practice`;
+  const meta = verbs.map(verb => `${verb.infinitive} #${getDisplayVerbNumber(verb)}`).join(" / ");
   const body = `
     <div class="practiceRunTop">
-      <div class="practiceVerb">${escapeHtml(verb.infinitive)} <span class="pill">#${getDisplayVerbNumber(verb)}</span></div>
+      <div class="practiceVerb">${escapeHtml(title)}</div>
       ${renderPracticeScorePills(PRACTICE_STATE.summary)}
     </div>
-    ${headerForms}
-    <div class="practiceColumns">
-      <section class="side" data-side="simple" ${simpleBlocks ? "" : "hidden"}>
-        <div class="colHeader"><div class="h">Simple tenses</div></div>
-        ${simpleBlocks}
-      </section>
-      <section class="side" data-side="compound" ${compoundBlocks ? "" : "hidden"}>
-        <div class="colHeader"><div class="h">Compound tenses</div></div>
-        ${compoundBlocks}
-      </section>
-    </div>
-    ${imperative}
+    ${renderPracticeMatrix(verbs, PRACTICE_STATE.selectedKeys)}
     ${submittedControls}
   `;
-  showPracticeModal(PRACTICE_STATE.submitted ? "Practice result" : "Practice", "Fill in the selected forms", body);
+  showPracticeModal(PRACTICE_STATE.submitted ? "Practice result" : "Practice", meta, body);
   const firstInput = document.querySelector("#practiceModal .practiceInput:not([disabled])");
   if (firstInput) {
     setTimeout(() => {
@@ -4986,71 +5199,59 @@ function renderPracticeRun(verbKey = PRACTICE_STATE.verbKey) {
   }
 }
 
-function startPracticeAttempt(verbKey, selectedKeys) {
-  const verb = findVerbByKey(verbKey);
-  if (!verb || !hasPracticeAnswerKey(verb)) return;
+function startPracticeAttempt(verbKey, selectedKeys, verbKeys = null) {
   const keys = practiceSelectionKeys(selectedKeys);
-  if (!getPracticeCellKeys(verb, keys).length) {
+  const resolvedVerbKeys = Array.isArray(verbKeys) && verbKeys.length ? verbKeys : [verbKey];
+  const verbs = resolvedVerbKeys.map(findVerbByKey).filter(Boolean);
+  if (!verbs.length || verbs.some(verb => !hasPracticeAnswerKey(verb))) return;
+  if (!verbs.some(verb => getPracticeCellKeys(verb, keys).length)) {
     alert("Select at least one form to practice.");
     return;
   }
   PRACTICE_STATE.selectedKeys = keys;
-  PRACTICE_STATE.verbKey = verb._key;
+  PRACTICE_STATE.verbKey = verbs[0]._key;
+  PRACTICE_STATE.verbKeys = verbs.map(verb => verb._key);
   PRACTICE_STATE.inputs = {};
   PRACTICE_STATE.statusByCell = {};
   PRACTICE_STATE.summary = null;
   PRACTICE_STATE.submitted = false;
-  renderPracticeRun(verb._key);
+  renderPracticeRun();
 }
 
 function collectPracticeInputs() {
   const inputs = {};
-  document.querySelectorAll("#practiceModal .practiceInput[data-practice-cell-key]").forEach(input => {
-    inputs[input.dataset.practiceCellKey] = normalizeUserCellInput(input.value || "");
+  document.querySelectorAll("#practiceModal .practiceInput[data-practice-input-key]").forEach(input => {
+    inputs[input.dataset.practiceInputKey] = normalizeUserCellInput(input.value || "");
   });
   return inputs;
 }
 
 function submitPracticeAttempt() {
-  const verb = findVerbByKey(PRACTICE_STATE.verbKey);
-  if (!verb) return;
+  const verbs = getPracticeVerbs();
+  if (!verbs.length) return;
   const inputs = collectPracticeInputs();
-  const scored = summarizePracticeInputs(verb, PRACTICE_STATE.selectedKeys, inputs);
+  const scored = summarizePracticeInputs(verbs, PRACTICE_STATE.selectedKeys, inputs);
   PRACTICE_STATE.inputs = inputs;
   PRACTICE_STATE.statusByCell = scored.statusByCell;
   PRACTICE_STATE.summary = scored.summary;
   PRACTICE_STATE.submitted = true;
   PRACTICE_STATE.attempts.push({
     id: `practice_${Date.now()}`,
-    verbKey: verb._key,
-    infinitive: verb.infinitive,
-    displayNumber: getDisplayVerbNumber(verb),
-    pattern: inferPatternCategory(verb),
+    verbKeys: verbs.map(verb => verb._key),
+    infinitive: verbs.map(verb => verb.infinitive).join(" / "),
+    displayNumber: verbs.map(getDisplayVerbNumber).join(" / "),
+    pattern: verbs.map(inferPatternCategory).join(" / "),
     selectedKeys: [...PRACTICE_STATE.selectedKeys],
     summary: deepClone(scored.summary),
+    perVerb: deepClone(scored.perVerb),
     checkedAt: new Date().toISOString()
   });
-  renderPracticeRun(verb._key);
-}
-
-function getPracticeCandidateVerbs() {
-  const pattern = PRACTICE_STATE.nextPatternFilter || "all";
-  const tag = PRACTICE_STATE.nextTagFilter || "all";
-  return getAllVerbs().filter(verb => {
-    if (!hasPracticeAnswerKey(verb)) return false;
-    if (verb._source === "example" && tag !== "example") return false;
-    if (pattern !== "all" && inferPatternCategory(verb) !== pattern) return false;
-    const tags = getVerbTags(verb);
-    if (tag !== "all" && !tags.includes(tag)) return false;
-    return true;
-  });
+  renderPracticeRun();
 }
 
 function chooseRandomPracticeVerb() {
-  let candidates = getPracticeCandidateVerbs();
-  if (candidates.length > 1) {
-    candidates = candidates.filter(verb => verb._key !== PRACTICE_STATE.verbKey);
-  }
+  const excludeKeys = PRACTICE_STATE.verbKeys?.length ? PRACTICE_STATE.verbKeys : [PRACTICE_STATE.verbKey];
+  const candidates = getPracticeCandidateVerbs({ excludeKeys });
   if (!candidates.length) {
     alert("No verbs match those filters.");
     return null;
@@ -5061,8 +5262,10 @@ function chooseRandomPracticeVerb() {
 function startRandomPracticeVerb() {
   const next = chooseRandomPracticeVerb();
   if (!next) return;
+  const verbKeys = resolvePracticeVerbKeysFromSlotConfigs(next._key, PRACTICE_STATE.extraVerbSlots || []);
+  if (!verbKeys) return;
   selectVerbByKey(next._key);
-  startPracticeAttempt(next._key, PRACTICE_STATE.selectedKeys);
+  startPracticeAttempt(next._key, PRACTICE_STATE.selectedKeys, verbKeys);
 }
 
 function summarizePracticeSession() {
@@ -5095,11 +5298,24 @@ function renderPracticeSummary() {
   const totals = summarizePracticeSession();
   const rows = PRACTICE_STATE.attempts.map((attempt, idx) => {
     const s = attempt.summary || {};
+    const perVerb = Array.isArray(attempt.perVerb) && attempt.perVerb.length
+      ? attempt.perVerb
+      : [{
+          infinitive: attempt.infinitive,
+          displayNumber: attempt.displayNumber,
+          pattern: attempt.pattern
+        }];
+    const verbsHtml = perVerb.map(item => (
+      `<div>${escapeHtml(item.infinitive || "")} <span class="pill">#${escapeHtml(item.displayNumber || "")}</span></div>`
+    )).join("");
+    const patternsHtml = perVerb.map(item => (
+      `<div>${escapeHtml(formatPracticePatternCategory(item.pattern || ""))}</div>`
+    )).join("");
     return `
       <tr>
         <td>${idx + 1}</td>
-        <td>${escapeHtml(attempt.infinitive)} <span class="pill">#${escapeHtml(attempt.displayNumber)}</span></td>
-        <td>${escapeHtml(formatPracticePatternCategory(attempt.pattern || ""))}</td>
+        <td>${verbsHtml}</td>
+        <td>${patternsHtml}</td>
         <td class="practiceSummaryScore">${s.points || 0}/${s.total || 0} (${s.percent || 0}%)</td>
         <td>${s.correct || 0}</td>
         <td>${s.accent_warning || 0}</td>
@@ -5114,7 +5330,7 @@ function renderPracticeSummary() {
       ${renderPracticeScorePills(totals)}
     </div>
     <div class="practicePanel">
-      <div class="practiceSectionTitle">Verbs attempted</div>
+      <div class="practiceSectionTitle">Practice sets</div>
       ${rows ? `
         <table class="practiceSummaryTable">
           <thead>
@@ -5147,6 +5363,7 @@ function resetPracticeSession() {
   PRACTICE_STATE.statusByCell = {};
   PRACTICE_STATE.summary = null;
   PRACTICE_STATE.submitted = false;
+  PRACTICE_STATE.verbKeys = PRACTICE_STATE.verbKey ? [PRACTICE_STATE.verbKey] : [];
   renderPracticeSetup(PRACTICE_STATE.verbKey || CURRENT_VERB_KEY);
 }
 
@@ -5173,7 +5390,12 @@ function bindPracticeModalInteractions() {
       alert("Select at least one form to practice.");
       return;
     }
-    startPracticeAttempt(PRACTICE_STATE.verbKey || CURRENT_VERB_KEY, selected);
+    const slots = getPracticeExtraSlotsFromModal();
+    PRACTICE_STATE.extraVerbSlots = slots;
+    const baseVerbKey = PRACTICE_STATE.verbKey || CURRENT_VERB_KEY;
+    const verbKeys = resolvePracticeVerbKeysFromSlotConfigs(baseVerbKey, slots);
+    if (!verbKeys) return;
+    startPracticeAttempt(baseVerbKey, selected, verbKeys);
   });
   modal.querySelector("[data-practice-submit]")?.addEventListener("click", submitPracticeAttempt);
   modal.querySelectorAll("[data-practice-setup]").forEach(btn => {
@@ -5194,7 +5416,7 @@ function bindPracticeModalInteractions() {
   });
   modal.querySelectorAll(".practiceInput").forEach(input => {
     input.addEventListener("input", () => {
-      PRACTICE_STATE.inputs[input.dataset.practiceCellKey] = normalizeUserCellInput(input.value || "");
+      PRACTICE_STATE.inputs[input.dataset.practiceInputKey] = normalizeUserCellInput(input.value || "");
     });
     input.addEventListener("keydown", (e) => {
       if (handleSpanishCharShortcut(e, input)) return;
