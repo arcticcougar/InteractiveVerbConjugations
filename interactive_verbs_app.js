@@ -5118,21 +5118,28 @@ function renderPracticeSetup(verbKey = CURRENT_VERB_KEY, options = {}) {
       <div class="practiceSectionTitle">Player</div>
       ${renderPracticePlayerControls(PRACTICE_STATE.playerName)}
     </div>
-    ${renderPracticeExtraVerbControls(setupVerb)}
-    <div class="practicePanel">
-      <div class="practiceSectionTitle">Tenses</div>
-      <div class="practiceOptionsGrid">${renderPracticeTenseOptions(PRACTICE_STATE.selectedKeys)}</div>
-    </div>
-    <div class="practicePanel">
-      <div class="practiceSectionTitle">Input order</div>
-      <div class="practiceOptionsGrid practiceOptionsGrid--two">${renderPracticeTabOrderOptions(PRACTICE_STATE.tabOrder)}</div>
-    </div>
-    <div class="practiceActions">
-      ${PRACTICE_STATE.attempts.length ? `<button type="button" class="practiceSecondaryBtn" data-practice-summary>Session summary</button>` : ""}
-      <button type="button" class="practiceSecondaryBtn" data-practice-reset-session>New session</button>
-      <button type="button" class="practiceSecondaryBtn" data-leaderboard-view>View leaderboard</button>
+    <div class="practiceActions practiceActions--primary">
       <button type="button" class="practiceActionBtn" data-practice-start>Start</button>
     </div>
+    <details class="practiceAdvancedDetails">
+      <summary>Options</summary>
+      <div class="practiceAdvancedBody">
+        ${renderPracticeExtraVerbControls(setupVerb)}
+        <div class="practicePanel">
+          <div class="practiceSectionTitle">Tenses</div>
+          <div class="practiceOptionsGrid">${renderPracticeTenseOptions(PRACTICE_STATE.selectedKeys)}</div>
+        </div>
+        <div class="practicePanel">
+          <div class="practiceSectionTitle">Input order</div>
+          <div class="practiceOptionsGrid practiceOptionsGrid--two">${renderPracticeTabOrderOptions(PRACTICE_STATE.tabOrder)}</div>
+        </div>
+        <div class="practiceActions">
+          ${PRACTICE_STATE.attempts.length ? `<button type="button" class="practiceSecondaryBtn" data-practice-summary>Session summary</button>` : ""}
+          <button type="button" class="practiceSecondaryBtn" data-practice-reset-session>New session</button>
+          <button type="button" class="practiceSecondaryBtn" data-leaderboard-view>View leaderboard</button>
+        </div>
+      </div>
+    </details>
   `;
   showPracticeModal("Practice setup", `${setupVerb.infinitive} #${getDisplayVerbNumber(setupVerb)}`, body);
 }
@@ -6457,6 +6464,11 @@ function bindPracticeLaunch(detailRoot) {
   });
 }
 
+function openInitialPracticeSetup() {
+  if (isPracticeOverlayOpen()) return;
+  renderPracticeSetup(CURRENT_VERB_KEY, { useCurrentChallengeDefault: true });
+}
+
 function saveDraftSnapshot() {
   const snapshot = {
     id: `snap_${Date.now()}`,
@@ -7404,6 +7416,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initFilterDropdowns();
   refreshFilterDropdowns();
   renderList(q.value || "");
+  setTimeout(openInitialPracticeSetup, 0);
   ensureMainCardLayoutObserver();
   queueSidebarSync();
   window.addEventListener("load", () => {

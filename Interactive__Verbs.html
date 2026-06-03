@@ -1513,6 +1513,53 @@
     justify-content: flex-end;
     gap: 8px;
   }
+  .practiceActions--primary {
+    justify-content: flex-start;
+  }
+  .practiceActions--primary .practiceActionBtn {
+    min-width: 118px;
+    padding: 10px 18px;
+    font-size: 15px;
+  }
+  .practiceAdvancedDetails {
+    min-width: 0;
+  }
+  .practiceAdvancedDetails summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 8px 12px;
+    border: 1px solid var(--close-border);
+    border-radius: 999px;
+    background: #2b2b2b;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+  }
+  .practiceAdvancedDetails summary::-webkit-details-marker {
+    display: none;
+  }
+  .practiceAdvancedDetails summary::before {
+    content: "+";
+    color: var(--section-color);
+    font-weight: 950;
+  }
+  .practiceAdvancedDetails[open] summary::before {
+    content: "-";
+  }
+  .practiceAdvancedDetails summary:hover {
+    border-color: var(--selected-border);
+    filter: brightness(1.08);
+  }
+  .practiceAdvancedBody {
+    display: grid;
+    gap: 10px;
+    margin-top: 10px;
+  }
   .practiceRunTop {
     display: flex;
     flex-wrap: wrap;
@@ -2936,7 +2983,7 @@ window.addEventListener("resize", () => {
 <script src="core_notes_overrides.js"></script>
 <script src="core_notes_manual_fixes.js"></script>
 <script src="practice-challenges.js?v=essential-55-weeks-1"></script>
-<script src="interactive_verbs_app.js?v=challenge-default-1"></script>
+<script src="interactive_verbs_app.js?v=practice-first-1"></script>
 </body>
 </html>
 
