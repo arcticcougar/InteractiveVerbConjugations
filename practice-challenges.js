@@ -45,243 +45,243 @@
 
   const INTRO_BY_WEEK = {
     1: {
-      lead: "This first week is about seeing the three regular families side by side. Hablar, comer, and vivir give you the cleanest possible comparison between -ar, -er, and -ir verbs, so use the shared shape of the endings to help your memory.",
+      lead: "This opening week is your reference point for the whole course. Hablar, comer, and vivir show the three regular verb families in their simplest form, so treat them as patterns you will keep returning to rather than as three isolated verbs.",
       watch: [
-        "In the present tense, notice that -er and -ir verbs are almost identical except nosotros and vosotros.",
-        "In the preterite, the yo and el/ella forms need accents: hablé/habló, comí/comió, viví/vivió.",
-        "The future is built from the full infinitive plus endings, so the verb ending type matters less there."
+        "In the present, -er and -ir verbs are almost identical except nosotros and vosotros: comemos/coméis versus vivimos/vivís.",
+        "In the preterite, the accent marks separate past-tense forms from present-tense lookalikes: hablé/habló, comí/comió, viví/vivió.",
+        "In the future, all three keep the full infinitive and add the same endings, so hablaré, comeré, and viviré are built the same way."
       ]
     },
     2: {
-      lead: "This week keeps the verbs regular but asks you to trust the pattern with fresh vocabulary. Cantar, aprender, and escribir are useful verbs, and they reinforce the idea that regular endings can carry you a long way.",
+      lead: "This week asks you to prove that last week's patterns transfer to new verbs. Cantar, aprender, and escribir are still regular, so the skill is to recognize the family quickly and apply the ending without hesitation.",
       watch: [
-        "Cantar behaves just like hablar, so it is a good confidence check for the -ar pattern.",
-        "Aprender and escribir let you compare -er and -ir forms again without extra irregular distractions.",
-        "Say the forms in order as you type; the rhythm often reveals whether an ending sounds wrong."
+        "Cantar follows hablar exactly; if a cantar form feels uncertain, mentally swap in hablar and then return to the new stem.",
+        "Aprender and escribir reinforce the -er/-ir split: most forms match, but nosotros and vosotros tell the families apart.",
+        "Use the infinitive ending as your first decision point, then keep the stem steady while the endings do the work."
       ]
     },
     3: {
-      lead: "Now the focus narrows to common -ar verbs. Estudiar, comprar, and tomar are regular, so the challenge is speed, accuracy, and not overthinking forms that follow the same model.",
+      lead: "Now you get a concentrated -ar week. Estudiar, comprar, and tomar are common classroom and everyday verbs, and the point is to make the -ar pattern feel automatic enough that you can focus on meaning.",
       watch: [
-        "All three verbs use the same -ar endings in the selected tenses.",
+        "All three verbs use the same -ar endings, so any difference should come from the stem, not the pattern.",
         "Preterite accents still matter: estudié/estudió, compré/compró, tomé/tomó.",
-        "These verbs combine easily with nouns, so picture simple sentences as you conjugate."
+        "Practise them as sentence starters: estudio español, compré café, tomaré agua."
       ]
     },
     4: {
-      lead: "Trabajar, beber, and abrir return to the -ar, -er, -ir comparison. By now, the aim is to recognize the regular pattern quickly instead of rebuilding every form from scratch.",
+      lead: "Trabajar, beber, and abrir bring the three regular families back together. This is a fluency week: you are training yourself to see a new regular verb and immediately know which endings belong to it.",
       watch: [
-        "Trabajar is a straightforward -ar verb even though the stem is a little longer.",
-        "Beber and abrir are useful for comparing -er and -ir endings in present and preterite.",
-        "Keep the stem stable; most of the work is choosing the correct ending."
+        "Trabajar has a longer stem, but it is still just trabaj- plus regular -ar endings.",
+        "Beber and abrir are a clean -er/-ir pair; compare bebo/bebemos with abro/abrimos.",
+        "The future is your breather: trabajaré, beberé, and abriré all use the infinitive plus the same future endings."
       ]
     },
     5: {
-      lead: "Necesitar, comprender, and recibir are classroom and communication verbs. They are regular, but they are also the sort of verbs learners use constantly when asking for help or explaining what they understand.",
+      lead: "Necesitar, comprender, and recibir are practical communication verbs. They let you say what you need, what you understand, and what you receive, which makes them useful far beyond this test.",
       watch: [
-        "Necesitar is an -ar verb, while comprender and recibir let you review the -er/-ir split.",
-        "Comprender and aprender are close in meaning and form, so pay attention to the stem you are using.",
-        "The preterite is useful here for saying what someone needed, understood, or received at a specific time."
+        "Necesitar is your -ar anchor; comprender and recibir keep the -er/-ir contrast active.",
+        "Comprender looks and sounds close to aprender, so make sure you are writing comprend- when this verb is tested.",
+        "These verbs are especially useful in the preterite: necesité ayuda, comprendí la pregunta, recibí un mensaje."
       ]
     },
     6: {
-      lead: "Escuchar, vender, and subir keep building fluency across the three regular endings. These are everyday action verbs, so aim for forms that feel automatic and sentence-ready.",
+      lead: "Escuchar, vender, and subir are straightforward regular verbs, but they are excellent for building usable speed. The goal is not just to get the forms right, but to make them arrive without a long pause.",
       watch: [
-        "Escuchar is regular; do not confuse it with oír, which is much more irregular.",
-        "Vender and subir are a clean -er/-ir pair for checking endings.",
-        "The gerunds are especially useful: escuchando, vendiendo, subiendo."
+        "Escuchar is regular; do not confuse it with oír, which follows a much more irregular pattern.",
+        "Vender and subir are a clean -er/-ir pair, especially in nosotros and vosotros.",
+        "The gerunds are useful in real speech: escuchando, vendiendo, subiendo."
       ]
     },
     7: {
-      lead: "Ayudar, responder, and decidir are excellent sentence-building verbs. They let you practise regular forms while thinking about real communication: helping, answering, and deciding.",
+      lead: "Ayudar, responder, and decidir are strong sentence-building verbs because they often connect people, questions, and choices. The forms are regular, so put your attention on clean endings and accurate accents.",
       watch: [
         "Ayudar is regular -ar, responder is regular -er, and decidir is regular -ir.",
-        "Decidir has an accented preterite yo form and third-person form, just like other regular -ir verbs.",
-        "Try to attach each form to a simple subject in your head: yo decido, nosotros respondemos, ellos ayudan."
+        "Decidir has the regular -ir preterite accents: decidí and decidió.",
+        "Attach each form to a subject as you type: yo ayudo, tú respondes, ellos decidirán."
       ]
     },
     8: {
-      lead: "Esperar, correr, and asistir look simple, but they are worth learning carefully because their meanings are high-frequency. Esperar can mean to wait or to hope, and asistir usually means to attend.",
+      lead: "Esperar, correr, and asistir are regular verbs with meanings learners use early and often. This week is a reminder that a verb can be grammatically simple but still deserve careful attention because of how common it is.",
       watch: [
-        "Do not translate asistir as 'assist' automatically; in most learner sentences it means 'attend'.",
-        "Correr gives you a very clean -er pattern to compare with the -ar and -ir verbs.",
-        "Esperar is especially useful in future-looking sentences, so the future forms are worth saying aloud."
+        "Esperar can mean to wait, to hope, or to expect; context decides which English translation fits.",
+        "Asistir usually means to attend, not to assist, so do not let the English lookalike mislead you.",
+        "Correr is a clean -er model; use it to check whether your -er endings are secure."
       ]
     },
     9: {
-      lead: "Viajar, sufrir, and acabar are mostly regular, but acabar is especially useful because acabar de plus an infinitive means 'to have just done something'. This week is still pattern practice, with a small phrase-building bonus.",
+      lead: "Viajar, sufrir, and acabar continue regular-pattern work, but acabar adds a useful phrase: acabar de plus an infinitive means to have just done something. This gives the week a small but important communication bonus.",
       watch: [
-        "Viajar keeps the j in the stem; the selected forms stay regular.",
-        "Sufrir is a regular -ir verb, so use it to strengthen the vivir/abrir/recibir pattern.",
-        "Acabar de is a phrase worth remembering: acabo de llegar means 'I have just arrived'."
+        "Viajar keeps the j in the stem throughout these forms: viajo, viajé, viajaré.",
+        "Sufrir strengthens the regular -ir pattern: sufro, sufrí, sufriré.",
+        "Acabo de llegar means 'I have just arrived'; the conjugated acabar carries the time."
       ]
     },
     10: {
-      lead: "Entrar, deber, and llevar are regular verbs with very useful meanings. They help you move from isolated conjugation into common expressions about entering, needing to do something, carrying, wearing, or taking.",
+      lead: "Entrar, deber, and llevar are regular, but their meanings open a lot of real sentences. This week is about turning reliable forms into useful expressions about entering, obligation, carrying, wearing, and taking.",
       watch: [
-        "Deber plus an infinitive means 'must' or 'should', so it behaves like a helper verb.",
-        "Llevar can mean carry, wear, or take, depending on context.",
-        "Even with flexible meanings, the forms themselves are regular, so let the endings do the work."
+        "Deber plus an infinitive means must, should, or ought to: debo estudiar, debemos salir.",
+        "Llevar is flexible: it can mean to carry, to wear, or to take someone/something somewhere.",
+        "The meanings are flexible, but the conjugations are regular; do not invent irregularities that are not there."
       ]
     },
     11: {
-      lead: "Limpiar, romper, and cumplir are the final regular-pattern consolidation week. Treat this as a check that you can now handle new regular verbs without needing them to be familiar first.",
+      lead: "Limpiar, romper, and cumplir are your final regular-pattern consolidation week. By this point, a new regular verb should feel manageable even when the vocabulary itself is less familiar.",
       watch: [
-        "Limpiar is a regular -ar verb despite the i in the stem.",
-        "Romper is the -er anchor, and cumplir is the -ir anchor.",
-        "If an answer feels hard, identify the infinitive ending first, then choose the matching family."
+        "Limpiar is regular despite the i in the stem; do not let the spelling distract you from the -ar pattern.",
+        "Romper is your -er anchor and cumplir is your -ir anchor.",
+        "If you hesitate, pause for the sequence: infinitive ending, stem, tense, subject."
       ]
     },
     12: {
-      lead: "Llamar, llamarse, and usar introduce a key contrast: a normal verb beside its reflexive form. Llamar means to call, while llamarse is used for names, as in 'me llamo'.",
+      lead: "Llamar, llamarse, and usar introduce the first major reflexive contrast. Llamar means to call; llamarse is the form used for names, so this week teaches you that a pronoun can change the whole job of a verb.",
       watch: [
-        "The reflexive verb needs reflexive pronouns: me, te, se, nos, os, se.",
-        "The verb ending still follows the regular -ar pattern; the extra challenge is the pronoun.",
-        "Compare llamo and me llamo so you see what changes and what stays the same."
+        "The reflexive pronouns are me, te, se, nos, os, se.",
+        "The verb ending still follows the regular -ar pattern; the extra task is placing the correct pronoun.",
+        "Compare llamo with me llamo: the verb ending is familiar, but the meaning changes."
       ]
     },
     13: {
-      lead: "Mirar, mirarse, and preparar continue the reflexive contrast. Mirar means to look at something; mirarse usually means to look at oneself, so the pronoun changes the meaning.",
+      lead: "Mirar, mirarse, and preparar continue the reflexive idea in a very manageable setting. Mirar means to look at something; mirarse usually means to look at oneself, so the grammar is also teaching meaning.",
       watch: [
-        "Do not drop the reflexive pronoun from mirarse forms.",
-        "Mirar and preparar are regular -ar verbs, so their endings should feel familiar.",
-        "Use the reflexive forms to practise keeping pronouns and verb endings aligned."
+        "Do not drop the reflexive pronoun from mirarse: me miro, te miras, se mira.",
+        "Mirar and preparar are regular -ar verbs, so the endings should feel familiar.",
+        "Keep pronoun and subject aligned; se miro is not the same as me miro."
       ]
     },
     14: {
-      lead: "Caer, caerse, and traer are the first week where related-looking verbs bring real irregular forms. This is a good moment to slow down and notice exactly where the irregularity appears.",
+      lead: "Caer, caerse, and traer move you into more serious irregular territory. They are related by sound and by some spelling behavior, but each form still needs to be checked carefully rather than guessed from a regular -er model.",
       watch: [
-        "Caer and traer both have irregular yo forms in the present: caigo and traigo.",
-        "Caerse adds reflexive pronouns, so you must manage both the pronoun and the irregular verb form.",
-        "In the preterite, watch for spelling and stem changes rather than assuming a regular -er pattern."
+        "Caer and traer both have irregular present yo forms: caigo and traigo.",
+        "Caerse adds reflexive pronouns on top of the irregular forms: me caigo, se cayó.",
+        "Watch the preterite third-person forms: caer gives cayó/cayeron, while traer gives trajo/trajeron."
       ]
     },
     15: {
-      lead: "Sentir, sentirse, and dormir introduce important -ir stem-changing verbs. These verbs are common, useful, and slightly trickier because the stem can change before you even choose the ending.",
+      lead: "Sentir, sentirse, and dormir introduce high-value -ir stem changers. The endings may be familiar, but the stem itself can move, so this week trains you to look inside the word before adding the ending.",
       watch: [
-        "Sentir changes e to ie in many present-tense forms, and sentirse adds reflexive pronouns.",
-        "Dormir changes o to ue in the present.",
-        "In the preterite, third-person forms of these -ir stem changers can shift again, so check el/ella and ellos carefully."
+        "Sentir changes e to ie in the present: siento, sientes, siente.",
+        "Dormir changes o to ue in the present: duermo, duermes, duerme.",
+        "In the preterite, third-person -ir forms shift again: sintió/sintieron and durmió/durmieron."
       ]
     },
     16: {
-      lead: "Poner, ponerse, and salir focus on irregular yo forms and useful everyday meanings. These verbs are worth learning early because they appear in many practical expressions.",
+      lead: "Poner, ponerse, and salir are everyday verbs with irregular forms that learners meet constantly. This week is about noticing the small irregular stems that make these verbs sound natural.",
       watch: [
         "The present yo forms are pongo and salgo.",
-        "Ponerse is reflexive, so include the pronouns as well as the irregular verb form.",
-        "The future stems are irregular too: pondr- and saldr- before the future endings."
+        "Ponerse is reflexive, so include both the pronoun and the correct verb form: me pongo, se pone.",
+        "The future stems are irregular: pondré/pondrás and saldré/saldrás."
       ]
     },
     17: {
-      lead: "Ir, irse, and volver are about movement: going, leaving, and returning. Ir is one of the most irregular verbs in Spanish, so this week is less about patterns and more about recognition.",
+      lead: "Ir, irse, and volver are movement verbs: going, going away, and returning. Ir is so irregular that it becomes a memory verb, while volver gives you a useful contrast between an irregular present stem and a very common past participle.",
       watch: [
-        "Ir has highly irregular present forms, so do not try to force a regular -ir pattern onto it.",
-        "Irse is reflexive and usually means to leave or go away.",
-        "Volver is stem-changing in the present and has the important past participle vuelto."
+        "Ir has highly irregular present forms: voy, vas, va, vamos, vais, van.",
+        "Irse means to leave or go away, so keep the reflexive pronoun: me voy, se fue.",
+        "Volver changes o to ue in the present and has the important past participle vuelto."
       ]
     },
     18: {
-      lead: "Quedarse, estar, and ser bring together staying, states, and identity. This week is as much about meaning as form, because ser and estar divide work that English often gives to one verb: 'to be'.",
+      lead: "Quedarse, estar, and ser are a meaning-heavy week. English uses one verb, to be, for many ideas, but Spanish divides identity, condition, location, and staying into different patterns.",
       watch: [
         "Ser is used for identity, origin, and defining characteristics; estar is used for states and location.",
-        "Both ser and estar have irregular forms that need to be learned directly.",
-        "Quedarse is reflexive and often means to stay or remain, so keep the pronoun attached to the idea."
+        "Estar has the present yo form estoy and the preterite stem estuv-.",
+        "Ser shares its preterite forms with ir: fui, fuiste, fue, fuimos, fuisteis, fueron."
       ]
     },
     19: {
-      lead: "Gustar, parecer, and doler behave differently from ordinary subject-action verbs. Think of them as 'to be pleasing', 'to seem', and 'to hurt', where the thing causing the feeling often drives the verb form.",
+      lead: "Gustar, parecer, and doler behave differently from ordinary subject-action verbs. In real use, the thing liked, seeming true, or hurting often controls the verb, while the person affected is shown with a pronoun.",
       watch: [
-        "Expect many forms to revolve around third-person singular and plural patterns: gusta/gustan, parece/parecen, duele/duelen.",
-        "The person affected is usually shown with an indirect-object pronoun: me, te, le, nos, os, les.",
-        "Doler also has a stem change, so watch the stem as well as the pronoun logic."
+        "The key everyday contrast is singular versus plural: me gusta el libro, me gustan los libros.",
+        "Use indirect-object pronouns for the person affected: me, te, le, nos, os, les.",
+        "Doler also changes o to ue in the present: duele and duelen."
       ]
     },
     20: {
-      lead: "Pagar, tocar, and buscar are regular in most ways, but they protect pronunciation in the preterite yo form. This week teaches you that spelling changes can preserve a sound rather than signal a whole new pattern.",
+      lead: "Pagar, tocar, and buscar are regular -ar verbs with one important spelling lesson. The yo preterite changes spelling to protect the original sound before the é ending.",
       watch: [
         "The yo preterite forms are pagué, toqué, and busqué.",
-        "Those spelling changes keep the hard g, hard c, and hard qu sounds.",
-        "Outside that spelling issue, the verbs mostly behave like normal -ar verbs."
+        "Those changes preserve the hard g/k sounds; the spelling changes, but the pronunciation stays loyal to the infinitive.",
+        "Outside that yo preterite spelling issue, treat the verbs as regular -ar verbs."
       ]
     },
     21: {
-      lead: "Comenzar, empezar, and pensar introduce e to ie stem-changing verbs. The endings are familiar, but the stem changes in stressed present-tense forms.",
+      lead: "Comenzar, empezar, and pensar train the e to ie stem-change pattern. This is the moment to stop seeing stem changers as random and start seeing the predictable present-tense shape.",
       watch: [
-        "Think of the present-tense boot pattern: the stem changes in all forms except nosotros and vosotros.",
+        "In the present, the stem changes in all forms except nosotros and vosotros: pienso, piensas, piensa, pensamos.",
         "Comenzar and empezar also have a spelling change in the yo preterite: comencé and empecé.",
-        "The future uses the full infinitive, so the stem change does not apply there."
+        "The future uses the full infinitive, so pensaré and empezaré do not use the present-tense stem change."
       ]
     },
     22: {
-      lead: "Contar, poder, and jugar continue stem-change work with o to ue and u to ue. These verbs are very common, so the goal is to make the changed stem feel normal rather than surprising.",
+      lead: "Contar, poder, and jugar continue stem-change work with o to ue and u to ue. These verbs are common enough that the changed forms need to feel normal, not exceptional.",
       watch: [
-        "Contar and poder change o to ue in many present-tense forms.",
-        "Jugar changes u to ue, which is less common but follows the same boot-pattern idea.",
-        "Poder has important irregular preterite forms, so do not expect every tense to follow the present pattern."
+        "Contar and poder change o to ue in the present: cuento, cuentas; puedo, puedes.",
+        "Jugar changes u to ue in the present and has a yo preterite spelling change: jugué.",
+        "Poder has a separate irregular preterite and future: pude, pudo, podré."
       ]
     },
     23: {
-      lead: "Perder, querer, and cerrar give you more e to ie practice with three very useful verbs. This is a chance to build confidence with stem changers across different meanings.",
+      lead: "Perder, querer, and cerrar give you more e to ie practice, but querer raises the difficulty because it has important irregular forms outside the present. This week is about comparing similar-looking patterns without flattening them into one rule.",
       watch: [
-        "All three use e to ie in many present-tense forms.",
-        "Querer is especially important and has irregular preterite forms, so treat it with extra care.",
-        "The future forms are regular for perder and cerrar, but querer uses the irregular future stem querr-."
+        "All three change e to ie in the present: pierdo, quiero, cierro.",
+        "Querer has an irregular preterite: quise, quiso, quisieron.",
+        "Perder and cerrar have regular futures, but querer uses querr-: querré, querrás."
       ]
     },
     24: {
-      lead: "Conocer, conducir, and traducir teach the -zco family and related irregular patterns. These verbs are common in real speech, especially conocer for knowing people or places.",
+      lead: "Conocer, conducir, and traducir teach the -zco family and then move beyond it. The present yo forms are the obvious hook, but conducir and traducir also have distinctive preterite stems.",
       watch: [
         "The present yo forms are conozco, conduzco, and traduzco.",
-        "Conducir and traducir also have irregular preterite stems: conduj- and traduj-.",
+        "Conducir and traducir use conduj- and traduj- in the preterite, with ellos forms condujeron and tradujeron.",
         "Conocer is not the same as saber; it usually means to know or be familiar with a person, place, or thing."
       ]
     },
     25: {
-      lead: "Leer, creer, and oír are vowel-heavy verbs, so spelling and accents matter. This week is excellent for training your eye as well as your memory.",
+      lead: "Leer, creer, and oír are vowel-heavy verbs, which means spelling, accents, and inserted y forms matter. This is a careful-writing week as much as a memory week.",
       watch: [
         "Past participles need written accents: leído, creído, oído.",
-        "The preterite often introduces y sounds in third-person forms, such as leyó and creyó.",
-        "Oír is more irregular than leer and creer, so give it extra attention."
+        "The preterite third-person forms introduce y: leyó/leyeron, creyó/creyeron, oyó/oyeron.",
+        "Oír also has present forms such as oigo, oyes, oye, so give it extra attention."
       ]
     },
     26: {
-      lead: "Tener, venir, and mantener are major irregular verbs and a related verb family. Once you learn tener and venir well, mantener becomes much easier because it carries many of the same patterns.",
+      lead: "Tener, venir, and mantener are major irregular verbs and a useful family study. Mantener is not a brand-new pattern; it borrows heavily from tener, which helps you learn more by noticing the family resemblance.",
       watch: [
         "The present yo forms are tengo, vengo, and mantengo.",
-        "The preterite stems are tuv-, vin-, and mantuv-.",
-        "The future stems are tendr-, vendr-, and mantendr- before the regular future endings."
+        "The preterite stems are tuv-, vin-, and mantuv-: tuve, vine, mantuve.",
+        "The future stems are tendr-, vendr-, and mantendr-: tendré, vendré, mantendré."
       ]
     },
     27: {
-      lead: "Saber, ver, and dar are short verbs, but they are not small in importance. Because the forms are compact, small spelling and accent details carry a lot of weight.",
+      lead: "Saber, ver, and dar are short, high-frequency verbs where small details matter. Because the forms are compact, one missing accent or one extra letter can change the answer completely.",
       watch: [
         "Saber has the present yo form sé and an irregular preterite stem sup-.",
-        "Ver and dar have very short preterite forms, so accents and exact spelling matter.",
-        "Do not mistake short forms for easy forms; check each one deliberately."
+        "Ver has veo in the present and vi/vio in the preterite; dar has doy and di/dio.",
+        "Notice that vi, vio, di, and dio are short preterite forms without written accents."
       ]
     },
     28: {
-      lead: "Hacer, decir, and pedir are high-frequency verbs with different kinds of irregularity. This week is about recognizing the particular personality of each verb rather than applying one rule to all three.",
+      lead: "Hacer, decir, and pedir are high-frequency verbs with three different irregular personalities. This week rewards careful pattern recognition: each verb is common, but each one misbehaves in its own way.",
       watch: [
         "Hacer and decir have irregular present yo forms: hago and digo.",
-        "Hacer and decir also have irregular future stems: har- and dir-.",
-        "Pedir is a stem-changing -ir verb, so watch present and preterite third-person forms."
+        "Their preterites are also distinctive: hice/hizo and dije/dijo.",
+        "Pedir changes e to i: pido in the present, pidió/pidieron in the preterite."
       ]
     },
     29: {
-      lead: "Haber, aparecer, and faltar deal with existence, appearance, and absence or need. These verbs often appear in sentence patterns that feel different from simple subject-action verbs.",
+      lead: "Haber, aparecer, and faltar deal with existence, appearance, and absence or need. They often appear in structures that do not feel like simple subject-action sentences, so meaning and grammar have to be learned together.",
       watch: [
-        "Haber is often used as an auxiliary or impersonally, so its meaning depends heavily on the structure around it.",
+        "Haber is often auxiliary or impersonal: he hablado, hay una mesa.",
         "Aparecer belongs with verbs like conocer in the present yo form: aparezco.",
-        "Faltar often works like gustar: me falta can mean 'I am missing' or 'I need'."
+        "Faltar often works like gustar: me falta tiempo means 'I lack time' or 'I need time'."
       ]
     },
     30: {
-      lead: "Andar, construir, and elegir are a final mixed-pattern review. You have regular-looking forms, spelling changes, stem changes, and strong irregular preterite forms all in one week.",
+      lead: "Andar, construir, and elegir are a final mixed-pattern week. You have an irregular preterite stem, a verb with y-spelling behavior, and an e to i stem changer, so the goal is to identify the kind of challenge before you type.",
       watch: [
-        "Andar has the irregular preterite stem anduv-.",
-        "Construir has y forms in places like construyo and construyó.",
-        "Elegir changes e to i in some forms and has the present yo form elijo."
+        "Andar has the irregular preterite stem anduv-: anduve, anduvo, anduvieron.",
+        "Construir has y forms such as construyo, construyó, and construyeron.",
+        "Elegir changes e to i in several forms and has the present yo form elijo."
       ]
     }
   };
