@@ -61,6 +61,25 @@ const TENSE_SELECTION_LABELS = {
   "14": "14 Pluperfect subjunctive",
   imperative: "Imperative"
 };
+const PRACTICE_TENSE_INTRO_HELP = {
+  gerund: "-ing form: hablando = speaking; often used with estar, as in estoy hablando.",
+  participle: "spoken/eaten/lived form: used with haber, as in he hablado, and sometimes as an adjective.",
+  "1": "Present: I speak, I do speak, or I am speaking.",
+  "2": "Imperfect: I was speaking or I used to speak; useful for background and repeated past actions.",
+  "3": "Preterite: I spoke or I did speak; useful for completed past actions.",
+  "4": "Future: I will speak.",
+  "5": "Conditional: I would speak; useful for polite requests and hypothetical ideas.",
+  "6": "Present subjunctive: that I speak or that I may speak; common after wishes, doubt, need, and emotion.",
+  "7": "Imperfect subjunctive: that I spoke or were to speak; used for past or hypothetical subjunctive ideas.",
+  "8": "Present perfect: I have spoken; built with haber plus the past participle.",
+  "9": "Pluperfect: I had spoken; something had already happened before another past moment.",
+  "10": "Preterite anterior: I had spoken; a rare literary form after expressions such as 'as soon as'.",
+  "11": "Future perfect: I will have spoken.",
+  "12": "Conditional perfect: I would have spoken.",
+  "13": "Perfect subjunctive: that I have spoken; subjunctive haber plus the past participle.",
+  "14": "Pluperfect subjunctive: that I had spoken or would have spoken, often in if-style sentences.",
+  imperative: "Command forms: speak, don't speak, let's speak."
+};
 const DEFAULT_STATE = {
   version: 1,
   custom_verbs: [],
@@ -5165,6 +5184,28 @@ function formatPracticeIntroTenses(keys) {
     .join(", ");
 }
 
+function renderPracticeIntroTenseHelp(keys) {
+  const rows = practiceSelectionKeys(keys)
+    .map(key => {
+      const label = TENSE_SELECTION_LABELS[key] || key;
+      const help = PRACTICE_TENSE_INTRO_HELP[key] || "";
+      return `
+        <div class="practiceIntroTenseRow">
+          <div class="practiceIntroTenseName">${escapeHtml(label)}</div>
+          <div class="practiceIntroTenseMeaning">${escapeHtml(help)}</div>
+        </div>
+      `;
+    })
+    .join("");
+  if (!rows) return "";
+  return `
+    <div class="practiceIntroTenseHelp">
+      <div class="practiceSectionTitle">Tense guide</div>
+      <div class="practiceIntroTenseRows">${rows}</div>
+    </div>
+  `;
+}
+
 function renderPracticeIntro(verbKey, selectedKeys, verbKeys = null) {
   const keys = practiceSelectionKeys(selectedKeys);
   const resolvedVerbKeys = Array.isArray(verbKeys) && verbKeys.length ? verbKeys : [verbKey];
@@ -5201,6 +5242,7 @@ function renderPracticeIntro(verbKey, selectedKeys, verbKeys = null) {
         <div class="practiceSectionTitle">Before you start</div>
         <ul class="practiceIntroList">${watchItems}</ul>
       ` : ""}
+      ${renderPracticeIntroTenseHelp(keys)}
       <div class="practiceIntroTenses">Selected forms: ${escapeHtml(formatPracticeIntroTenses(keys))}</div>
     </div>
     <div class="practiceActions">

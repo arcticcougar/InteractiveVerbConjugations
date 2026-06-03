@@ -2020,27 +2020,54 @@
   }
   .practiceIntroLead {
     margin-bottom: 12px;
-    color: var(--text);
+    color: var(--subhead);
     font-size: 15px;
-    font-weight: 750;
-    line-height: 1.4;
+    font-weight: 650;
+    line-height: 1.42;
   }
   .practiceIntroList {
     display: grid;
     gap: 7px;
     margin: 0 0 12px;
     padding-left: 20px;
-    color: var(--muted);
+    color: var(--subhead);
     font-size: 14px;
-    font-weight: 750;
+    font-weight: 650;
     line-height: 1.35;
+  }
+  .practiceIntroTenseHelp {
+    margin: 12px 0;
+    padding-top: 10px;
+    border-top: 1px solid var(--table-rule);
+  }
+  .practiceIntroTenseRows {
+    display: grid;
+    gap: 7px;
+  }
+  .practiceIntroTenseRow {
+    display: grid;
+    grid-template-columns: minmax(138px, 0.48fr) minmax(0, 1fr);
+    gap: 8px 12px;
+    align-items: start;
+  }
+  .practiceIntroTenseName {
+    color: var(--note-subhead-color);
+    font-size: 12px;
+    font-weight: 850;
+    line-height: 1.25;
+  }
+  .practiceIntroTenseMeaning {
+    color: var(--subhead);
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.32;
   }
   .practiceIntroTenses {
     padding-top: 9px;
     border-top: 1px solid var(--table-rule);
     color: var(--subhead);
     font-size: 12px;
-    font-weight: 900;
+    font-weight: 750;
     line-height: 1.25;
   }
   .practiceLeaderboardCurrent td {
@@ -2056,6 +2083,7 @@
     .practiceColumns,
     .practiceNextControls,
     .practiceSlotControls,
+    .practiceIntroTenseRow,
     .practiceImperativeGrid {
       grid-template-columns: 1fr;
     }
@@ -3031,7 +3059,7 @@ window.addEventListener("resize", () => {
 <script src="core_notes_overrides.js"></script>
 <script src="core_notes_manual_fixes.js"></script>
 <script src="practice-challenges.js?v=essential-55-intros-2"></script>
-<script src="interactive_verbs_app.js?v=practice-intro-1"></script>
+<script src="interactive_verbs_app.js?v=practice-intro-2"></script>
 </body>
 </html>
 
