@@ -2169,6 +2169,12 @@ function normalizeUserCellInput(s) {
   return (s || "").replace(/\s+/g, " ").trim();
 }
 
+function normalizePracticeTypedValue(value) {
+  return normalizeUserCellInput(value).replace(/^(\P{L}*)(\p{L})/u, (_, prefix, letter) => (
+    `${prefix}${letter.toLocaleLowerCase("es-ES")}`
+  ));
+}
+
 function deepClone(value) {
   return JSON.parse(JSON.stringify(value));
 }
@@ -4450,13 +4456,13 @@ function getEditableCellsForNavigation(verbKey) {
 
 function toUpperAccentChar(ch) {
   const map = {
-    "á": "Á",
-    "é": "É",
-    "í": "Í",
-    "ó": "Ó",
-    "ú": "Ú",
-    "ñ": "Ñ",
-    "ü": "Ü"
+    "\u00e1": "\u00c1",
+    "\u00e9": "\u00c9",
+    "\u00ed": "\u00cd",
+    "\u00f3": "\u00d3",
+    "\u00fa": "\u00da",
+    "\u00f1": "\u00d1",
+    "\u00fc": "\u00dc"
   };
   return map[ch] || ch;
 }
@@ -4474,6 +4480,7 @@ function applySpanishCharShortcut(input, shortcut) {
     if (selected === selected.toUpperCase()) accent = toUpperAccentChar(accent);
     input.value = value.slice(0, start) + accent + value.slice(end);
     input.setSelectionRange(start + accent.length, start + accent.length);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
     return;
   }
 
@@ -4483,6 +4490,7 @@ function applySpanishCharShortcut(input, shortcut) {
       if (prev === prev.toUpperCase()) accent = toUpperAccentChar(accent);
       input.value = value.slice(0, start - 1) + accent + value.slice(start);
       input.setSelectionRange(start, start);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
       return;
     }
   }
@@ -4490,10 +4498,11 @@ function applySpanishCharShortcut(input, shortcut) {
   input.value = value.slice(0, start) + accent + value.slice(end);
   const caret = start + accent.length;
   input.setSelectionRange(caret, caret);
+  input.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
 function handleSpanishCharShortcut(e, input) {
-  if (!e.ctrlKey || !e.shiftKey || !input) return false;
+  if (!(e.ctrlKey || e.metaKey) || !e.shiftKey || !input) return false;
   const letterKey = (e.key || "").toLowerCase();
   const letterShortcut = SPANISH_CHAR_SHORTCUTS_BY_LETTER[letterKey] || null;
   const numpadShortcut = SPANISH_CHAR_SHORTCUTS_NUMPAD[e.code || ""] || null;
@@ -5704,6 +5713,8 @@ function renderPracticeInput(verb, cellKey, expectedMap, tabIndex = null) {
         data-practice-cell-key="${escapeHtml(cellKey)}"
         value="${escapeHtml(value)}"
         autocomplete="off"
+        autocapitalize="none"
+        autocorrect="off"
         spellcheck="false"
         ${tabIndexAttr}
         ${submitted ? "disabled" : ""}
@@ -5711,6 +5722,64 @@ function renderPracticeInput(verb, cellKey, expectedMap, tabIndex = null) {
       ${expectedHtml}
     </div>
   `;
+}
+
+function syncPracticeInputValue(input, value = input?.value || "") {
+  if (!input) return "";
+  const normalized = normalizePracticeTypedValue(value);
+  if (input.value !== normalized) {
+    input.value = normalized;
+    const caret = normalized.length;
+    if (typeof input.setSelectionRange === "function") {
+      input.setSelectionRange(caret, caret);
+    }
+  }
+  if (input.dataset.practiceInputKey) {
+    PRACTICE_STATE.inputs[input.dataset.practiceInputKey] = normalized;
+  }
+  return normalized;
+}
+
+function getOrderedPracticeInputs(modal) {
+  return Array.from(modal.querySelectorAll(".practiceInput:not([disabled])"))
+    .sort((a, b) => {
+      const aTab = Number(a.getAttribute("tabindex")) || 0;
+      const bTab = Number(b.getAttribute("tabindex")) || 0;
+      if (aTab !== bTab) return aTab - bTab;
+      return 0;
+    });
+}
+
+function focusNextPracticeInput(modal, input, options = {}) {
+  syncPracticeInputValue(input);
+  const inputs = getOrderedPracticeInputs(modal);
+  const idx = inputs.indexOf(input);
+  const next = inputs[idx + 1];
+  if (next) {
+    next.focus();
+    next.select();
+    return true;
+  }
+  if (options.submitAtEnd) {
+    submitPracticeAttempt();
+    return true;
+  }
+  modal.querySelector("[data-practice-submit]")?.focus();
+  return false;
+}
+
+function isSecondTrailingSpace(e, input) {
+  if (!input || e.ctrlKey || e.metaKey || e.altKey) return false;
+  if (!(e.key === " " || e.key === "Spacebar" || e.code === "Space")) return false;
+  const value = input.value || "";
+  const start = typeof input.selectionStart === "number" ? input.selectionStart : value.length;
+  const end = typeof input.selectionEnd === "number" ? input.selectionEnd : start;
+  if (start !== end || start !== value.length) return false;
+  return /\s$/.test(value);
+}
+
+function hasDoubleTrailingSpace(input) {
+  return /\s{2,}$/.test(input?.value || "");
 }
 
 function getPracticeSelectedTenseDescriptors(verbs, sourceName, selectedKeys) {
@@ -6079,15 +6148,15 @@ function renderPracticeRun() {
   PRACTICE_STATE.verbKeys = verbs.map(verb => verb._key);
   const submittedControls = PRACTICE_STATE.submitted
     ? `
-      ${renderPracticeNextControls()}
       <div class="practiceActions">
         <button type="button" class="practiceSecondaryBtn" data-practice-summary>Finish session</button>
-        <button type="button" class="practiceSecondaryBtn" data-practice-setup>Change tenses</button>
+        <button type="button" class="practiceActionBtn" data-practice-retry>Try again</button>
+        <button type="button" class="practiceSecondaryBtn" data-practice-setup>Adjust setup</button>
       </div>
     `
     : `
       <div class="practiceActions">
-        <button type="button" class="practiceSecondaryBtn" data-practice-setup>Change tenses</button>
+        <button type="button" class="practiceSecondaryBtn" data-practice-setup>Adjust setup</button>
         <button type="button" class="practiceActionBtn" data-practice-submit>Submit</button>
       </div>
     `;
@@ -6098,6 +6167,7 @@ function renderPracticeRun() {
   const body = `
     ${scoreHtml ? `<div class="practiceRunTop">${scoreHtml}</div>` : ""}
     ${PRACTICE_STATE.submitted ? renderPracticeLeaderboard() : ""}
+    ${PRACTICE_STATE.submitted ? "" : `<div class="practiceTypingHint">Accents: Ctrl/Cmd+Shift+A/E/I/O/U/N. Mac also supports Option+E then vowel, Option+N then n. Double-space moves next.</div>`}
     ${renderPracticeMatrix(verbs, PRACTICE_STATE.selectedKeys)}
     ${submittedControls}
   `;
@@ -6140,7 +6210,7 @@ function startPracticeAttempt(verbKey, selectedKeys, verbKeys = null) {
 function collectPracticeInputs() {
   const inputs = {};
   document.querySelectorAll("#practiceModal .practiceInput[data-practice-input-key]").forEach(input => {
-    inputs[input.dataset.practiceInputKey] = normalizeUserCellInput(input.value || "");
+    inputs[input.dataset.practiceInputKey] = syncPracticeInputValue(input);
   });
   return inputs;
 }
@@ -6408,6 +6478,13 @@ function bindPracticeModalInteractions() {
       PRACTICE_STATE.verbKeys
     );
   });
+  modal.querySelector("[data-practice-retry]")?.addEventListener("click", () => {
+    startPracticeAttempt(
+      PRACTICE_STATE.verbKey || CURRENT_VERB_KEY,
+      PRACTICE_STATE.selectedKeys,
+      PRACTICE_STATE.verbKeys
+    );
+  });
   modal.querySelectorAll("[data-practice-summary]").forEach(btn => {
     btn.addEventListener("click", renderPracticeSummary);
   });
@@ -6423,21 +6500,25 @@ function bindPracticeModalInteractions() {
   });
   modal.querySelectorAll(".practiceInput").forEach(input => {
     input.addEventListener("input", () => {
+      if (hasDoubleTrailingSpace(input)) {
+        focusNextPracticeInput(modal, input);
+        return;
+      }
       PRACTICE_STATE.inputs[input.dataset.practiceInputKey] = normalizeUserCellInput(input.value || "");
+    });
+    input.addEventListener("blur", () => {
+      syncPracticeInputValue(input);
     });
     input.addEventListener("keydown", (e) => {
       if (handleSpanishCharShortcut(e, input)) return;
-      if (e.key !== "Enter") return;
-      e.preventDefault();
-      const inputs = Array.from(modal.querySelectorAll(".practiceInput:not([disabled])"));
-      const idx = inputs.indexOf(input);
-      const next = inputs[idx + 1];
-      if (next) {
-        next.focus();
-        next.select();
+      if (isSecondTrailingSpace(e, input)) {
+        e.preventDefault();
+        focusNextPracticeInput(modal, input);
         return;
       }
-      submitPracticeAttempt();
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      focusNextPracticeInput(modal, input, { submitAtEnd: true });
     });
   });
 }
