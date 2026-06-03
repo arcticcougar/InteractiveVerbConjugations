@@ -3,6 +3,7 @@
 const fs = require("fs");
 const path = require("path");
 const { createHash, randomUUID } = require("crypto");
+const PRACTICE_CHALLENGES = require("../practice-challenges.js");
 
 const TENSE_SELECTION_ALL_KEYS = [
   "gerund", "participle",
@@ -257,6 +258,14 @@ function sameKeySet(a, b) {
 
 function normalizePlayerFilter(value) {
   return normalize(sanitizePlayerName(value || ""));
+}
+
+function normalizeChallengeWeekFilter(value) {
+  const raw = cleanText(value || "").toLowerCase();
+  if (!raw || raw === "all") return "";
+  if (raw === "any") return "any";
+  const n = Number(raw);
+  return PRACTICE_CHALLENGES.byWeek(n) ? String(n) : "";
 }
 
 function resolveVerbs(verbKeys) {
@@ -516,11 +525,43 @@ function attemptMatchesCombinedFilters(attempt, filters) {
     const selected = normalizeOptionalSelectedKeys(attempt.selectedKeys || []);
     if (selected.join(",") !== filters.selectedKeys.join(",")) return false;
   }
+  if (filters.challengeWeek) {
+    const challenge = challengeForAttempt(attempt);
+    if (!challenge) return false;
+    if (filters.challengeWeek !== "any" && String(challenge.week) !== String(filters.challengeWeek)) return false;
+  }
   return true;
+}
+
+function challengeVerbNamesForAttempt(attempt) {
+  const labels = Array.isArray(attempt.verbLabels) ? attempt.verbLabels : [];
+  const names = labels.map(label => cleanText(label?.infinitive || "")).filter(Boolean);
+  if (names.length) return names;
+  try {
+    return resolveVerbs(normalizeOptionalVerbKeys(attempt.verbKeys || []))
+      .map(({ verb }) => cleanText(verb.infinitive || ""))
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+function challengeForAttempt(attempt) {
+  const challenge = PRACTICE_CHALLENGES.matchingChallenge(
+    challengeVerbNamesForAttempt(attempt),
+    normalizeOptionalSelectedKeys(attempt.selectedKeys || [])
+  );
+  return challenge ? {
+    program: PRACTICE_CHALLENGES.PROGRAM_LABEL,
+    week: challenge.week,
+    label: PRACTICE_CHALLENGES.label(challenge),
+    focus: challenge.focus
+  } : null;
 }
 
 function mapCombinedAttempt(attempt, rank) {
   const weighted = weightedSummaryForAttempt(attempt);
+  const challenge = challengeForAttempt(attempt);
   return {
     rank,
     attemptId: attempt.attemptId || "",
@@ -536,7 +577,8 @@ function mapCombinedAttempt(attempt, rank) {
     submittedAt: attempt.submittedAt || "",
     verbKeys: Array.isArray(attempt.verbKeys) ? attempt.verbKeys : [],
     verbLabels: Array.isArray(attempt.verbLabels) ? attempt.verbLabels : [],
-    selectedKeys: normalizeOptionalSelectedKeys(attempt.selectedKeys || [])
+    selectedKeys: normalizeOptionalSelectedKeys(attempt.selectedKeys || []),
+    challenge
   };
 }
 
@@ -553,7 +595,8 @@ function rankedCombinedLeaderboard(attempts, filters) {
     filters: {
       playerName: filters.playerName || "",
       verbKeys: filters.verbKeys || [],
-      selectedKeys: filters.selectedKeys || []
+      selectedKeys: filters.selectedKeys || [],
+      challengeWeek: filters.challengeWeek || ""
     }
   };
 }
@@ -856,7 +899,8 @@ async function handleGet(req, res) {
     const filters = {
       playerName: normalizePlayerFilter(url.searchParams.get("playerName") || ""),
       verbKeys: normalizeOptionalVerbKeys(url.searchParams.get("verbKeys") || ""),
-      selectedKeys: normalizeOptionalSelectedKeys(url.searchParams.get("selectedKeys") || "")
+      selectedKeys: normalizeOptionalSelectedKeys(url.searchParams.get("selectedKeys") || ""),
+      challengeWeek: normalizeChallengeWeekFilter(url.searchParams.get("challengeWeek") || "")
     };
     if (hasBlobStore()) {
       const leaderboard = await getBlobCombinedLeaderboard(filters);

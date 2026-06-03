@@ -15,6 +15,7 @@ const DEFAULT_BEGINNER_TENSE_KEYS = [
 ];
 const PRACTICE_DEFAULT_TENSE_KEYS = ["gerund", "participle", "1", "3", "4"];
 const PRACTICE_PLAYER_PRESETS = ["Mike", "Scott", "Travis"];
+const PRACTICE_CHALLENGE_PROGRAM = window.PRACTICE_CHALLENGES || null;
 const LEADERBOARD_TENSE_DISPLAY_ORDER = [
   "1", "gerund", "participle", "3", "4", "2", "imperative",
   "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"
@@ -2090,6 +2091,7 @@ let PRACTICE_STATE = {
   combinedLeaderboardFilters: {
     verbSetEnabled: false,
     tenseSetEnabled: false,
+    challengeWeek: "",
     playerName: "",
     verbKeys: [],
     selectedKeys: []
@@ -5039,20 +5041,72 @@ function resolvePracticeVerbKeysFromSlotConfigs(baseVerbKey, slotConfigs) {
   return selected.map(verb => verb._key);
 }
 
-function renderPracticeSetup(verbKey = CURRENT_VERB_KEY) {
-  const verb = findVerbByKey(verbKey);
-  if (!verb) return;
-  if (!hasPracticeAnswerKey(verb)) {
+function resolveChallengeVerbKeys(challenge) {
+  if (!challenge?.verbs?.length) return [];
+  return challenge.verbs
+    .map(name => findVerbByInfinitive(name))
+    .filter(verb => verb && hasPracticeAnswerKey(verb))
+    .map(verb => verb._key);
+}
+
+function getCurrentPracticeChallenge() {
+  return PRACTICE_CHALLENGE_PROGRAM?.current ? PRACTICE_CHALLENGE_PROGRAM.current(new Date()) : null;
+}
+
+function getPracticeChallengeByWeek(week) {
+  return PRACTICE_CHALLENGE_PROGRAM?.byWeek ? PRACTICE_CHALLENGE_PROGRAM.byWeek(week) : null;
+}
+
+function getPracticeChallengeLabel(challenge) {
+  return PRACTICE_CHALLENGE_PROGRAM?.label ? PRACTICE_CHALLENGE_PROGRAM.label(challenge) : "";
+}
+
+function getPracticeChallengeForEntry(entry) {
+  if (entry?.challenge) return entry.challenge;
+  if (!PRACTICE_CHALLENGE_PROGRAM?.matchingChallenge) return null;
+  const verbs = Array.isArray(entry?.verbLabels)
+    ? entry.verbLabels.map(label => label.infinitive).filter(Boolean)
+    : [];
+  return PRACTICE_CHALLENGE_PROGRAM.matchingChallenge(verbs, entry?.selectedKeys || []);
+}
+
+function applyCurrentPracticeChallengeDefault() {
+  const challenge = getCurrentPracticeChallenge();
+  const verbKeys = resolveChallengeVerbKeys(challenge);
+  if (!challenge || verbKeys.length !== 3) return null;
+  setPracticeSlotsFromVerbKeys(verbKeys);
+  PRACTICE_STATE.selectedKeys = [...PRACTICE_DEFAULT_TENSE_KEYS];
+  PRACTICE_STATE.verbKeys = verbKeys;
+  return { challenge, verbKeys };
+}
+
+function renderPracticeChallengeSetupPanel(challenge) {
+  if (!challenge) return "";
+  return `
+    <div class="practicePanel practiceChallengePanel">
+      <div class="practiceSectionTitle">${escapeHtml(getPracticeChallengeLabel(challenge))}</div>
+      <div class="practiceChallengeFocus">${escapeHtml(challenge.focus || "")}</div>
+    </div>
+  `;
+}
+
+function renderPracticeSetup(verbKey = CURRENT_VERB_KEY, options = {}) {
+  const appliedChallenge = options.useCurrentChallengeDefault ? applyCurrentPracticeChallengeDefault() : null;
+  const setupVerbKey = appliedChallenge?.verbKeys?.[0] || verbKey;
+  const setupVerb = findVerbByKey(setupVerbKey);
+  if (!setupVerb) return;
+  if (!hasPracticeAnswerKey(setupVerb)) {
     alert("No answer key is available for this verb yet.");
     return;
   }
-  PRACTICE_STATE.verbKey = verb._key;
+  PRACTICE_STATE.verbKey = setupVerb._key;
   const body = `
+    ${renderPracticeChallengeSetupPanel(appliedChallenge?.challenge)}
     <div class="practicePanel">
       <div class="practiceSectionTitle">Player</div>
       ${renderPracticePlayerControls(PRACTICE_STATE.playerName)}
     </div>
-    ${renderPracticeExtraVerbControls(verb)}
+    ${renderPracticeExtraVerbControls(setupVerb)}
     <div class="practicePanel">
       <div class="practiceSectionTitle">Tenses</div>
       <div class="practiceOptionsGrid">${renderPracticeTenseOptions(PRACTICE_STATE.selectedKeys)}</div>
@@ -5068,7 +5122,7 @@ function renderPracticeSetup(verbKey = CURRENT_VERB_KEY) {
       <button type="button" class="practiceActionBtn" data-practice-start>Start</button>
     </div>
   `;
-  showPracticeModal("Practice setup", `${verb.infinitive} #${getDisplayVerbNumber(verb)}`, body);
+  showPracticeModal("Practice setup", `${setupVerb.infinitive} #${getDisplayVerbNumber(setupVerb)}`, body);
 }
 
 function renderLeaderboardSetup(verbKey = CURRENT_VERB_KEY) {
@@ -5217,6 +5271,14 @@ function combinedLeaderboardFilterSummary(filters = PRACTICE_STATE.combinedLeade
   const parts = [];
   const playerName = sanitizePracticePlayerName(filters.playerName || "");
   if (playerName) parts.push(`Player: ${playerName}`);
+  if (filters.challengeWeek) {
+    if (filters.challengeWeek === "any") {
+      parts.push("Challenge: any week");
+    } else {
+      const challenge = getPracticeChallengeByWeek(filters.challengeWeek);
+      if (challenge) parts.push(`Challenge: ${getPracticeChallengeLabel(challenge)}`);
+    }
+  }
   if (filters.verbSetEnabled && filters.verbKeys?.length) {
     const verbs = filters.verbKeys
       .map(findVerbByKey)
@@ -5235,6 +5297,7 @@ function effectiveCombinedLeaderboardFilters(source = PRACTICE_STATE.combinedLea
   return {
     verbSetEnabled: !!source.verbSetEnabled,
     tenseSetEnabled: !!source.tenseSetEnabled,
+    challengeWeek: source.challengeWeek || "",
     playerName: sanitizePracticePlayerName(source.playerName || ""),
     verbKeys: source.verbSetEnabled ? [...(source.verbKeys || [])] : [],
     selectedKeys: source.tenseSetEnabled ? practiceSelectionKeys(source.selectedKeys || [], { allowEmpty: true }) : []
@@ -5245,6 +5308,7 @@ function combinedLeaderboardRequestKey(filters) {
   const effective = effectiveCombinedLeaderboardFilters(filters);
   return JSON.stringify({
     playerName: effective.playerName,
+    challengeWeek: effective.challengeWeek,
     verbKeys: [...effective.verbKeys].sort(),
     selectedKeys: effective.selectedKeys
   });
@@ -5265,7 +5329,11 @@ function renderCombinedLeaderboardTable(leaderboard) {
   if (!entries.length) {
     return `<div class="practiceEmptyState">No scores match those filters yet.</div>`;
   }
-  const rows = entries.map((entry, idx) => `
+  const rows = entries.map((entry, idx) => {
+    const challenge = getPracticeChallengeForEntry(entry);
+    const actionLabel = challenge ? (challenge.label || getPracticeChallengeLabel(challenge)) : "Practice";
+    const actionTitle = challenge?.focus || "Practice this set";
+    return `
     <tr>
       <td>${entry.rank || idx + 1}</td>
       <td>${escapeHtml(entry.playerName || "")}</td>
@@ -5286,10 +5354,12 @@ function renderCombinedLeaderboardTable(leaderboard) {
           type="button"
           class="practiceMiniBtn"
           data-combined-leaderboard-try="${escapeHtml(entry.attemptId || String(idx))}"
-        >Practice</button>
+          title="${escapeHtml(actionTitle)}"
+        >${escapeHtml(actionLabel)}</button>
       </td>
     </tr>
-  `).join("");
+    `;
+  }).join("");
   return `
     <div class="practiceLeaderboardTableWrap">
       <table class="practiceSummaryTable practiceLeaderboardTable practiceLeaderboardTable--combined">
@@ -5302,7 +5372,7 @@ function renderCombinedLeaderboardTable(leaderboard) {
             <th>Verbs</th>
             <th>Tenses</th>
             <th>Time</th>
-            <th></th>
+            <th>Challenge</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -5363,6 +5433,7 @@ async function loadCombinedLeaderboardOnline(filters) {
     const effective = effectiveCombinedLeaderboardFilters(filters);
     const params = new URLSearchParams({ scope: "combined" });
     if (effective.playerName) params.set("playerName", effective.playerName);
+    if (effective.challengeWeek) params.set("challengeWeek", effective.challengeWeek);
     if (effective.verbKeys.length) params.set("verbKeys", effective.verbKeys.join(","));
     if (effective.selectedKeys.length) params.set("selectedKeys", effective.selectedKeys.join(","));
     const res = await fetch(`/api/practice-scores?${params.toString()}`);
@@ -5394,6 +5465,7 @@ function viewCombinedLeaderboard(filters = PRACTICE_STATE.combinedLeaderboardFil
   const effective = effectiveCombinedLeaderboardFilters(filters);
   PRACTICE_STATE.combinedLeaderboardFilters = {
     ...effective,
+    challengeWeek: effective.challengeWeek,
     verbKeys: [...effective.verbKeys],
     selectedKeys: [...effective.selectedKeys]
   };
@@ -5437,6 +5509,7 @@ function renderCombinedLeaderboardFilters() {
   PRACTICE_STATE.verbKey = verb._key;
   ensurePracticeSetupSlots(verb);
   const playerName = sanitizePracticePlayerName(filters.playerName || "");
+  const challengeWeek = filters.challengeWeek || "";
   const body = `
     <div class="practicePanel">
       <div class="practiceSectionTitle">Player</div>
@@ -5450,6 +5523,12 @@ function renderCombinedLeaderboardFilters() {
         autocomplete="off"
         spellcheck="false"
       >
+    </div>
+    <div class="practicePanel">
+      <div class="practiceSectionTitle">Challenge</div>
+      <select class="practiceSelect" data-combined-filter-challenge>
+        ${renderChallengeWeekFilterOptions(challengeWeek)}
+      </select>
     </div>
     <div class="practicePanel">
       <label class="practiceSlotToggle practiceFilterToggle">
@@ -5476,14 +5555,31 @@ function renderCombinedLeaderboardFilters() {
   showPracticeModal("Leaderboard filters", combinedLeaderboardFilterSummary(filters), body);
 }
 
+function renderChallengeWeekFilterOptions(value = "") {
+  const options = [
+    ["", "All attempts"],
+    ["any", "Any Essential 55 week"]
+  ];
+  if (PRACTICE_CHALLENGE_PROGRAM?.WEEKS) {
+    PRACTICE_CHALLENGE_PROGRAM.WEEKS.forEach(challenge => {
+      options.push([String(challenge.week), getPracticeChallengeLabel(challenge)]);
+    });
+  }
+  return options.map(([optionValue, label]) => (
+    `<option value="${escapeHtml(optionValue)}" ${String(value) === optionValue ? "selected" : ""}>${escapeHtml(label)}</option>`
+  )).join("");
+}
+
 function getCombinedLeaderboardFiltersFromModal() {
   const verbSetEnabled = !!document.querySelector("#practiceModal [data-combined-filter-verbs]")?.checked;
   const tenseSetEnabled = !!document.querySelector("#practiceModal [data-combined-filter-tenses]")?.checked;
   const playerName = sanitizePracticePlayerName(document.querySelector("#practiceModal [data-combined-filter-player]")?.value || "");
+  const challengeWeek = document.querySelector("#practiceModal [data-combined-filter-challenge]")?.value || "";
   const selectedKeys = getPracticeSelectedKeysFromModal();
   const filters = {
     verbSetEnabled,
     tenseSetEnabled,
+    challengeWeek,
     playerName,
     verbKeys: [],
     selectedKeys: tenseSetEnabled ? selectedKeys : []
@@ -5507,6 +5603,7 @@ function clearCombinedLeaderboardFilters() {
   PRACTICE_STATE.combinedLeaderboardFilters = {
     verbSetEnabled: false,
     tenseSetEnabled: false,
+    challengeWeek: "",
     playerName: "",
     verbKeys: [],
     selectedKeys: []
@@ -6331,7 +6428,7 @@ function bindPracticeLaunch(detailRoot) {
       e.stopPropagation();
       if (ACTIVE_EDITOR) commitInlineEdit(0);
       hidePopover();
-      renderPracticeSetup(btn.dataset.practiceLaunch || CURRENT_VERB_KEY);
+      renderPracticeSetup(btn.dataset.practiceLaunch || CURRENT_VERB_KEY, { useCurrentChallengeDefault: true });
     });
   });
   detailRoot.querySelectorAll("[data-leaderboard-launch]").forEach(btn => {
