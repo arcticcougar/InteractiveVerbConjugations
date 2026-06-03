@@ -2112,7 +2112,8 @@ let PRACTICE_STATE = {
     playerName: "",
     verbKeys: [],
     selectedKeys: []
-  }
+  },
+  modalLocked: false
 };
 
 const SPANISH_CHAR_SHORTCUTS_BY_LETTER = {
@@ -4693,16 +4694,17 @@ function isPracticeOverlayOpen() {
   return !!(overlay && !overlay.hidden);
 }
 
-function showPracticeModal(title, meta, bodyHtml) {
+function showPracticeModal(title, meta, bodyHtml, options = {}) {
   const { overlay, modal } = practiceOverlayEls();
   if (!overlay || !modal) return;
+  PRACTICE_STATE.modalLocked = !!options.locked;
   modal.innerHTML = `
     <div class="practiceModalHead">
       <div>
         <div id="practiceModalTitle" class="practiceTitle">${escapeHtml(title)}</div>
         ${meta ? `<div class="practiceMeta">${escapeHtml(meta)}</div>` : ""}
       </div>
-      <button type="button" class="practiceCloseBtn" data-practice-close>Close</button>
+      ${PRACTICE_STATE.modalLocked ? "" : `<button type="button" class="practiceCloseBtn" data-practice-close>Close</button>`}
     </div>
     <div class="practiceModalBody">${bodyHtml}</div>
   `;
@@ -4713,6 +4715,7 @@ function showPracticeModal(title, meta, bodyHtml) {
 function hidePracticeModal() {
   const { overlay, modal } = practiceOverlayEls();
   if (!overlay || !modal) return;
+  PRACTICE_STATE.modalLocked = false;
   overlay.hidden = true;
   modal.innerHTML = "";
 }
@@ -5085,6 +5088,15 @@ function getPracticeChallengeForEntry(entry) {
   return PRACTICE_CHALLENGE_PROGRAM.matchingChallenge(verbs, entry?.selectedKeys || []);
 }
 
+function getPracticeChallengeForVerbs(verbs) {
+  if (!PRACTICE_CHALLENGE_PROGRAM?.WEEKS || !PRACTICE_CHALLENGE_PROGRAM?.sameSet) return null;
+  const infinitives = (verbs || []).map(verb => verb?.infinitive).filter(Boolean);
+  if (!infinitives.length) return null;
+  return PRACTICE_CHALLENGE_PROGRAM.WEEKS.find(challenge => (
+    PRACTICE_CHALLENGE_PROGRAM.sameSet(infinitives, challenge.verbs)
+  )) || null;
+}
+
 function applyCurrentPracticeChallengeDefault() {
   const challenge = getCurrentPracticeChallenge();
   const verbKeys = resolveChallengeVerbKeys(challenge);
@@ -5145,6 +5157,57 @@ function renderPracticeSetup(verbKey = CURRENT_VERB_KEY, options = {}) {
     </details>
   `;
   showPracticeModal("Practice setup", `${setupVerb.infinitive} #${getDisplayVerbNumber(setupVerb)}`, body);
+}
+
+function formatPracticeIntroTenses(keys) {
+  return practiceSelectionKeys(keys)
+    .map(key => TENSE_SELECTION_LABELS[key] || key)
+    .join(", ");
+}
+
+function renderPracticeIntro(verbKey, selectedKeys, verbKeys = null) {
+  const keys = practiceSelectionKeys(selectedKeys);
+  const resolvedVerbKeys = Array.isArray(verbKeys) && verbKeys.length ? verbKeys : [verbKey];
+  const verbs = resolvedVerbKeys.map(findVerbByKey).filter(Boolean);
+  if (!verbs.length || verbs.some(verb => !hasPracticeAnswerKey(verb))) return;
+  if (!verbs.some(verb => getPracticeCellKeys(verb, keys).length)) {
+    alert("Select at least one form to practice.");
+    return;
+  }
+
+  PRACTICE_STATE.selectedKeys = keys;
+  PRACTICE_STATE.verbKey = verbs[0]._key;
+  PRACTICE_STATE.verbKeys = verbs.map(verb => verb._key);
+
+  const challenge = getPracticeChallengeForVerbs(verbs);
+  const intro = challenge?.intro || {
+    lead: `You are about to practise ${verbs.map(verb => verb.infinitive).join(", ")}. Before you begin, look for the verb family, any visible irregular patterns, and the tense endings you have selected.`,
+    watch: [
+      "Use the infinitive ending to decide which regular pattern is the starting point.",
+      "If a form is irregular, focus on the exact part that changes rather than relearning the whole verb.",
+      "Keep accents and reflexive pronouns in mind; small details often decide the score."
+    ]
+  };
+  const title = challenge ? `${getPracticeChallengeLabel(challenge)} intro` : "Practice intro";
+  const meta = verbs.map(verb => `${verb.infinitive} #${getDisplayVerbNumber(verb)}`).join(" / ");
+  const watchItems = (intro.watch || [])
+    .map(item => `<li>${escapeHtml(item)}</li>`)
+    .join("");
+  const body = `
+    <div class="practicePanel practiceIntroPanel">
+      ${challenge?.focus ? `<div class="practiceIntroFocus">${escapeHtml(challenge.focus)}</div>` : ""}
+      <div class="practiceIntroLead">${escapeHtml(intro.lead || "")}</div>
+      ${watchItems ? `
+        <div class="practiceSectionTitle">Before you start</div>
+        <ul class="practiceIntroList">${watchItems}</ul>
+      ` : ""}
+      <div class="practiceIntroTenses">Selected forms: ${escapeHtml(formatPracticeIntroTenses(keys))}</div>
+    </div>
+    <div class="practiceActions">
+      <button type="button" class="practiceActionBtn" data-practice-begin>Begin test</button>
+    </div>
+  `;
+  showPracticeModal(title, meta, body);
 }
 
 function renderLeaderboardSetup(verbKey = CURRENT_VERB_KEY) {
@@ -5639,7 +5702,7 @@ function startPracticeFromCombinedEntry(entry) {
   if (!verbs.length) return;
   setPracticeSlotsFromVerbKeys(entry.verbKeys);
   PRACTICE_STATE.selectedKeys = practiceSelectionKeys(entry.selectedKeys);
-  startPracticeAttempt(verbs[0]._key, PRACTICE_STATE.selectedKeys, entry.verbKeys);
+  renderPracticeIntro(verbs[0]._key, PRACTICE_STATE.selectedKeys, entry.verbKeys);
 }
 
 function getPracticeCellKeys(verb, selectedKeys) {
@@ -6150,7 +6213,6 @@ function renderPracticeRun() {
     `
     : `
       <div class="practiceActions">
-        <button type="button" class="practiceSecondaryBtn" data-practice-setup>Adjust setup</button>
         <button type="button" class="practiceActionBtn" data-practice-submit>Submit</button>
       </div>
     `;
@@ -6165,7 +6227,7 @@ function renderPracticeRun() {
     ${renderPracticeMatrix(verbs, PRACTICE_STATE.selectedKeys)}
     ${submittedControls}
   `;
-  showPracticeModal(modalTitle, meta, body);
+  showPracticeModal(modalTitle, meta, body, { locked: !PRACTICE_STATE.submitted });
   const firstInput = document.querySelector("#practiceModal .practiceInput:not([disabled])");
   if (firstInput) {
     setTimeout(() => {
@@ -6381,7 +6443,7 @@ function bindPracticeModalInteractions() {
   if (!overlay || !modal) return;
 
   overlay.onclick = (e) => {
-    if (e.target === overlay) hidePracticeModal();
+    if (e.target === overlay && !PRACTICE_STATE.modalLocked) hidePracticeModal();
   };
   modal.querySelectorAll("[data-practice-close]").forEach(btn => {
     btn.addEventListener("click", hidePracticeModal);
@@ -6404,7 +6466,14 @@ function bindPracticeModalInteractions() {
     const baseVerbKey = PRACTICE_STATE.verbKey || CURRENT_VERB_KEY;
     const verbKeys = resolvePracticeVerbKeysFromSlotConfigs(baseVerbKey, slots);
     if (!verbKeys) return;
-    startPracticeAttempt(baseVerbKey, selected, verbKeys);
+    renderPracticeIntro(baseVerbKey, selected, verbKeys);
+  });
+  modal.querySelector("[data-practice-begin]")?.addEventListener("click", () => {
+    startPracticeAttempt(
+      PRACTICE_STATE.verbKey || CURRENT_VERB_KEY,
+      PRACTICE_STATE.selectedKeys,
+      PRACTICE_STATE.verbKeys
+    );
   });
   modal.querySelectorAll("[data-leaderboard-view]").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -6466,7 +6535,7 @@ function bindPracticeModalInteractions() {
     );
   });
   modal.querySelector("[data-leaderboard-start-practice]")?.addEventListener("click", () => {
-    startPracticeAttempt(
+    renderPracticeIntro(
       PRACTICE_STATE.verbKey || CURRENT_VERB_KEY,
       PRACTICE_STATE.selectedKeys,
       PRACTICE_STATE.verbKeys
@@ -7409,7 +7478,7 @@ popClose.addEventListener("click", hidePopover);
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && isPracticeOverlayOpen()) {
     e.preventDefault();
-    hidePracticeModal();
+    if (!PRACTICE_STATE.modalLocked) hidePracticeModal();
     return;
   }
   if (isPracticeOverlayOpen()) return;
