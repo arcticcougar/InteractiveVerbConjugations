@@ -6295,7 +6295,7 @@ function resetPracticeSession() {
   PRACTICE_STATE.onlineScoreMessage = "";
   PRACTICE_STATE.onlineLeaderboard = null;
   PRACTICE_STATE.onlineAttemptId = "";
-  renderPracticeSetup(PRACTICE_STATE.verbKey || CURRENT_VERB_KEY);
+  renderPracticeSetup(PRACTICE_STATE.verbKey || CURRENT_VERB_KEY, { useCurrentChallengeDefault: true });
 }
 
 function updatePracticeNextFilters() {
@@ -6361,7 +6361,9 @@ function bindPracticeModalInteractions() {
   }
   modal.querySelector("[data-practice-submit]")?.addEventListener("click", submitPracticeAttempt);
   modal.querySelectorAll("[data-practice-setup]").forEach(btn => {
-    btn.addEventListener("click", () => renderPracticeSetup(PRACTICE_STATE.verbKey || CURRENT_VERB_KEY));
+    btn.addEventListener("click", () => {
+      renderPracticeSetup(PRACTICE_STATE.verbKey || CURRENT_VERB_KEY, { useCurrentChallengeDefault: true });
+    });
   });
   modal.querySelectorAll("[data-leaderboard-setup]").forEach(btn => {
     btn.addEventListener("click", () => renderLeaderboardSetup(PRACTICE_STATE.verbKey || CURRENT_VERB_KEY));
