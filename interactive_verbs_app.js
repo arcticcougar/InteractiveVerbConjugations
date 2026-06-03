@@ -2609,16 +2609,17 @@ function renderTenseHelper(context) {
     host.innerHTML = `
       ${topRow}
       <div class="helperTitle">How to use this trainer</div>
-      <div class="helperMeta">Edit in place, check quickly, and move through forms in a natural conjugation order.</div>
+      <div class="helperMeta">Use weekly practice for scored testing, and use the main table for reference, patterns, and tense guidance.</div>
       <div class="helperCue">Select a conjugation cell to resume tense guidance.</div>
       <div class="helperPanel">
         <div class="helperSectionTitle">Core workflow</div>
         <ul class="helperList">
-          <li>Single-click any form cell to start typing.</li>
-          <li>Press Enter to save that cell.</li>
-          <li>Press Tab / Shift+Tab to save and jump to next/previous cell.</li>
-          <li>Double-click opens the detailed popover for that cell.</li>
-          <li>Use the practice button beside the verb title for test mode; use the trophy button to view the combined online leaderboard and filter it by player, verbs, or tenses.</li>
+          <li>Practice setup opens on load with the current Essential 55 weekly challenge.</li>
+          <li>Choose a player, press Start, then fill the selected forms.</li>
+          <li>Double-space, Enter, or Tab moves through practice answer boxes.</li>
+          <li>Submit scores the attempt and adds it to the matching online leaderboard group.</li>
+          <li>Use the trophy button to view the combined leaderboard and filter it by player, verbs, tenses, or challenge week.</li>
+          <li>Use the main verb table to inspect forms, irregular highlights, and tense guidance.</li>
         </ul>
       </div>
       <div class="helperPanel">
@@ -2631,33 +2632,25 @@ function renderTenseHelper(context) {
         </ul>
       </div>
       <div class="helperPanel">
-        <div class="helperSectionTitle">Keyboard shortcuts</div>
+        <div class="helperSectionTitle">Practice input</div>
         <ul class="helperList">
-          <li>Ctrl+Shift+K - check current verb.</li>
-          <li>Ctrl+Shift+V - reveal answers for current verb.</li>
-          <li>Ctrl+Shift+X - clear current verb to blanks.</li>
-          <li>Ctrl+Shift+S - save a draft snapshot.</li>
-          <li>Ctrl+Shift+B - export your local practice state.</li>
-          <li>Ctrl+Shift+R - import a saved practice state.</li>
-          <li>Ctrl+Shift+L - import slang starter set.</li>
-          <li>Ctrl+Shift+M - set model verb for current custom verb.</li>
-          <li>Ctrl+Shift+G - generate model-based key for custom verb.</li>
-          <li>Ctrl+Shift+F - finalize current custom verb (locks draft).</li>
-          <li>Ctrl+Shift+J - next verb in current group.</li>
-          <li>Ctrl+Shift+H - next verb group.</li>
+          <li>Double-space moves to the next practice answer box.</li>
+          <li>Capitalized first letters are normalized to lowercase before scoring.</li>
+          <li>Accent differences are shown separately from fully wrong answers.</li>
         </ul>
       </div>
       <div class="helperPanel">
-        <div class="helperSectionTitle">Spanish character shortcuts (while editing)</div>
+        <div class="helperSectionTitle">Spanish characters</div>
         <ul class="helperList">
-          <li>Ctrl+Shift+A / E / I / O / U -> á / é / í / ó / ú.</li>
-          <li>Ctrl+Shift+N -> ñ.</li>
-          <li>Ctrl+Shift+Numpad1..0 -> á, é, í, ó, ú, ñ, ü, ¿, ¡, Ñ.</li>
+          <li>Ctrl/Cmd+Shift+A / E / I / O / U -> á / é / í / ó / ú.</li>
+          <li>Ctrl/Cmd+Shift+N -> ñ.</li>
+          <li>Ctrl/Cmd+Shift+Numpad1..0 -> á, é, í, ó, ú, ñ, ü, ¿, ¡, Ñ.</li>
+          <li>On Mac keyboards, native Option accent shortcuts also work in normal text fields.</li>
         </ul>
       </div>
       <div class="helperPanel">
         <div class="helperSectionTitle">Useful tip</div>
-        <div class="helperCue">Use search + filters in the left panel to isolate a verb pattern, then fill one full tense block before moving on.</div>
+        <div class="helperCue">Use search + filters in the left panel to isolate a verb pattern, then start practice from the selected verb or weekly challenge.</div>
       </div>
     `;
     bindHelpToggle();
@@ -2676,7 +2669,7 @@ function renderTenseHelper(context) {
         <ul class="helperList">
           <li>Single-click any form cell to enter edit mode.</li>
           <li>Tab moves to the next cell in conjugation order.</li>
-          <li>Ctrl+Shift+K checks your current verb.</li>
+          <li>Use practice mode for scored testing and the main table for reference.</li>
         </ul>
       </div>
       <div class="helperSource">Source references: 501 Spanish Verbs, Sec. 1 and Sec. 6.</div>
@@ -3912,22 +3905,6 @@ function renderList(filterText) {
     });
     list.appendChild(btn);
   });
-
-  if (q && (q.includes("slang") || q.includes("starter") || q.includes("import"))) {
-    const importBtn = document.createElement("button");
-    importBtn.className = "verbBtn";
-    importBtn.type = "button";
-    importBtn.innerHTML = `
-      <div class="verbTop"><div class="verbTitle"><span class="pill">#----</span> Import 12 slang starters</div></div>
-      <div class="verbMeta">Adds editable custom templates linked to model verbs.</div>
-      <div class="tagRow"><div class="pill typePill">Action</div></div>
-    `;
-    importBtn.addEventListener("click", () => {
-      importSlangStarterSet();
-      renderList(filterText || "");
-    });
-    list.appendChild(importBtn);
-  }
 
   const hasExact = !!findVerbByInfinitive(filterText || "");
   if (q && !hasExact) {
@@ -6831,7 +6808,7 @@ function generateModelKeyForCurrentCustomVerb() {
     return;
   }
   if (!verb.model_verb_ref) {
-    alert("No model selected. Use Ctrl+Shift+M first.");
+    alert("Assign a model verb before generating an answer key.");
     return;
   }
   const model = findVerbByKey(verb.model_verb_ref);
@@ -7407,24 +7384,7 @@ function shouldClearSelectionFromClick(target) {
 }
 
 function handleShortcut(e) {
-  if (!e.ctrlKey || !e.shiftKey) return;
-  const key = e.key.toLowerCase();
-  if (!["k", "v", "x", "s", "b", "r", "l", "m", "g", "f", "j", "h"].includes(key)) return;
-  e.preventDefault();
-  if (ACTIVE_EDITOR) commitInlineEdit(0);
-
-  if (key === "k") checkCurrentVerb();
-  if (key === "v") revealAnswersForCurrentVerb();
-  if (key === "x") clearCurrentVerbToBlanks();
-  if (key === "s") saveDraftSnapshot();
-  if (key === "b") exportStateBackup();
-  if (key === "r") importStateBackup();
-  if (key === "l") importSlangStarterSet();
-  if (key === "m") setModelForCurrentCustomVerb();
-  if (key === "g") generateModelKeyForCurrentCustomVerb();
-  if (key === "f") finalizeCurrentCustomVerb();
-  if (key === "j") goToNextVerbInCurrentGroup();
-  if (key === "h") goToNextVerbGroup();
+  return;
 }
 
 popClose.addEventListener("click", hidePopover);

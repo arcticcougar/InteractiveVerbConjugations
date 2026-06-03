@@ -1,6 +1,6 @@
 # Interactive Spanish Verb Conjugations
 
-A browser-based Spanish conjugation reference and practice app built around the *501 Spanish Verbs* dataset, with an in-place editing workflow and local persistence.
+A browser-based Spanish conjugation reference and practice app built around the *501 Spanish Verbs* dataset, with weekly challenge practice and online leaderboards.
 
 ## What This Project Is
 
@@ -8,9 +8,9 @@ This repo contains a single-page app that:
 
 - Loads a canonical verb dataset (`501` core verbs).
 - Displays simple tenses (1-7), compound tenses (8-14), imperative, and notes in a book-style layout.
-- Supports in-place practice on top of the same UI (no separate practice page/theme).
+- Supports scored practice from the current verb, custom verb sets, or the current Essential 55 weekly challenge.
 - Lets you add custom verbs and grow your own practice list.
-- Persists drafts/check results in browser storage.
+- Persists local app state in browser storage.
 
 The current production deployment is hosted from this repo via Vercel.
 
@@ -30,23 +30,19 @@ The current production deployment is hosted from this repo via Vercel.
 - Optional model-verb linkage for custom verbs.
 - Model-based answer-key generation for custom verbs.
 - Finalize flow for custom verbs (locks and queues for review, does not mutate canonical core data).
-- Starter slang import set (12 verbs) for fast practice seeding.
-- Local export/import backup for all practice state.
+- Weekly Essential 55 challenge presets.
+- Combined online leaderboard with filters for player, verbs, tenses, and challenge week.
 
-## Keyboard Shortcuts
+## Practice Input
 
-All shortcuts are `Ctrl+Shift+<key>`:
+The old global `Ctrl+Shift` learner shortcuts have been retired so practice runs are driven by visible buttons and setup controls.
 
-- `K`: Check current verb.
-- `V`: Reveal expected answers for current verb.
-- `X`: Clear current verb forms to blanks.
-- `S`: Save a draft snapshot.
-- `E`: Export local backup JSON.
-- `I`: Import local backup JSON.
-- `L`: Import 12 slang starter custom verbs.
-- `M`: Set model verb for current custom verb.
-- `G`: Generate answer key from selected model verb.
-- `F`: Finalize current custom verb (locks and adds to pending queue).
+- Double-space, Enter, or Tab moves through practice answer boxes.
+- Practice scoring normalizes an initial capital letter before checking an answer.
+- Accent/diacritic differences are scored separately from fully wrong answers.
+- `Ctrl/Cmd+Shift+A/E/I/O/U` inserts `á/é/í/ó/ú` while editing.
+- `Ctrl/Cmd+Shift+N` inserts `ñ`.
+- `Ctrl/Cmd+Shift+Numpad1..0` inserts `á, é, í, ó, ú, ñ, ü, ¿, ¡, Ñ`.
 
 ## Data and State Contracts
 
