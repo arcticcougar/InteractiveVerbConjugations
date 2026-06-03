@@ -1857,17 +1857,59 @@
   .practiceLeaderboardTableWrap {
     overflow-x: auto;
   }
+  .practiceLeaderboardTable--combined {
+    min-width: 1180px;
+    table-layout: fixed;
+  }
   .practiceLeaderboardTable--combined th,
   .practiceLeaderboardTable--combined td {
     vertical-align: top;
   }
-  .practiceLeaderboardCombo {
-    min-width: 175px;
-    white-space: normal;
+  .practiceLeaderboardTable--combined th:nth-child(1),
+  .practiceLeaderboardTable--combined td:nth-child(1) {
+    width: 58px;
   }
-  .practiceLeaderboardTenses {
-    min-width: 120px;
+  .practiceLeaderboardTable--combined th:nth-child(2),
+  .practiceLeaderboardTable--combined td:nth-child(2) {
+    width: 130px;
+  }
+  .practiceLeaderboardTable--combined th:nth-child(3),
+  .practiceLeaderboardTable--combined td:nth-child(3) {
+    width: 155px;
+  }
+  .practiceLeaderboardTable--combined th:nth-child(4),
+  .practiceLeaderboardTable--combined td:nth-child(4) {
+    width: 130px;
+  }
+  .practiceLeaderboardTable--combined th:nth-child(5),
+  .practiceLeaderboardTable--combined td:nth-child(5) {
+    width: 330px;
+  }
+  .practiceLeaderboardTable--combined th:nth-child(6),
+  .practiceLeaderboardTable--combined td:nth-child(6) {
+    width: 190px;
+  }
+  .practiceLeaderboardTable--combined th:nth-child(7),
+  .practiceLeaderboardTable--combined td:nth-child(7) {
+    width: 105px;
+  }
+  .practiceLeaderboardTable--combined th:nth-child(8),
+  .practiceLeaderboardTable--combined td:nth-child(8) {
+    width: 95px;
+  }
+  .practiceSummaryTable td.practiceLeaderboardCombo,
+  .practiceSummaryTable td.practiceLeaderboardTenses {
     white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+  .practiceWeightedScoreCell span {
+    color: var(--muted);
+    font-weight: 900;
+  }
+  .practiceRawScoreCell {
+    color: var(--text);
+    font-weight: 900;
   }
   .practiceLeaderboardSub {
     margin-top: 2px;

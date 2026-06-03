@@ -456,7 +456,8 @@ function weightedSummaryForAttempt(attempt) {
     return {
       points: weightedPoints,
       total: weightedTotal,
-      percent: weightedTotal ? Math.round((weightedPoints / weightedTotal) * 100) : 0
+      percent: weightedTotal ? Math.round((weightedPoints / weightedTotal) * 100) : 0,
+      estimated: false
     };
   }
 
@@ -483,7 +484,8 @@ function weightedSummaryForAttempt(attempt) {
   return {
     points: weightedPoints,
     total: weightedTotal,
-    percent: weightedTotal ? Math.round((weightedPoints / weightedTotal) * 100) : 0
+    percent: weightedTotal ? Math.round((weightedPoints / weightedTotal) * 100) : 0,
+    estimated: true
   };
 }
 
@@ -526,6 +528,7 @@ function mapCombinedAttempt(attempt, rank) {
     weightedPoints: weighted.points,
     weightedTotal: weighted.total,
     weightedPercent: weighted.percent,
+    weightedEstimated: !!weighted.estimated,
     points: Number(attempt.summary?.points) || 0,
     total: Number(attempt.summary?.total) || 0,
     percent: Number(attempt.summary?.percent) || 0,

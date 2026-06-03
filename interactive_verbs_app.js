@@ -5269,11 +5269,12 @@ function renderCombinedLeaderboardTable(leaderboard) {
     <tr>
       <td>${entry.rank || idx + 1}</td>
       <td>${escapeHtml(entry.playerName || "")}</td>
-      <td class="practiceSummaryScore">
+      <td class="practiceSummaryScore practiceWeightedScoreCell">
         ${formatLeaderboardScore(entry.weightedPoints)}
-        <div class="practiceLeaderboardSub">${entry.weightedPercent || 0}% weighted</div>
+        <span> / ${formatLeaderboardScore(entry.weightedTotal)}</span>
+        <div class="practiceLeaderboardSub">${entry.weightedPercent || 0}% weighted${entry.weightedEstimated ? " estimate" : ""}</div>
       </td>
-      <td>
+      <td class="practiceRawScoreCell">
         ${entry.points || 0}/${entry.total || 0}
         <div class="practiceLeaderboardSub">${entry.percent || 0}% raw</div>
       </td>
@@ -5296,8 +5297,8 @@ function renderCombinedLeaderboardTable(leaderboard) {
           <tr>
             <th>Rank</th>
             <th>Player</th>
-            <th>Score</th>
-            <th>Raw</th>
+            <th>Weighted score</th>
+            <th>Raw score</th>
             <th>Verbs</th>
             <th>Tenses</th>
             <th>Time</th>
