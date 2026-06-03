@@ -21,7 +21,7 @@
     { week: 8, verbs: ["esperar", "correr", "asistir"], focus: "Regular verbs with useful everyday meanings" },
     { week: 9, verbs: ["viajar", "sufrir", "acabar"], focus: "Mostly regular; introduces acabar de + infinitive" },
     { week: 10, verbs: ["entrar", "deber", "llevar"], focus: "Useful regular verbs and common expressions" },
-    { week: 11, verbs: ["limpiar", "romper", "compartir"], focus: "Final regular-pattern consolidation week" },
+    { week: 11, verbs: ["limpiar", "romper", "cumplir"], focus: "Final regular-pattern consolidation week" },
     { week: 12, verbs: ["llamar", "llamarse", "usar"], focus: "First reflexive/nonreflexive contrast" },
     { week: 13, verbs: ["mirar", "mirarse", "preparar"], focus: "Reflexive meaning contrast, kept manageable" },
     { week: 14, verbs: ["caer", "caerse", "traer"], focus: "Related difficult forms: caigo, traigo" },
@@ -39,7 +39,7 @@
     { week: 26, verbs: ["tener", "venir", "mantener"], focus: "Major irregulars and related verb families" },
     { week: 27, verbs: ["saber", "ver", "dar"], focus: "Short but important irregular verbs" },
     { week: 28, verbs: ["hacer", "decir", "pedir"], focus: "High-frequency irregulars plus a stem-changing helper" },
-    { week: 29, verbs: ["haber", "existir", "faltar"], focus: "Existence, presence, absence, and need" },
+    { week: 29, verbs: ["haber", "aparecer", "faltar"], focus: "Existence, appearance, absence, and need" },
     { week: 30, verbs: ["andar", "construir", "elegir"], focus: "Final mixed-pattern week and consolidation" }
   ];
 
