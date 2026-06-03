@@ -15,6 +15,15 @@ const DEFAULT_BEGINNER_TENSE_KEYS = [
 ];
 const PRACTICE_DEFAULT_TENSE_KEYS = ["gerund", "participle", "1", "3", "4"];
 const PRACTICE_PLAYER_PRESETS = ["Mike", "Scott", "Travis"];
+const LEADERBOARD_TENSE_DISPLAY_ORDER = [
+  "1", "gerund", "participle", "3", "4", "2", "imperative",
+  "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"
+];
+const LEADERBOARD_TENSE_SHORT_LABELS = {
+  gerund: "Ger.",
+  participle: "Part.",
+  imperative: "Imp."
+};
 const TENSE_SELECTION_LABELS = {
   gerund: "Gerund",
   participle: "Past participle",
@@ -2073,7 +2082,18 @@ let PRACTICE_STATE = {
   onlineAttemptId: "",
   leaderboardStatus: "idle",
   leaderboardMessage: "",
-  leaderboardData: null
+  leaderboardData: null,
+  combinedLeaderboardStatus: "idle",
+  combinedLeaderboardMessage: "",
+  combinedLeaderboardData: null,
+  combinedLeaderboardRequestKey: "",
+  combinedLeaderboardFilters: {
+    verbSetEnabled: false,
+    tenseSetEnabled: false,
+    playerName: "",
+    verbKeys: [],
+    selectedKeys: []
+  }
 };
 
 const SPANISH_CHAR_SHORTCUTS_BY_LETTER = {
@@ -2579,7 +2599,7 @@ function renderTenseHelper(context) {
           <li>Press Enter to save that cell.</li>
           <li>Press Tab / Shift+Tab to save and jump to next/previous cell.</li>
           <li>Double-click opens the detailed popover for that cell.</li>
-          <li>Use the practice button beside the verb title for test mode; use the trophy button to view the matching online leaderboard without submitting a new attempt.</li>
+          <li>Use the practice button beside the verb title for test mode; use the trophy button to view the combined online leaderboard and filter it by player, verbs, or tenses.</li>
         </ul>
       </div>
       <div class="helperPanel">
@@ -5158,6 +5178,350 @@ function viewPracticeLeaderboard(verbKey, selectedKeys, verbKeys = null) {
   loadPracticeLeaderboardOnline(PRACTICE_STATE.verbKeys, keys);
 }
 
+function sortedLeaderboardSelectedKeys(keys) {
+  const selected = new Set(practiceSelectionKeys(keys, { allowEmpty: true }));
+  return LEADERBOARD_TENSE_DISPLAY_ORDER.filter(key => selected.has(key));
+}
+
+function formatLeaderboardTenses(keys) {
+  const ordered = sortedLeaderboardSelectedKeys(keys);
+  if (!ordered.length) return "All tenses";
+  return ordered.map(key => LEADERBOARD_TENSE_SHORT_LABELS[key] || key).join(", ");
+}
+
+function formatLeaderboardScore(value) {
+  const n = Number(value) || 0;
+  return Number.isInteger(n) ? String(n) : n.toFixed(1);
+}
+
+function formatLeaderboardVerbLabels(entry) {
+  const labels = Array.isArray(entry?.verbLabels) && entry.verbLabels.length
+    ? entry.verbLabels
+    : (entry?.verbKeys || []).map(key => {
+      const verb = findVerbByKey(key);
+      return verb ? {
+        infinitive: verb.infinitive,
+        displayNumber: getDisplayVerbNumber(verb)
+      } : { infinitive: key, displayNumber: "" };
+    });
+  return labels
+    .map(label => {
+      const number = label.displayNumber ? ` #${label.displayNumber}` : "";
+      return `${label.infinitive || ""}${number}`;
+    })
+    .filter(Boolean)
+    .join(" / ") || "Unknown verbs";
+}
+
+function combinedLeaderboardFilterSummary(filters = PRACTICE_STATE.combinedLeaderboardFilters) {
+  const parts = [];
+  const playerName = sanitizePracticePlayerName(filters.playerName || "");
+  if (playerName) parts.push(`Player: ${playerName}`);
+  if (filters.verbSetEnabled && filters.verbKeys?.length) {
+    const verbs = filters.verbKeys
+      .map(findVerbByKey)
+      .filter(Boolean)
+      .map(verb => `${verb.infinitive} #${getDisplayVerbNumber(verb)}`)
+      .join(" / ");
+    if (verbs) parts.push(`Verbs: ${verbs}`);
+  }
+  if (filters.tenseSetEnabled && filters.selectedKeys?.length) {
+    parts.push(`Tenses: ${formatLeaderboardTenses(filters.selectedKeys)}`);
+  }
+  return parts.length ? parts.join("  |  ") : "All attempts";
+}
+
+function effectiveCombinedLeaderboardFilters(source = PRACTICE_STATE.combinedLeaderboardFilters) {
+  return {
+    verbSetEnabled: !!source.verbSetEnabled,
+    tenseSetEnabled: !!source.tenseSetEnabled,
+    playerName: sanitizePracticePlayerName(source.playerName || ""),
+    verbKeys: source.verbSetEnabled ? [...(source.verbKeys || [])] : [],
+    selectedKeys: source.tenseSetEnabled ? practiceSelectionKeys(source.selectedKeys || [], { allowEmpty: true }) : []
+  };
+}
+
+function combinedLeaderboardRequestKey(filters) {
+  const effective = effectiveCombinedLeaderboardFilters(filters);
+  return JSON.stringify({
+    playerName: effective.playerName,
+    verbKeys: [...effective.verbKeys].sort(),
+    selectedKeys: effective.selectedKeys
+  });
+}
+
+function renderCombinedLeaderboardTable(leaderboard) {
+  const entries = [...(leaderboard?.entries || [])].sort((a, b) => {
+    const weightedDiff = (Number(b.weightedPoints) || 0) - (Number(a.weightedPoints) || 0);
+    if (weightedDiff) return weightedDiff;
+    const rawDiff = (Number(b.points) || 0) - (Number(a.points) || 0);
+    if (rawDiff) return rawDiff;
+    const percentDiff = (Number(b.weightedPercent) || 0) - (Number(a.weightedPercent) || 0);
+    if (percentDiff) return percentDiff;
+    const durationDiff = (Number(a.durationMs) || 0) - (Number(b.durationMs) || 0);
+    if (durationDiff) return durationDiff;
+    return (Number(a.rank) || 0) - (Number(b.rank) || 0);
+  });
+  if (!entries.length) {
+    return `<div class="practiceEmptyState">No scores match those filters yet.</div>`;
+  }
+  const rows = entries.map((entry, idx) => `
+    <tr>
+      <td>${entry.rank || idx + 1}</td>
+      <td>${escapeHtml(entry.playerName || "")}</td>
+      <td class="practiceSummaryScore">
+        ${formatLeaderboardScore(entry.weightedPoints)}
+        <div class="practiceLeaderboardSub">${entry.weightedPercent || 0}% weighted</div>
+      </td>
+      <td>
+        ${entry.points || 0}/${entry.total || 0}
+        <div class="practiceLeaderboardSub">${entry.percent || 0}% raw</div>
+      </td>
+      <td class="practiceLeaderboardCombo">${escapeHtml(formatLeaderboardVerbLabels(entry))}</td>
+      <td class="practiceLeaderboardTenses">${escapeHtml(formatLeaderboardTenses(entry.selectedKeys))}</td>
+      <td>${formatPracticeDuration(entry.durationMs || 0)}</td>
+      <td>
+        <button
+          type="button"
+          class="practiceMiniBtn"
+          data-combined-leaderboard-try="${escapeHtml(entry.attemptId || String(idx))}"
+        >Practice</button>
+      </td>
+    </tr>
+  `).join("");
+  return `
+    <div class="practiceLeaderboardTableWrap">
+      <table class="practiceSummaryTable practiceLeaderboardTable practiceLeaderboardTable--combined">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Player</th>
+            <th>Score</th>
+            <th>Raw</th>
+            <th>Verbs</th>
+            <th>Tenses</th>
+            <th>Time</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderCombinedLeaderboardPanel() {
+  const status = PRACTICE_STATE.combinedLeaderboardStatus || "idle";
+  const leaderboard = PRACTICE_STATE.combinedLeaderboardData;
+  const message = PRACTICE_STATE.combinedLeaderboardMessage || "";
+  const count = Number(leaderboard?.totalAttempts) || 0;
+  let content = "";
+
+  if (status === "loading") {
+    content = `<div class="practiceEmptyState">Loading combined leaderboard...</div>`;
+  } else if (status === "saved" && leaderboard) {
+    content = `
+      <div class="practiceLeaderboardRank">
+        ${escapeHtml(pluralizePracticeAttempt(count))}
+        <span>${escapeHtml(combinedLeaderboardFilterSummary())}</span>
+      </div>
+      ${renderCombinedLeaderboardTable(leaderboard)}
+    `;
+  } else if (status === "unavailable") {
+    content = `<div class="practiceEmptyState">${escapeHtml(message || "Online scores need storage setup.")}</div>`;
+  } else if (status === "error") {
+    content = `<div class="practiceEmptyState">${escapeHtml(message || "Combined leaderboard could not be loaded.")}</div>`;
+  } else {
+    content = `<div class="practiceEmptyState">Loading combined leaderboard...</div>`;
+  }
+
+  return `
+    <div class="practicePanel">
+      <div class="practiceSectionTitle">Combined leaderboard</div>
+      ${content}
+    </div>
+  `;
+}
+
+function renderCombinedLeaderboardView() {
+  const body = `
+    ${renderCombinedLeaderboardPanel()}
+    <div class="practiceActions">
+      <button type="button" class="practiceSecondaryBtn" data-combined-leaderboard-filters>Filters</button>
+      <button type="button" class="practiceSecondaryBtn" data-combined-leaderboard-refresh>Refresh</button>
+      <button type="button" class="practiceActionBtn" data-practice-setup>Practice setup</button>
+    </div>
+  `;
+  showPracticeModal("Combined leaderboard", combinedLeaderboardFilterSummary(), body);
+}
+
+async function loadCombinedLeaderboardOnline(filters) {
+  const requestKey = combinedLeaderboardRequestKey(filters);
+  PRACTICE_STATE.combinedLeaderboardRequestKey = requestKey;
+  try {
+    const effective = effectiveCombinedLeaderboardFilters(filters);
+    const params = new URLSearchParams({ scope: "combined" });
+    if (effective.playerName) params.set("playerName", effective.playerName);
+    if (effective.verbKeys.length) params.set("verbKeys", effective.verbKeys.join(","));
+    if (effective.selectedKeys.length) params.set("selectedKeys", effective.selectedKeys.join(","));
+    const res = await fetch(`/api/practice-scores?${params.toString()}`);
+    const data = await res.json().catch(() => ({}));
+    if (PRACTICE_STATE.combinedLeaderboardRequestKey !== requestKey) return;
+    if (!res.ok) {
+      PRACTICE_STATE.combinedLeaderboardStatus = "error";
+      PRACTICE_STATE.combinedLeaderboardMessage = data.message || "Combined leaderboard could not be loaded.";
+      PRACTICE_STATE.combinedLeaderboardData = null;
+    } else if (data.configured === false) {
+      PRACTICE_STATE.combinedLeaderboardStatus = "unavailable";
+      PRACTICE_STATE.combinedLeaderboardMessage = data.message || "Online scores need storage setup.";
+      PRACTICE_STATE.combinedLeaderboardData = null;
+    } else {
+      PRACTICE_STATE.combinedLeaderboardStatus = "saved";
+      PRACTICE_STATE.combinedLeaderboardMessage = "";
+      PRACTICE_STATE.combinedLeaderboardData = data.leaderboard || null;
+    }
+  } catch {
+    if (PRACTICE_STATE.combinedLeaderboardRequestKey !== requestKey) return;
+    PRACTICE_STATE.combinedLeaderboardStatus = "error";
+    PRACTICE_STATE.combinedLeaderboardMessage = "Combined leaderboard could not be reached.";
+    PRACTICE_STATE.combinedLeaderboardData = null;
+  }
+  renderCombinedLeaderboardView();
+}
+
+function viewCombinedLeaderboard(filters = PRACTICE_STATE.combinedLeaderboardFilters) {
+  const effective = effectiveCombinedLeaderboardFilters(filters);
+  PRACTICE_STATE.combinedLeaderboardFilters = {
+    ...effective,
+    verbKeys: [...effective.verbKeys],
+    selectedKeys: [...effective.selectedKeys]
+  };
+  PRACTICE_STATE.combinedLeaderboardStatus = "loading";
+  PRACTICE_STATE.combinedLeaderboardMessage = "";
+  PRACTICE_STATE.combinedLeaderboardData = null;
+  renderCombinedLeaderboardView();
+  loadCombinedLeaderboardOnline(PRACTICE_STATE.combinedLeaderboardFilters);
+}
+
+function setPracticeSlotsFromVerbKeys(verbKeys) {
+  const verbs = (verbKeys || []).map(findVerbByKey).filter(Boolean);
+  if (!verbs.length) return;
+  PRACTICE_STATE.verbKey = verbs[0]._key;
+  PRACTICE_STATE.setupBaseVerbKey = verbs[0]._key;
+  PRACTICE_STATE.extraVerbSlots = [0, 1].map(idx => {
+    const verb = verbs[idx + 1];
+    return verb
+      ? {
+        enabled: true,
+        query: verb.infinitive,
+        pattern: inferPatternCategory(verb),
+        tag: getVerbTags(verb).includes("essential55") ? "essential55" : "all"
+      }
+      : {
+        enabled: false,
+        query: "",
+        pattern: "all",
+        tag: "essential55"
+      };
+  });
+}
+
+function renderCombinedLeaderboardFilters() {
+  const filters = PRACTICE_STATE.combinedLeaderboardFilters || {};
+  if (filters.verbSetEnabled && filters.verbKeys?.length) {
+    setPracticeSlotsFromVerbKeys(filters.verbKeys);
+  }
+  const verb = findVerbByKey(PRACTICE_STATE.verbKey || CURRENT_VERB_KEY);
+  if (!verb) return;
+  PRACTICE_STATE.verbKey = verb._key;
+  ensurePracticeSetupSlots(verb);
+  const playerName = sanitizePracticePlayerName(filters.playerName || "");
+  const body = `
+    <div class="practicePanel">
+      <div class="practiceSectionTitle">Player</div>
+      <input
+        class="practiceTextInput"
+        type="text"
+        data-combined-filter-player
+        value="${escapeHtml(playerName)}"
+        placeholder="Any player"
+        maxlength="24"
+        autocomplete="off"
+        spellcheck="false"
+      >
+    </div>
+    <div class="practicePanel">
+      <label class="practiceSlotToggle practiceFilterToggle">
+        <input type="checkbox" data-combined-filter-verbs ${filters.verbSetEnabled ? "checked" : ""}>
+        <span>Filter by selected verb set</span>
+      </label>
+    </div>
+    ${renderPracticeExtraVerbControls(verb)}
+    <div class="practicePanel">
+      <label class="practiceSlotToggle practiceFilterToggle">
+        <input type="checkbox" data-combined-filter-tenses ${filters.tenseSetEnabled ? "checked" : ""}>
+        <span>Filter by selected tenses</span>
+      </label>
+      <div class="practiceFilterTenses">
+        <div class="practiceOptionsGrid">${renderPracticeTenseOptions(filters.selectedKeys?.length ? filters.selectedKeys : PRACTICE_STATE.selectedKeys)}</div>
+      </div>
+    </div>
+    <div class="practiceActions">
+      <button type="button" class="practiceSecondaryBtn" data-combined-leaderboard-clear>Clear filters</button>
+      <button type="button" class="practiceSecondaryBtn" data-combined-leaderboard-cancel>Back</button>
+      <button type="button" class="practiceActionBtn" data-combined-leaderboard-apply>Apply filters</button>
+    </div>
+  `;
+  showPracticeModal("Leaderboard filters", combinedLeaderboardFilterSummary(filters), body);
+}
+
+function getCombinedLeaderboardFiltersFromModal() {
+  const verbSetEnabled = !!document.querySelector("#practiceModal [data-combined-filter-verbs]")?.checked;
+  const tenseSetEnabled = !!document.querySelector("#practiceModal [data-combined-filter-tenses]")?.checked;
+  const playerName = sanitizePracticePlayerName(document.querySelector("#practiceModal [data-combined-filter-player]")?.value || "");
+  const selectedKeys = getPracticeSelectedKeysFromModal();
+  const filters = {
+    verbSetEnabled,
+    tenseSetEnabled,
+    playerName,
+    verbKeys: [],
+    selectedKeys: tenseSetEnabled ? selectedKeys : []
+  };
+  if (tenseSetEnabled && !selectedKeys.length) {
+    alert("Select at least one tense to use the tense filter.");
+    return null;
+  }
+  if (verbSetEnabled) {
+    const slots = getPracticeExtraSlotsFromModal();
+    PRACTICE_STATE.extraVerbSlots = slots;
+    const baseVerbKey = PRACTICE_STATE.verbKey || CURRENT_VERB_KEY;
+    const verbKeys = resolvePracticeVerbKeysFromSlotConfigs(baseVerbKey, slots);
+    if (!verbKeys) return null;
+    filters.verbKeys = verbKeys;
+  }
+  return filters;
+}
+
+function clearCombinedLeaderboardFilters() {
+  PRACTICE_STATE.combinedLeaderboardFilters = {
+    verbSetEnabled: false,
+    tenseSetEnabled: false,
+    playerName: "",
+    verbKeys: [],
+    selectedKeys: []
+  };
+  viewCombinedLeaderboard(PRACTICE_STATE.combinedLeaderboardFilters);
+}
+
+function startPracticeFromCombinedEntry(entry) {
+  if (!entry?.verbKeys?.length || !entry?.selectedKeys?.length) return;
+  const verbs = entry.verbKeys.map(findVerbByKey).filter(Boolean);
+  if (!verbs.length) return;
+  setPracticeSlotsFromVerbKeys(entry.verbKeys);
+  PRACTICE_STATE.selectedKeys = practiceSelectionKeys(entry.selectedKeys);
+  startPracticeAttempt(verbs[0]._key, PRACTICE_STATE.selectedKeys, entry.verbKeys);
+}
+
 function getPracticeCellKeys(verb, selectedKeys) {
   const selected = new Set(practiceSelectionKeys(selectedKeys));
   const keys = [];
@@ -5892,6 +6256,25 @@ function bindPracticeModalInteractions() {
   modal.querySelectorAll("[data-leaderboard-setup]").forEach(btn => {
     btn.addEventListener("click", () => renderLeaderboardSetup(PRACTICE_STATE.verbKey || CURRENT_VERB_KEY));
   });
+  modal.querySelector("[data-combined-leaderboard-filters]")?.addEventListener("click", renderCombinedLeaderboardFilters);
+  modal.querySelector("[data-combined-leaderboard-refresh]")?.addEventListener("click", () => {
+    viewCombinedLeaderboard(PRACTICE_STATE.combinedLeaderboardFilters);
+  });
+  modal.querySelector("[data-combined-leaderboard-apply]")?.addEventListener("click", () => {
+    const filters = getCombinedLeaderboardFiltersFromModal();
+    if (!filters) return;
+    viewCombinedLeaderboard(filters);
+  });
+  modal.querySelector("[data-combined-leaderboard-clear]")?.addEventListener("click", clearCombinedLeaderboardFilters);
+  modal.querySelector("[data-combined-leaderboard-cancel]")?.addEventListener("click", renderCombinedLeaderboardView);
+  modal.querySelectorAll("[data-combined-leaderboard-try]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const attemptId = btn.dataset.combinedLeaderboardTry || "";
+      const entry = (PRACTICE_STATE.combinedLeaderboardData?.entries || [])
+        .find(item => String(item.attemptId || "") === attemptId);
+      startPracticeFromCombinedEntry(entry);
+    });
+  });
   modal.querySelector("[data-leaderboard-refresh]")?.addEventListener("click", () => {
     viewPracticeLeaderboard(
       PRACTICE_STATE.verbKey || CURRENT_VERB_KEY,
@@ -5956,7 +6339,8 @@ function bindPracticeLaunch(detailRoot) {
       e.stopPropagation();
       if (ACTIVE_EDITOR) commitInlineEdit(0);
       hidePopover();
-      renderLeaderboardSetup(btn.dataset.leaderboardLaunch || CURRENT_VERB_KEY);
+      PRACTICE_STATE.verbKey = btn.dataset.leaderboardLaunch || CURRENT_VERB_KEY;
+      viewCombinedLeaderboard(PRACTICE_STATE.combinedLeaderboardFilters);
     });
   });
 }

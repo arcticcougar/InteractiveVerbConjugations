@@ -16,6 +16,13 @@ const MAX_VERBS = 3;
 const MAX_INPUTS = 240;
 const MAX_DURATION_MS = 4 * 60 * 60 * 1000;
 const MAX_BLOB_ATTEMPTS_PER_BOARD = 1000;
+const MAX_COMBINED_LEADERBOARD_ENTRIES = 50;
+const MAX_COMBINED_ATTEMPTS_TO_SCAN = 5000;
+const DIFFICULTY_ORDER = [
+  "1", "gerund", "participle", "3", "4", "2", "imperative",
+  "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"
+];
+const DIFFICULTY_MULTIPLIERS = new Map(DIFFICULTY_ORDER.map((key, idx) => [key, 1 + idx * 0.1]));
 
 let DATA_CACHE = null;
 let POOL = null;
@@ -79,6 +86,26 @@ function participleCellKey() {
 
 function imperativeCellKey(slot) {
   return `i:${slot}`;
+}
+
+function difficultyKeyForCell(cellKey) {
+  if (cellKey === gerundCellKey()) return "gerund";
+  if (cellKey === participleCellKey()) return "participle";
+  if (String(cellKey || "").startsWith("i:")) return "imperative";
+  const tenseMatch = String(cellKey || "").match(/^s:(\d+):/);
+  return tenseMatch ? tenseMatch[1] : "";
+}
+
+function difficultyMultiplierForKey(key) {
+  return DIFFICULTY_MULTIPLIERS.get(String(key || "")) || 1;
+}
+
+function difficultyMultiplierForCell(cellKey) {
+  return difficultyMultiplierForKey(difficultyKeyForCell(cellKey));
+}
+
+function roundScore(value) {
+  return Math.round((Number(value) || 0) * 10) / 10;
 }
 
 function parseImperativeLines(lines) {
@@ -202,6 +229,36 @@ function normalizeSelectedKeys(value) {
   return keys;
 }
 
+function normalizeOptionalVerbKeys(value) {
+  const source = Array.isArray(value)
+    ? value
+    : String(value || "").split(",");
+  const keys = source.map(key => String(key || "").trim()).filter(Boolean);
+  return keys.length ? normalizeVerbKeys(keys) : [];
+}
+
+function normalizeOptionalSelectedKeys(value) {
+  const source = Array.isArray(value)
+    ? value
+    : String(value || "").split(",");
+  const keys = source.map(key => String(key || "").trim()).filter(Boolean);
+  return keys.length ? normalizeSelectedKeys(keys) : [];
+}
+
+function canonicalKeyList(keys) {
+  return [...(keys || [])].map(key => String(key || "")).filter(Boolean).sort();
+}
+
+function sameKeySet(a, b) {
+  const left = canonicalKeyList(a);
+  const right = canonicalKeyList(b);
+  return left.length === right.length && left.every((key, idx) => key === right[idx]);
+}
+
+function normalizePlayerFilter(value) {
+  return normalize(sanitizePlayerName(value || ""));
+}
+
 function resolveVerbs(verbKeys) {
   const { byCoreKey } = getData();
   return verbKeys.map(key => {
@@ -226,22 +283,56 @@ function summarizeAttempt(payload) {
   const inputs = payload.inputs && typeof payload.inputs === "object" ? payload.inputs : {};
   if (Object.keys(inputs).length > MAX_INPUTS) throw new Error("Too many answers submitted.");
 
-  const summary = { correct: 0, accent_warning: 0, incorrect: 0, empty: 0, total: 0, points: 0, percent: 0 };
+  const summary = {
+    correct: 0,
+    accent_warning: 0,
+    incorrect: 0,
+    empty: 0,
+    total: 0,
+    points: 0,
+    percent: 0,
+    weightedPoints: 0,
+    weightedTotal: 0,
+    weightedPercent: 0
+  };
   const perVerb = [];
 
   verbs.forEach(({ key, verb }) => {
     const expected = buildCanonicalCellMap(verb);
-    const verbSummary = { correct: 0, accent_warning: 0, incorrect: 0, empty: 0, total: 0, points: 0, percent: 0 };
+    const verbSummary = {
+      correct: 0,
+      accent_warning: 0,
+      incorrect: 0,
+      empty: 0,
+      total: 0,
+      points: 0,
+      percent: 0,
+      weightedPoints: 0,
+      weightedTotal: 0,
+      weightedPercent: 0
+    };
     getPracticeCellKeys(verb, selectedKeys).forEach(cellKey => {
       const inputKey = `${key}::${cellKey}`;
       const status = compareUserToExpected(normalizeUserCellInput(inputs[inputKey] || ""), expected[cellKey] || "");
+      const multiplier = difficultyMultiplierForCell(cellKey);
       summary[status] += 1;
       summary.total += 1;
+      summary.weightedTotal += multiplier;
       verbSummary[status] += 1;
       verbSummary.total += 1;
+      verbSummary.weightedTotal += multiplier;
+      if (status === "correct" || status === "accent_warning") {
+        summary.weightedPoints += multiplier;
+        verbSummary.weightedPoints += multiplier;
+      }
     });
     verbSummary.points = verbSummary.correct + verbSummary.accent_warning;
     verbSummary.percent = verbSummary.total ? Math.round((verbSummary.points / verbSummary.total) * 100) : 0;
+    verbSummary.weightedPoints = roundScore(verbSummary.weightedPoints);
+    verbSummary.weightedTotal = roundScore(verbSummary.weightedTotal);
+    verbSummary.weightedPercent = verbSummary.weightedTotal
+      ? Math.round((verbSummary.weightedPoints / verbSummary.weightedTotal) * 100)
+      : 0;
     perVerb.push({
       verbKey: key,
       infinitive: cleanText(verb.infinitive || ""),
@@ -252,6 +343,11 @@ function summarizeAttempt(payload) {
 
   summary.points = summary.correct + summary.accent_warning;
   summary.percent = summary.total ? Math.round((summary.points / summary.total) * 100) : 0;
+  summary.weightedPoints = roundScore(summary.weightedPoints);
+  summary.weightedTotal = roundScore(summary.weightedTotal);
+  summary.weightedPercent = summary.weightedTotal
+    ? Math.round((summary.weightedPoints / summary.weightedTotal) * 100)
+    : 0;
   if (!summary.total) throw new Error("No scorable forms were submitted.");
 
   return {
@@ -350,6 +446,115 @@ function compareRankableAttempts(a, b) {
   return String(a.attemptId || "").localeCompare(String(b.attemptId || ""));
 }
 
+function weightedSummaryForAttempt(attempt) {
+  const summary = attempt.summary || {};
+  const rawPoints = Number(summary.points) || 0;
+  const rawTotal = Number(summary.total) || 0;
+  if (Number.isFinite(Number(summary.weightedPoints)) && Number.isFinite(Number(summary.weightedTotal)) && Number(summary.weightedTotal) > 0) {
+    const weightedPoints = roundScore(summary.weightedPoints);
+    const weightedTotal = roundScore(summary.weightedTotal);
+    return {
+      points: weightedPoints,
+      total: weightedTotal,
+      percent: weightedTotal ? Math.round((weightedPoints / weightedTotal) * 100) : 0
+    };
+  }
+
+  let weightedTotal = 0;
+  try {
+    const selectedKeys = normalizeOptionalSelectedKeys(attempt.selectedKeys || []);
+    const verbs = resolveVerbs(normalizeOptionalVerbKeys(attempt.verbKeys || []));
+    verbs.forEach(({ verb }) => {
+      getPracticeCellKeys(verb, selectedKeys).forEach(cellKey => {
+        weightedTotal += difficultyMultiplierForCell(cellKey);
+      });
+    });
+  } catch {
+    const selectedKeys = normalizeOptionalSelectedKeys(attempt.selectedKeys || []);
+    const averageMultiplier = selectedKeys.length
+      ? selectedKeys.reduce((sum, key) => sum + difficultyMultiplierForKey(key), 0) / selectedKeys.length
+      : 1;
+    weightedTotal = rawTotal * averageMultiplier;
+  }
+
+  weightedTotal = roundScore(weightedTotal || rawTotal);
+  const rawRatio = rawTotal ? rawPoints / rawTotal : 0;
+  const weightedPoints = roundScore(weightedTotal * rawRatio);
+  return {
+    points: weightedPoints,
+    total: weightedTotal,
+    percent: weightedTotal ? Math.round((weightedPoints / weightedTotal) * 100) : 0
+  };
+}
+
+function compareCombinedAttempts(a, b) {
+  const aWeighted = weightedSummaryForAttempt(a);
+  const bWeighted = weightedSummaryForAttempt(b);
+  if (aWeighted.points !== bWeighted.points) return bWeighted.points - aWeighted.points;
+  const aPoints = Number(a.summary?.points) || 0;
+  const bPoints = Number(b.summary?.points) || 0;
+  if (aPoints !== bPoints) return bPoints - aPoints;
+  if (aWeighted.percent !== bWeighted.percent) return bWeighted.percent - aWeighted.percent;
+  const aDuration = Number(a.durationMs) || 0;
+  const bDuration = Number(b.durationMs) || 0;
+  if (aDuration !== bDuration) return aDuration - bDuration;
+  const aSubmitted = Date.parse(a.submittedAt || "") || 0;
+  const bSubmitted = Date.parse(b.submittedAt || "") || 0;
+  if (aSubmitted !== bSubmitted) return aSubmitted - bSubmitted;
+  return String(a.attemptId || "").localeCompare(String(b.attemptId || ""));
+}
+
+function attemptMatchesCombinedFilters(attempt, filters) {
+  if (filters.playerName) {
+    const playerName = normalize(sanitizePlayerName(attempt.playerName || ""));
+    if (!playerName.includes(filters.playerName)) return false;
+  }
+  if (filters.verbKeys?.length && !sameKeySet(attempt.verbKeys || [], filters.verbKeys)) return false;
+  if (filters.selectedKeys?.length) {
+    const selected = normalizeOptionalSelectedKeys(attempt.selectedKeys || []);
+    if (selected.join(",") !== filters.selectedKeys.join(",")) return false;
+  }
+  return true;
+}
+
+function mapCombinedAttempt(attempt, rank) {
+  const weighted = weightedSummaryForAttempt(attempt);
+  return {
+    rank,
+    attemptId: attempt.attemptId || "",
+    playerName: attempt.playerName || "",
+    weightedPoints: weighted.points,
+    weightedTotal: weighted.total,
+    weightedPercent: weighted.percent,
+    points: Number(attempt.summary?.points) || 0,
+    total: Number(attempt.summary?.total) || 0,
+    percent: Number(attempt.summary?.percent) || 0,
+    durationMs: Number(attempt.durationMs) || 0,
+    submittedAt: attempt.submittedAt || "",
+    verbKeys: Array.isArray(attempt.verbKeys) ? attempt.verbKeys : [],
+    verbLabels: Array.isArray(attempt.verbLabels) ? attempt.verbLabels : [],
+    selectedKeys: normalizeOptionalSelectedKeys(attempt.selectedKeys || [])
+  };
+}
+
+function rankedCombinedLeaderboard(attempts, filters) {
+  const filtered = attempts.filter(attempt => attemptMatchesCombinedFilters(attempt, filters));
+  const sorted = filtered.sort(compareCombinedAttempts);
+  const entries = sorted
+    .slice(0, MAX_COMBINED_LEADERBOARD_ENTRIES)
+    .map((attempt, idx) => mapCombinedAttempt(attempt, idx + 1));
+  return {
+    leaderboardKey: `${SCORE_VERSION}|combined`,
+    totalAttempts: sorted.length,
+    entries,
+    filters: {
+      playerName: filters.playerName || "",
+      verbKeys: filters.verbKeys || [],
+      selectedKeys: filters.selectedKeys || []
+    }
+  };
+}
+
 function rankedBlobLeaderboard(doc, attemptId = "") {
   const sorted = [...(doc.attempts || [])].sort(compareRankableAttempts);
   let rank = 0;
@@ -408,6 +613,39 @@ async function getBlobLeaderboard(leaderboardKey, attemptId = "") {
   return rankedBlobLeaderboard(doc, attemptId);
 }
 
+async function readAllBlobAttempts() {
+  const { get, list } = require("@vercel/blob");
+  const attempts = [];
+  let cursor = undefined;
+  do {
+    const page = await list({
+      prefix: "practice-leaderboards/",
+      cursor,
+      limit: 1000
+    });
+    for (const blob of page.blobs || []) {
+      if (attempts.length >= MAX_COMBINED_ATTEMPTS_TO_SCAN) break;
+      try {
+        const result = await get(blob.pathname, { access: "private", useCache: false });
+        if (!result || result.statusCode !== 200) continue;
+        const text = await streamToText(result.stream);
+        const parsed = text ? JSON.parse(text) : null;
+        const doc = normalizeBlobLeaderboard(parsed, parsed?.leaderboardKey || "");
+        doc.attempts.forEach(attempt => attempts.push(attempt));
+      } catch {
+        // Ignore one malformed or deleted board rather than losing the combined leaderboard.
+      }
+    }
+    cursor = page.cursor;
+  } while (cursor && attempts.length < MAX_COMBINED_ATTEMPTS_TO_SCAN);
+  return attempts.slice(0, MAX_COMBINED_ATTEMPTS_TO_SCAN);
+}
+
+async function getBlobCombinedLeaderboard(filters) {
+  const attempts = await readAllBlobAttempts();
+  return rankedCombinedLeaderboard(attempts, filters);
+}
+
 async function saveBlobScore(storedAttempt, leaderboardKey) {
   const { pathname, doc } = await readBlobLeaderboard(leaderboardKey);
   const existingIdx = doc.attempts.findIndex(item => item.attemptId === storedAttempt.attemptId);
@@ -451,6 +689,9 @@ async function ensureSchema(pool) {
       score_points INTEGER NOT NULL,
       score_total INTEGER NOT NULL,
       score_percent INTEGER NOT NULL,
+      score_weighted_points REAL,
+      score_weighted_total REAL,
+      score_weighted_percent INTEGER,
       correct INTEGER NOT NULL,
       accent_warning INTEGER NOT NULL,
       incorrect INTEGER NOT NULL,
@@ -462,6 +703,9 @@ async function ensureSchema(pool) {
     );
     CREATE INDEX IF NOT EXISTS idx_practice_scores_leaderboard
       ON practice_scores (leaderboard_key, score_points DESC, duration_ms ASC, submitted_at ASC);
+    ALTER TABLE practice_scores ADD COLUMN IF NOT EXISTS score_weighted_points REAL;
+    ALTER TABLE practice_scores ADD COLUMN IF NOT EXISTS score_weighted_total REAL;
+    ALTER TABLE practice_scores ADD COLUMN IF NOT EXISTS score_weighted_percent INTEGER;
   `);
   SCHEMA_READY = true;
 }
@@ -525,6 +769,74 @@ async function getLeaderboard(pool, leaderboardKey, attemptId = "") {
   };
 }
 
+function parseJsonField(value, fallback) {
+  if (Array.isArray(value)) return value;
+  if (value && typeof value === "object") return value;
+  if (typeof value === "string" && value.trim()) {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return fallback;
+    }
+  }
+  return fallback;
+}
+
+function storedAttemptFromRow(row) {
+  return {
+    attemptId: row.attempt_id,
+    playerName: row.player_name,
+    verbKeys: parseJsonField(row.verb_keys, []),
+    verbLabels: parseJsonField(row.verb_labels, []),
+    selectedKeys: parseJsonField(row.selected_keys, []),
+    summary: {
+      points: Number(row.score_points) || 0,
+      total: Number(row.score_total) || 0,
+      percent: Number(row.score_percent) || 0,
+      weightedPoints: Number(row.score_weighted_points) || 0,
+      weightedTotal: Number(row.score_weighted_total) || 0,
+      weightedPercent: Number(row.score_weighted_percent) || 0,
+      correct: Number(row.correct) || 0,
+      accent_warning: Number(row.accent_warning) || 0,
+      incorrect: Number(row.incorrect) || 0,
+      empty: Number(row.empty) || 0
+    },
+    durationMs: Number(row.duration_ms) || 0,
+    startedAt: row.started_at,
+    submittedAt: row.submitted_at,
+    appVersion: row.app_version
+  };
+}
+
+async function getCombinedLeaderboard(pool, filters) {
+  const rowsResult = await pool.query(`
+    SELECT
+      attempt_id,
+      player_name,
+      verb_keys,
+      verb_labels,
+      selected_keys,
+      score_points,
+      score_total,
+      score_percent,
+      score_weighted_points,
+      score_weighted_total,
+      score_weighted_percent,
+      correct,
+      accent_warning,
+      incorrect,
+      empty,
+      duration_ms,
+      started_at,
+      submitted_at,
+      app_version
+    FROM practice_scores
+    ORDER BY submitted_at DESC
+    LIMIT $1
+  `, [MAX_COMBINED_ATTEMPTS_TO_SCAN]);
+  return rankedCombinedLeaderboard(rowsResult.rows.map(storedAttemptFromRow), filters);
+}
+
 async function readBody(req) {
   if (req.body && typeof req.body === "object") return req.body;
   if (typeof req.body === "string" && req.body.trim()) return JSON.parse(req.body);
@@ -536,6 +848,30 @@ async function readBody(req) {
 
 async function handleGet(req, res) {
   const url = new URL(req.url, "http://localhost");
+  const scope = cleanText(url.searchParams.get("scope") || "");
+  if (scope === "combined") {
+    const filters = {
+      playerName: normalizePlayerFilter(url.searchParams.get("playerName") || ""),
+      verbKeys: normalizeOptionalVerbKeys(url.searchParams.get("verbKeys") || ""),
+      selectedKeys: normalizeOptionalSelectedKeys(url.searchParams.get("selectedKeys") || "")
+    };
+    if (hasBlobStore()) {
+      const leaderboard = await getBlobCombinedLeaderboard(filters);
+      return json(res, 200, { ok: true, configured: true, storage: "blob", leaderboard });
+    }
+    const pool = getPool();
+    if (!pool) {
+      return json(res, 200, {
+        ok: true,
+        configured: false,
+        message: "Online scores need Vercel Blob or Postgres storage configured."
+      });
+    }
+    await ensureSchema(pool);
+    const leaderboard = await getCombinedLeaderboard(pool, filters);
+    return json(res, 200, { ok: true, configured: true, storage: "postgres", leaderboard });
+  }
+
   const verbKeys = normalizeVerbKeys(url.searchParams.get("verbKeys") || "");
   const selectedKeys = normalizeSelectedKeys(url.searchParams.get("selectedKeys") || "");
   const leaderboardKey = buildLeaderboardKey(verbKeys, selectedKeys);
@@ -602,6 +938,9 @@ async function handlePost(req, res) {
       score_points,
       score_total,
       score_percent,
+      score_weighted_points,
+      score_weighted_total,
+      score_weighted_percent,
       correct,
       accent_warning,
       incorrect,
@@ -611,7 +950,7 @@ async function handlePost(req, res) {
       submitted_at,
       app_version
     ) VALUES (
-      $1, $2, $3, $4::jsonb, $5::jsonb, $6::jsonb, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+      $1, $2, $3, $4::jsonb, $5::jsonb, $6::jsonb, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
     )
     ON CONFLICT (attempt_id) DO NOTHING
   `, [
@@ -624,6 +963,9 @@ async function handlePost(req, res) {
     scored.summary.points,
     scored.summary.total,
     scored.summary.percent,
+    scored.summary.weightedPoints,
+    scored.summary.weightedTotal,
+    scored.summary.weightedPercent,
     scored.summary.correct,
     scored.summary.accent_warning,
     scored.summary.incorrect,
