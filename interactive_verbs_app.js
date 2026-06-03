@@ -21,10 +21,16 @@ const TENSE_SELECTION_ALL_KEYS = [
   "8", "9", "10", "11", "12", "13", "14",
   "imperative"
 ];
-const DEFAULT_BEGINNER_TENSE_KEYS = [
+const PRACTICE_DEFAULT_TENSE_KEYS = ["gerund", "participle", "1", "3", "4"];
+const DEFAULT_BEGINNER_TENSE_KEYS = [...PRACTICE_DEFAULT_TENSE_KEYS];
+const LEGACY_BEGINNER_TENSE_KEYS = [
   "gerund", "participle", "1", "2", "3", "4", "5", "imperative"
 ];
-const PRACTICE_DEFAULT_TENSE_KEYS = ["gerund", "participle", "1", "3", "4"];
+const INTERMEDIATE_TENSE_KEYS = [
+  "gerund", "participle",
+  "1", "2", "3", "4", "5", "6", "8",
+  "imperative"
+];
 const PRACTICE_PLAYER_PRESETS = ["Mike", "Scott", "Travis"];
 const PRACTICE_CHALLENGE_PROGRAM = window.PRACTICE_CHALLENGES || null;
 const LEADERBOARD_TENSE_DISPLAY_ORDER = [
@@ -3023,6 +3029,9 @@ function applyCoreNotesOverride(v) {
 }
 
 function sanitizeEnabledTenseKeys(keys) {
+  if (Array.isArray(keys) && hasSameTenseKeySet(keys, LEGACY_BEGINNER_TENSE_KEYS)) {
+    return [...DEFAULT_BEGINNER_TENSE_KEYS];
+  }
   const source = Array.isArray(keys) ? keys : DEFAULT_BEGINNER_TENSE_KEYS;
   const allowed = new Set(TENSE_SELECTION_ALL_KEYS);
   const out = [];
@@ -3032,6 +3041,14 @@ function sanitizeEnabledTenseKeys(keys) {
     out.push(value);
   });
   return out.length ? out : [...DEFAULT_BEGINNER_TENSE_KEYS];
+}
+
+function hasSameTenseKeySet(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+  const aSet = new Set(a.map(key => String(key || "")));
+  const bSet = new Set(b.map(key => String(key || "")));
+  if (aSet.size !== bSet.size) return false;
+  return Array.from(aSet).every(key => bSet.has(key));
 }
 
 function coerceState(raw) {
@@ -7445,6 +7462,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const tagFilter = document.getElementById("filterTag");
   const tenseSelection = document.getElementById("tenseSelection");
   const beginnerTensesBtn = document.getElementById("tenseSelectionBeginner");
+  const intermediateTensesBtn = document.getElementById("tenseSelectionIntermediate");
   const allTensesBtn = document.getElementById("tenseSelectionAll");
   renderTenseHelper(null);
   q.value = APP_STATE.ui.search_text || "";
@@ -7453,6 +7471,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderTenseSelectionControls();
   tenseSelection?.addEventListener("toggle", queueSidebarSync);
   beginnerTensesBtn?.addEventListener("click", () => setTenseSelection(DEFAULT_BEGINNER_TENSE_KEYS));
+  intermediateTensesBtn?.addEventListener("click", () => setTenseSelection(INTERMEDIATE_TENSE_KEYS));
   allTensesBtn?.addEventListener("click", () => setTenseSelection(TENSE_SELECTION_ALL_KEYS));
   initFilterDropdowns();
   refreshFilterDropdowns();

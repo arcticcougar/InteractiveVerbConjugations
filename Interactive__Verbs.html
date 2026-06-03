@@ -485,11 +485,12 @@
   }
   .tenseSelectionActions {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 5px;
     padding-top: 5px;
   }
   .tenseSelectionAction {
+    min-width: 0;
     width: 100%;
     padding: 4px 7px;
     border: 1px solid transparent;
@@ -499,6 +500,7 @@
     font-size: 11px;
     font-weight: 700;
     line-height: 1.2;
+    overflow-wrap: anywhere;
     cursor: pointer;
   }
   .tenseSelectionAction:hover,
@@ -2140,6 +2142,7 @@
         <div class="tenseSelectionBody">
           <div class="tenseSelectionActions">
             <button id="tenseSelectionBeginner" class="tenseSelectionAction" type="button">Beginner</button>
+            <button id="tenseSelectionIntermediate" class="tenseSelectionAction" type="button">Intermediate</button>
             <button id="tenseSelectionAll" class="tenseSelectionAction" type="button">All</button>
           </div>
           <div id="tenseSelectionOptions" class="tenseSelectionOptions"></div>
@@ -2990,7 +2993,7 @@ window.addEventListener("resize", () => {
 <script src="core_notes_overrides.js"></script>
 <script src="core_notes_manual_fixes.js"></script>
 <script src="practice-challenges.js?v=essential-55-weeks-1"></script>
-<script src="interactive_verbs_app.js?v=shortcut-cleanup-1"></script>
+<script src="interactive_verbs_app.js?v=tense-presets-1"></script>
 </body>
 </html>
 
