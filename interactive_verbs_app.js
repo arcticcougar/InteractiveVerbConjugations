@@ -3,7 +3,18 @@
 const STATE_KEY = "ivc_state_v1";
 const PRACTICE_PLAYER_KEY = "ivc_practice_player_v1";
 const BACKUP_VERSION = 1;
-const BASE_DATA = window.VERB_DATA || [];
+
+function initialInfinitiveKey(verb) {
+  return String(verb?.infinitive || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+const BASE_SOURCE_DATA = window.VERB_DATA || [];
+const SUPPLEMENTAL_SOURCE_DATA = (window.SUPPLEMENTAL_VERBS || [])
+  .filter(verb => {
+    const key = initialInfinitiveKey(verb);
+    return key && !BASE_SOURCE_DATA.some(baseVerb => initialInfinitiveKey(baseVerb) === key);
+  });
+const BASE_DATA = [...BASE_SOURCE_DATA, ...SUPPLEMENTAL_SOURCE_DATA];
 const TENSE_SELECTION_ALL_KEYS = [
   "gerund", "participle",
   "1", "2", "3", "4", "5", "6", "7",
@@ -3284,6 +3295,7 @@ function autoBackfillMissingCustomPatternNotes() {
 }
 
 function getDisplayVerbNumber(verb) {
+  if (verb?.display_id) return String(verb.display_id);
   return String(Number(verb.id) || 0).padStart(4, "0");
 }
 
@@ -3759,7 +3771,7 @@ function isEssential55Verb(verb) {
 
 function getVerbTags(verb) {
   const tags = [];
-  if (verb._source === "core") tags.push("core501");
+  if (verb._source === "core" && verb.source_tag !== "supplemental_essential55") tags.push("core501");
   if (verb._source === "custom") tags.push("custom");
   if (verb._source === "example" || verb.source_tag === "ending_example") tags.push("example");
   if (isEssential55Verb(verb)) tags.push("essential55");

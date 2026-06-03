@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const { createHash, randomUUID } = require("crypto");
 const PRACTICE_CHALLENGES = require("../practice-challenges.js");
+const SUPPLEMENTAL_VERBS = require("../supplemental-verbs.js");
 
 const TENSE_SELECTION_ALL_KEYS = [
   "gerund", "participle",
@@ -49,6 +50,11 @@ function normalizeForMatch(s) {
 
 function normalize(s) {
   return (s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+}
+
+function getDisplayVerbNumber(verb) {
+  if (verb?.display_id) return String(verb.display_id);
+  return String(Number(verb?.id) || 0).padStart(4, "0");
 }
 
 function normalizeUserCellInput(s) {
@@ -185,8 +191,15 @@ function getData() {
   if (!DATA_CACHE) {
     const dataPath = path.join(process.cwd(), "verbs-data.json");
     const rows = JSON.parse(fs.readFileSync(dataPath, "utf8"));
+    const rowNames = new Set(rows.map(verb => normalize(verb.infinitive || "")));
+    const supplementalRows = (Array.isArray(SUPPLEMENTAL_VERBS) ? SUPPLEMENTAL_VERBS : [])
+      .filter(verb => {
+        const key = normalize(verb?.infinitive || "");
+        return key && !rowNames.has(key);
+      });
+    const allRows = rows.concat(supplementalRows);
     DATA_CACHE = {
-      byCoreKey: new Map(rows.map(verb => [`core:${Number(verb.id)}`, verb]))
+      byCoreKey: new Map(allRows.map(verb => [`core:${Number(verb.id)}`, verb]))
     };
   }
   return DATA_CACHE;
@@ -345,7 +358,7 @@ function summarizeAttempt(payload) {
     perVerb.push({
       verbKey: key,
       infinitive: cleanText(verb.infinitive || ""),
-      displayNumber: String(Number(verb.id) || 0).padStart(4, "0"),
+      displayNumber: getDisplayVerbNumber(verb),
       summary: verbSummary
     });
   });
