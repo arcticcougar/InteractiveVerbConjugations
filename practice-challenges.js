@@ -10,6 +10,10 @@
   const START_DATE = "2026-06-01";
   const DEFAULT_TENSE_KEYS = ["gerund", "participle", "1", "3", "4"];
   const PROGRAM_LABEL = "Essential 55";
+  const COURSE_WELCOME_VIDEO = {
+    src: "Essential55_Welcome.mp4",
+    title: "Essential 55 course welcome"
+  };
   const WEEKS = [
     { week: 1, verbs: ["hablar", "comer", "vivir"], focus: "Simplest regular -ar, -er, -ir verbs" },
     { week: 2, verbs: ["cantar", "aprender", "escribir"], focus: "More regular verb confidence" },
@@ -46,10 +50,6 @@
   const INTRO_BY_WEEK = {
     1: {
       lead: "This opening week is your reference point for the whole course. Hablar, comer, and vivir show the three regular verb families in their simplest form, so treat them as patterns you will keep returning to rather than as three isolated verbs.",
-      video: {
-        src: "Essential55_Welcome.mp4",
-        title: "Essential 55 welcome video"
-      },
       watch: [
         "In the present, -er and -ir verbs are almost identical except nosotros and vosotros: comemos/coméis versus vivimos/vivís.",
         "In the preterite, the accent marks separate past-tense forms from present-tense lookalikes: hablé/habló, comí/comió, viví/vivió.",
@@ -291,7 +291,20 @@
   };
 
   WEEKS.forEach(challenge => {
-    challenge.intro = INTRO_BY_WEEK[challenge.week] || null;
+    const intro = INTRO_BY_WEEK[challenge.week] || null;
+    if (!intro) {
+      challenge.intro = null;
+      return;
+    }
+    const extraVideos = [
+      ...(intro.video ? [intro.video] : []),
+      ...(Array.isArray(intro.videos) ? intro.videos : [])
+    ];
+    const { video, videos, ...introCopy } = intro;
+    challenge.intro = {
+      ...introCopy,
+      videos: [COURSE_WELCOME_VIDEO, ...extraVideos]
+    };
   });
 
   function normalizeText(value) {

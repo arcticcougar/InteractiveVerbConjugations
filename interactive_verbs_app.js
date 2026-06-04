@@ -5206,23 +5206,51 @@ function renderPracticeIntroTenseHelp(keys) {
   `;
 }
 
+function normalizePracticeIntroVideos(intro) {
+  const source = Array.isArray(intro?.videos)
+    ? intro.videos
+    : (intro?.video ? [intro.video] : []);
+  return source
+    .map(video => {
+      const src = typeof video === "string" ? video : video?.src;
+      if (!src) return null;
+      return {
+        src,
+        title: typeof video === "object" ? video.title || "" : ""
+      };
+    })
+    .filter(Boolean);
+}
+
+function renderPracticeIntroVideos(intro) {
+  const videos = normalizePracticeIntroVideos(intro);
+  if (!videos.length) return "";
+  return videos.map(video => {
+    const title = video.title || "";
+    const src = video.src || "";
+    return `
+      <div class="practiceIntroVideo">
+        <video
+          controls
+          playsinline
+          preload="metadata"
+          ${title ? `aria-label="${escapeHtml(title)}"` : ""}
+        >
+          <source src="${escapeHtml(src)}" type="video/mp4">
+          Your browser does not support embedded video.
+        </video>
+        ${title ? `<div class="practiceIntroVideoCaption">${escapeHtml(title)}</div>` : ""}
+      </div>
+    `;
+  }).join("");
+}
+
 function renderPracticeIntroVideo(intro) {
-  const video = intro?.video;
-  const src = typeof video === "string" ? video : video?.src;
-  if (!src) return "";
-  const title = typeof video === "object" ? video.title || "" : "";
+  const videoHtml = renderPracticeIntroVideos(intro);
+  if (!videoHtml) return "";
   return `
-    <div class="practiceIntroVideo">
-      <video
-        controls
-        playsinline
-        preload="metadata"
-        ${title ? `aria-label="${escapeHtml(title)}"` : ""}
-      >
-        <source src="${escapeHtml(src)}" type="video/mp4">
-        Your browser does not support embedded video.
-      </video>
-      ${title ? `<div class="practiceIntroVideoCaption">${escapeHtml(title)}</div>` : ""}
+    <div class="practiceIntroVideoStack">
+      ${videoHtml}
     </div>
   `;
 }
