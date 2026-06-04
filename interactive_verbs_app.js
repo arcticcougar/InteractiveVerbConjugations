@@ -2109,6 +2109,7 @@ let PRACTICE_STATE = {
   nextPatternFilter: "all",
   nextTagFilter: "all",
   tabOrder: "column",
+  setupSkipsIntro: false,
   playerName: loadPracticePlayerName(),
   startedAtMs: 0,
   submittedAtMs: 0,
@@ -2640,7 +2641,7 @@ function renderTenseHelper(context) {
       <div class="helperPanel">
         <div class="helperSectionTitle">Core workflow</div>
         <ul class="helperList">
-          <li>Practice setup opens on load with the current Essential 55 weekly challenge.</li>
+          <li>The current Essential 55 weekly intro opens on load, then continues to practice setup.</li>
           <li>Choose a player, press Start, then fill the selected forms.</li>
           <li>Double-space, Enter, or Tab moves through practice answer boxes.</li>
           <li>Submit scores the attempt and adds it to the matching online leaderboard group.</li>
@@ -5098,6 +5099,28 @@ function getPracticeChallengeLabel(challenge) {
   return PRACTICE_CHALLENGE_PROGRAM?.label ? PRACTICE_CHALLENGE_PROGRAM.label(challenge) : "";
 }
 
+function getPracticeChallengeTenseKeys(challenge) {
+  return practiceSelectionKeys(challenge?.tenseKeys?.length ? challenge.tenseKeys : PRACTICE_DEFAULT_TENSE_KEYS);
+}
+
+function sameStringSet(left, right) {
+  const a = (left || []).map(value => String(value || ""));
+  const b = (right || []).map(value => String(value || ""));
+  if (a.length !== b.length) return false;
+  const bSet = new Set(b);
+  return a.every(value => bSet.has(value));
+}
+
+function isCurrentChallengeDefaultSelection(verbKeys, selectedKeys) {
+  const challenge = getCurrentPracticeChallenge();
+  const currentVerbKeys = resolveChallengeVerbKeys(challenge);
+  if (!challenge || currentVerbKeys.length !== 3) return false;
+  return (
+    sameStringSet(verbKeys, currentVerbKeys) &&
+    sameStringSet(practiceSelectionKeys(selectedKeys), getPracticeChallengeTenseKeys(challenge))
+  );
+}
+
 function getPracticeChallengeForEntry(entry) {
   if (entry?.challenge) return entry.challenge;
   if (!PRACTICE_CHALLENGE_PROGRAM?.matchingChallenge) return null;
@@ -5107,7 +5130,12 @@ function getPracticeChallengeForEntry(entry) {
   return PRACTICE_CHALLENGE_PROGRAM.matchingChallenge(verbs, entry?.selectedKeys || []);
 }
 
-function getPracticeChallengeForVerbs(verbs) {
+function getPracticeChallengeForVerbs(verbs, selectedKeys = null) {
+  if (PRACTICE_CHALLENGE_PROGRAM?.matchingChallenge && selectedKeys?.length) {
+    const infinitives = (verbs || []).map(verb => verb?.infinitive).filter(Boolean);
+    const matched = PRACTICE_CHALLENGE_PROGRAM.matchingChallenge(infinitives, selectedKeys);
+    if (matched) return matched;
+  }
   if (!PRACTICE_CHALLENGE_PROGRAM?.WEEKS || !PRACTICE_CHALLENGE_PROGRAM?.sameSet) return null;
   const infinitives = (verbs || []).map(verb => verb?.infinitive).filter(Boolean);
   if (!infinitives.length) return null;
@@ -5121,17 +5149,21 @@ function applyCurrentPracticeChallengeDefault() {
   const verbKeys = resolveChallengeVerbKeys(challenge);
   if (!challenge || verbKeys.length !== 3) return null;
   setPracticeSlotsFromVerbKeys(verbKeys);
-  PRACTICE_STATE.selectedKeys = [...PRACTICE_DEFAULT_TENSE_KEYS];
+  PRACTICE_STATE.selectedKeys = getPracticeChallengeTenseKeys(challenge);
   PRACTICE_STATE.verbKeys = verbKeys;
   return { challenge, verbKeys };
 }
 
 function renderPracticeChallengeSetupPanel(challenge) {
   if (!challenge) return "";
+  const cycleNote = challenge.cycleId && challenge.cycleId !== "beginner"
+    ? `<div class="practiceChallengeFocus">This rotation uses ${escapeHtml(String(challenge.cycleLabel || "").toLowerCase())} tense coverage.</div>`
+    : "";
   return `
     <div class="practicePanel practiceChallengePanel">
       <div class="practiceSectionTitle">${escapeHtml(getPracticeChallengeLabel(challenge))}</div>
       <div class="practiceChallengeFocus">${escapeHtml(challenge.focus || "")}</div>
+      ${cycleNote}
     </div>
   `;
 }
@@ -5146,6 +5178,7 @@ function renderPracticeSetup(verbKey = CURRENT_VERB_KEY, options = {}) {
     return;
   }
   PRACTICE_STATE.verbKey = setupVerb._key;
+  PRACTICE_STATE.setupSkipsIntro = !!options.skipIntroOnStart;
   const body = `
     ${renderPracticeChallengeSetupPanel(appliedChallenge?.challenge)}
     <div class="practicePanel">
@@ -5255,7 +5288,7 @@ function renderPracticeIntroVideo(intro) {
   `;
 }
 
-function renderPracticeIntro(verbKey, selectedKeys, verbKeys = null) {
+function renderPracticeIntro(verbKey, selectedKeys, verbKeys = null, options = {}) {
   const keys = practiceSelectionKeys(selectedKeys);
   const resolvedVerbKeys = Array.isArray(verbKeys) && verbKeys.length ? verbKeys : [verbKey];
   const verbs = resolvedVerbKeys.map(findVerbByKey).filter(Boolean);
@@ -5269,7 +5302,7 @@ function renderPracticeIntro(verbKey, selectedKeys, verbKeys = null) {
   PRACTICE_STATE.verbKey = verbs[0]._key;
   PRACTICE_STATE.verbKeys = verbs.map(verb => verb._key);
 
-  const challenge = getPracticeChallengeForVerbs(verbs);
+  const challenge = getPracticeChallengeForVerbs(verbs, keys);
   const intro = challenge?.intro || {
     lead: `You are about to practise ${verbs.map(verb => verb.infinitive).join(", ")}. Before you begin, look for the verb family, any visible irregular patterns, and the tense endings you have selected.`,
     watch: [
@@ -5283,6 +5316,9 @@ function renderPracticeIntro(verbKey, selectedKeys, verbKeys = null) {
   const watchItems = (intro.watch || [])
     .map(item => `<li>${escapeHtml(item)}</li>`)
     .join("");
+  const continueToSetup = options.next === "setup";
+  const actionAttr = continueToSetup ? "data-practice-intro-setup" : "data-practice-begin";
+  const actionLabel = continueToSetup ? "Continue to setup" : "Begin test";
   const body = `
     <div class="practicePanel practiceIntroPanel">
       ${challenge?.focus ? `<div class="practiceIntroFocus">${escapeHtml(challenge.focus)}</div>` : ""}
@@ -5296,7 +5332,7 @@ function renderPracticeIntro(verbKey, selectedKeys, verbKeys = null) {
       <div class="practiceIntroTenses">Selected forms: ${escapeHtml(formatPracticeIntroTenses(keys))}</div>
     </div>
     <div class="practiceActions">
-      <button type="button" class="practiceActionBtn" data-practice-begin>Begin test</button>
+      <button type="button" class="practiceActionBtn" ${actionAttr}>${escapeHtml(actionLabel)}</button>
     </div>
   `;
   showPracticeModal(title, meta, body);
@@ -6345,6 +6381,7 @@ function startPracticeAttempt(verbKey, selectedKeys, verbKeys = null) {
   PRACTICE_STATE.statusByCell = {};
   PRACTICE_STATE.summary = null;
   PRACTICE_STATE.submitted = false;
+  PRACTICE_STATE.setupSkipsIntro = false;
   PRACTICE_STATE.startedAtMs = Date.now();
   PRACTICE_STATE.submittedAtMs = 0;
   PRACTICE_STATE.durationMs = 0;
@@ -6558,7 +6595,17 @@ function bindPracticeModalInteractions() {
     const baseVerbKey = PRACTICE_STATE.verbKey || CURRENT_VERB_KEY;
     const verbKeys = resolvePracticeVerbKeysFromSlotConfigs(baseVerbKey, slots);
     if (!verbKeys) return;
+    if (PRACTICE_STATE.setupSkipsIntro && isCurrentChallengeDefaultSelection(verbKeys, selected)) {
+      startPracticeAttempt(baseVerbKey, selected, verbKeys);
+      return;
+    }
     renderPracticeIntro(baseVerbKey, selected, verbKeys);
+  });
+  modal.querySelector("[data-practice-intro-setup]")?.addEventListener("click", () => {
+    renderPracticeSetup(PRACTICE_STATE.verbKey || CURRENT_VERB_KEY, {
+      useCurrentChallengeDefault: true,
+      skipIntroOnStart: true
+    });
   });
   modal.querySelector("[data-practice-begin]")?.addEventListener("click", () => {
     startPracticeAttempt(
@@ -6702,6 +6749,16 @@ function bindPracticeLaunch(detailRoot) {
 
 function openInitialPracticeSetup() {
   if (isPracticeOverlayOpen()) return;
+  const appliedChallenge = applyCurrentPracticeChallengeDefault();
+  if (appliedChallenge?.verbKeys?.length) {
+    renderPracticeIntro(
+      appliedChallenge.verbKeys[0],
+      PRACTICE_STATE.selectedKeys,
+      appliedChallenge.verbKeys,
+      { next: "setup" }
+    );
+    return;
+  }
   renderPracticeSetup(CURRENT_VERB_KEY, { useCurrentChallengeDefault: true });
 }
 

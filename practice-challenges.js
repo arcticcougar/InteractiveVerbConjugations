@@ -9,6 +9,22 @@
 
   const START_DATE = "2026-06-01";
   const DEFAULT_TENSE_KEYS = ["gerund", "participle", "1", "3", "4"];
+  const INTERMEDIATE_TENSE_KEYS = [
+    "gerund", "participle",
+    "1", "2", "3", "4", "5", "6", "8",
+    "imperative"
+  ];
+  const ALL_TENSE_KEYS = [
+    "gerund", "participle",
+    "1", "2", "3", "4", "5", "6", "7",
+    "8", "9", "10", "11", "12", "13", "14",
+    "imperative"
+  ];
+  const TENSE_CYCLES = [
+    { id: "beginner", label: "Beginner", tenseKeys: DEFAULT_TENSE_KEYS },
+    { id: "intermediate", label: "Intermediate", tenseKeys: INTERMEDIATE_TENSE_KEYS },
+    { id: "all", label: "All tenses", tenseKeys: ALL_TENSE_KEYS }
+  ];
   const PROGRAM_LABEL = "Essential 55";
   const COURSE_WELCOME_VIDEO = {
     src: "Essential55_Welcome.mp4",
@@ -321,8 +337,8 @@
   }
 
   function weekForDate(value) {
-    const week = Math.floor((dayNumber(value || new Date()) - dayNumber(START_DATE)) / 7) + 1;
-    return week >= 1 && week <= WEEKS.length ? week : null;
+    const schedule = scheduleForDate(value);
+    return schedule ? schedule.week : null;
   }
 
   function byWeek(week) {
@@ -330,12 +346,52 @@
     return WEEKS.find(item => item.week === n) || null;
   }
 
+  function scheduleForDate(value) {
+    const elapsedWeeks = Math.floor((dayNumber(value || new Date()) - dayNumber(START_DATE)) / 7);
+    if (elapsedWeeks < 0) return null;
+    const cycleIndex = Math.min(Math.floor(elapsedWeeks / WEEKS.length), TENSE_CYCLES.length - 1);
+    const tenseCycle = TENSE_CYCLES[cycleIndex];
+    return {
+      absoluteWeek: elapsedWeeks + 1,
+      week: (elapsedWeeks % WEEKS.length) + 1,
+      pass: Math.floor(elapsedWeeks / WEEKS.length) + 1,
+      cycleId: tenseCycle.id,
+      cycleLabel: tenseCycle.label,
+      tenseKeys: [...tenseCycle.tenseKeys]
+    };
+  }
+
+  function applySchedule(challenge, schedule) {
+    if (!challenge) return null;
+    const activeSchedule = schedule || {
+      absoluteWeek: challenge.week,
+      week: challenge.week,
+      pass: 1,
+      cycleId: TENSE_CYCLES[0].id,
+      cycleLabel: TENSE_CYCLES[0].label,
+      tenseKeys: [...TENSE_CYCLES[0].tenseKeys]
+    };
+    return {
+      ...challenge,
+      absoluteWeek: activeSchedule.absoluteWeek,
+      pass: activeSchedule.pass,
+      cycleId: activeSchedule.cycleId,
+      cycleLabel: activeSchedule.cycleLabel,
+      tenseKeys: [...activeSchedule.tenseKeys]
+    };
+  }
+
   function current(value) {
-    return byWeek(weekForDate(value));
+    const schedule = scheduleForDate(value);
+    return schedule ? applySchedule(byWeek(schedule.week), schedule) : null;
   }
 
   function label(challenge) {
-    return challenge ? `${PROGRAM_LABEL} - Week ${challenge.week}` : "";
+    if (!challenge) return "";
+    const suffix = challenge.cycleId && challenge.cycleId !== "beginner"
+      ? ` (${challenge.cycleLabel})`
+      : "";
+    return `${PROGRAM_LABEL} - Week ${challenge.week}${suffix}`;
   }
 
   function sameSet(a, b) {
@@ -344,27 +400,45 @@
     return left.length === right.length && left.every((item, idx) => item === right[idx]);
   }
 
+  function tenseCycleForKeys(keys) {
+    return TENSE_CYCLES.find(cycle => sameSet(keys || [], cycle.tenseKeys)) || null;
+  }
+
   function sameTenses(keys) {
-    return sameSet(keys || [], DEFAULT_TENSE_KEYS);
+    return !!tenseCycleForKeys(keys);
   }
 
   function matchingChallenge(verbs, selectedKeys) {
-    if (!sameTenses(selectedKeys)) return null;
-    return WEEKS.find(challenge => sameSet(verbs, challenge.verbs)) || null;
+    const tenseCycle = tenseCycleForKeys(selectedKeys);
+    if (!tenseCycle) return null;
+    const challenge = WEEKS.find(item => sameSet(verbs, item.verbs)) || null;
+    return challenge ? applySchedule(challenge, {
+      absoluteWeek: challenge.week,
+      week: challenge.week,
+      pass: TENSE_CYCLES.findIndex(cycle => cycle.id === tenseCycle.id) + 1,
+      cycleId: tenseCycle.id,
+      cycleLabel: tenseCycle.label,
+      tenseKeys: [...tenseCycle.tenseKeys]
+    }) : null;
   }
 
   return {
     START_DATE,
     DEFAULT_TENSE_KEYS,
+    INTERMEDIATE_TENSE_KEYS,
+    ALL_TENSE_KEYS,
+    TENSE_CYCLES,
     PROGRAM_LABEL,
     WEEKS,
     normalizeText,
+    scheduleForDate,
     weekForDate,
     byWeek,
     current,
     label,
     sameSet,
     sameTenses,
+    tenseCycleForKeys,
     matchingChallenge
   };
 });
