@@ -5206,6 +5206,27 @@ function renderPracticeIntroTenseHelp(keys) {
   `;
 }
 
+function renderPracticeIntroVideo(intro) {
+  const video = intro?.video;
+  const src = typeof video === "string" ? video : video?.src;
+  if (!src) return "";
+  const title = typeof video === "object" ? video.title || "" : "";
+  return `
+    <div class="practiceIntroVideo">
+      <video
+        controls
+        playsinline
+        preload="metadata"
+        ${title ? `aria-label="${escapeHtml(title)}"` : ""}
+      >
+        <source src="${escapeHtml(src)}" type="video/mp4">
+        Your browser does not support embedded video.
+      </video>
+      ${title ? `<div class="practiceIntroVideoCaption">${escapeHtml(title)}</div>` : ""}
+    </div>
+  `;
+}
+
 function renderPracticeIntro(verbKey, selectedKeys, verbKeys = null) {
   const keys = practiceSelectionKeys(selectedKeys);
   const resolvedVerbKeys = Array.isArray(verbKeys) && verbKeys.length ? verbKeys : [verbKey];
@@ -5237,6 +5258,7 @@ function renderPracticeIntro(verbKey, selectedKeys, verbKeys = null) {
   const body = `
     <div class="practicePanel practiceIntroPanel">
       ${challenge?.focus ? `<div class="practiceIntroFocus">${escapeHtml(challenge.focus)}</div>` : ""}
+      ${renderPracticeIntroVideo(intro)}
       <div class="practiceIntroLead">${escapeHtml(intro.lead || "")}</div>
       ${watchItems ? `
         <div class="practiceSectionTitle">Before you start</div>
