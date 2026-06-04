@@ -30,6 +30,11 @@
     src: "Essential55_Welcome.mp4",
     title: "Essential 55 course welcome"
   };
+  const WEEK_1_PRONUNCIATION_AUDIO = {
+    type: "audio",
+    src: "Essential55-Week1%20Verb%20Pronunciation.mp3",
+    title: "Week 1 verb pronunciation"
+  };
   const WEEKS = [
     { week: 1, verbs: ["hablar", "comer", "vivir"], focus: "Simplest regular -ar, -er, -ir verbs" },
     { week: 2, verbs: ["cantar", "aprender", "escribir"], focus: "More regular verb confidence" },
@@ -66,6 +71,7 @@
   const INTRO_BY_WEEK = {
     1: {
       lead: "This opening week is your reference point for the whole course. Hablar, comer, and vivir show the three regular verb families in their simplest form, so treat them as patterns you will keep returning to rather than as three isolated verbs.",
+      audio: WEEK_1_PRONUNCIATION_AUDIO,
       watch: [
         "In the present, -er and -ir verbs are almost identical except nosotros and vosotros: comemos/coméis versus vivimos/vivís.",
         "In the preterite, the accent marks separate past-tense forms from present-tense lookalikes: hablé/habló, comí/comió, viví/vivió.",
@@ -312,14 +318,17 @@
       challenge.intro = null;
       return;
     }
-    const extraVideos = [
+    const extraMedia = [
+      ...(Array.isArray(intro.media) ? intro.media : []),
       ...(intro.video ? [intro.video] : []),
-      ...(Array.isArray(intro.videos) ? intro.videos : [])
+      ...(Array.isArray(intro.videos) ? intro.videos : []),
+      ...(intro.audio ? [intro.audio] : []),
+      ...(Array.isArray(intro.audios) ? intro.audios : [])
     ];
-    const { video, videos, ...introCopy } = intro;
+    const { video, videos, audio, audios, media, ...introCopy } = intro;
     challenge.intro = {
       ...introCopy,
-      videos: [COURSE_WELCOME_VIDEO, ...extraVideos]
+      media: [COURSE_WELCOME_VIDEO, ...extraMedia]
     };
   });
 

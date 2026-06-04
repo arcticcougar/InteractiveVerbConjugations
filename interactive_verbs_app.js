@@ -5239,37 +5239,61 @@ function renderPracticeIntroTenseHelp(keys) {
   `;
 }
 
-function normalizePracticeIntroVideos(intro) {
-  const source = Array.isArray(intro?.videos)
-    ? intro.videos
-    : (intro?.video ? [intro.video] : []);
+function normalizePracticeIntroMedia(intro) {
+  const source = Array.isArray(intro?.media)
+    ? intro.media
+    : [
+      ...(Array.isArray(intro?.videos) ? intro.videos : (intro?.video ? [intro.video] : [])),
+      ...(Array.isArray(intro?.audios) ? intro.audios : (intro?.audio ? [intro.audio] : []))
+    ];
   return source
-    .map(video => {
-      const src = typeof video === "string" ? video : video?.src;
+    .map(item => {
+      const src = typeof item === "string" ? item : item?.src;
       if (!src) return null;
+      const explicitType = typeof item === "object" ? String(item.type || item.kind || "").toLowerCase() : "";
+      const isAudio = explicitType === "audio" || /\.mp3(?:$|[?#])/i.test(src);
       return {
         src,
-        title: typeof video === "object" ? video.title || "" : ""
+        mediaType: isAudio ? "audio" : "video",
+        mime: typeof item === "object" && item.mime
+          ? item.mime
+          : (isAudio ? "audio/mpeg" : "video/mp4"),
+        title: typeof item === "object" ? item.title || "" : ""
       };
     })
     .filter(Boolean);
 }
 
-function renderPracticeIntroVideos(intro) {
-  const videos = normalizePracticeIntroVideos(intro);
-  if (!videos.length) return "";
-  return videos.map(video => {
-    const title = video.title || "";
-    const src = video.src || "";
+function renderPracticeIntroMediaItems(intro) {
+  const mediaItems = normalizePracticeIntroMedia(intro);
+  if (!mediaItems.length) return "";
+  return mediaItems.map(item => {
+    const title = item.title || "";
+    const src = item.src || "";
+    if (item.mediaType === "audio") {
+      return `
+        <div class="practiceIntroMedia practiceIntroAudio">
+          <audio
+            controls
+            preload="metadata"
+            ${title ? `aria-label="${escapeHtml(title)}"` : ""}
+          >
+            <source src="${escapeHtml(src)}" type="${escapeHtml(item.mime)}">
+            Your browser does not support embedded audio.
+          </audio>
+          ${title ? `<div class="practiceIntroVideoCaption">${escapeHtml(title)}</div>` : ""}
+        </div>
+      `;
+    }
     return `
-      <div class="practiceIntroVideo">
+      <div class="practiceIntroMedia practiceIntroVideo">
         <video
           controls
           playsinline
           preload="metadata"
           ${title ? `aria-label="${escapeHtml(title)}"` : ""}
         >
-          <source src="${escapeHtml(src)}" type="video/mp4">
+          <source src="${escapeHtml(src)}" type="${escapeHtml(item.mime)}">
           Your browser does not support embedded video.
         </video>
         ${title ? `<div class="practiceIntroVideoCaption">${escapeHtml(title)}</div>` : ""}
@@ -5279,11 +5303,11 @@ function renderPracticeIntroVideos(intro) {
 }
 
 function renderPracticeIntroVideo(intro) {
-  const videoHtml = renderPracticeIntroVideos(intro);
-  if (!videoHtml) return "";
+  const mediaHtml = renderPracticeIntroMediaItems(intro);
+  if (!mediaHtml) return "";
   return `
     <div class="practiceIntroVideoStack">
-      ${videoHtml}
+      ${mediaHtml}
     </div>
   `;
 }
