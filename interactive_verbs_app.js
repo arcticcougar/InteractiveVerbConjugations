@@ -5288,6 +5288,47 @@ function renderPracticeIntroVideo(intro) {
   `;
 }
 
+function renderPracticeIntroReview(verbs, selectedKeys) {
+  const rows = buildPracticeRows(verbs, selectedKeys);
+  if (!rows.length) return "";
+  const expectedByVerb = new Map(verbs.map(verb => [verb._key, getExpectedMap(verb) || {}]));
+  return `
+    <details class="practiceIntroReview">
+      <summary>Review this week's forms</summary>
+      <div
+        class="practiceIntroReviewGrid"
+        style="--practice-intro-review-count: ${Math.max(1, verbs.length)};"
+      >
+        ${verbs.map(verb => {
+          const expectedMap = expectedByVerb.get(verb._key) || {};
+          return `
+            <div class="practiceIntroReviewVerb">
+              <div class="practiceIntroReviewTitle">
+                <span>${escapeHtml(verb.infinitive)}</span>
+                <span class="pill">#${getDisplayVerbNumber(verb)}</span>
+              </div>
+              <div class="practiceIntroReviewRows">
+                ${rows.map(row => {
+                  if (row.type === "section") {
+                    return `<div class="practiceIntroReviewSection">${row.label}</div>`;
+                  }
+                  const expected = cleanText(expectedMap[row.cellKey] || "");
+                  return `
+                    <div class="practiceIntroReviewRow">
+                      <div class="practiceIntroReviewLabel">${escapeHtml(row.label)}</div>
+                      <div class="practiceIntroReviewValue">${expected ? escapeHtml(expected) : "-"}</div>
+                    </div>
+                  `;
+                }).join("")}
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </details>
+  `;
+}
+
 function renderPracticeIntro(verbKey, selectedKeys, verbKeys = null, options = {}) {
   const keys = practiceSelectionKeys(selectedKeys);
   const resolvedVerbKeys = Array.isArray(verbKeys) && verbKeys.length ? verbKeys : [verbKey];
@@ -5323,6 +5364,7 @@ function renderPracticeIntro(verbKey, selectedKeys, verbKeys = null, options = {
     <div class="practicePanel practiceIntroPanel">
       ${challenge?.focus ? `<div class="practiceIntroFocus">${escapeHtml(challenge.focus)}</div>` : ""}
       ${renderPracticeIntroVideo(intro)}
+      ${renderPracticeIntroReview(verbs, keys)}
       <div class="practiceIntroLead">${escapeHtml(intro.lead || "")}</div>
       ${watchItems ? `
         <div class="practiceSectionTitle">Before you start</div>

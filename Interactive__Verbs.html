@@ -2049,6 +2049,89 @@
     font-weight: 750;
     line-height: 1.2;
   }
+  .practiceIntroReview {
+    margin: 0 0 12px;
+    padding: 9px 0;
+    border-top: 1px solid var(--table-rule);
+    border-bottom: 1px solid var(--table-rule);
+  }
+  .practiceIntroReview summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    color: var(--note-subhead-color);
+    font-size: 12px;
+    font-weight: 850;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    cursor: pointer;
+    user-select: none;
+  }
+  .practiceIntroReview summary::-webkit-details-marker {
+    display: none;
+  }
+  .practiceIntroReview summary::before {
+    content: "+";
+    color: var(--section-color);
+    font-weight: 950;
+  }
+  .practiceIntroReview[open] summary::before {
+    content: "-";
+  }
+  .practiceIntroReviewGrid {
+    display: grid;
+    grid-template-columns: repeat(var(--practice-intro-review-count), minmax(170px, 1fr));
+    gap: 12px 16px;
+    margin-top: 10px;
+  }
+  .practiceIntroReviewVerb {
+    min-width: 0;
+    padding-left: 10px;
+    border-left: 1px solid var(--table-rule);
+  }
+  .practiceIntroReviewTitle {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    color: var(--big-color);
+    font-size: 15px;
+    font-weight: 900;
+    line-height: 1.1;
+  }
+  .practiceIntroReviewRows {
+    display: grid;
+    gap: 3px;
+  }
+  .practiceIntroReviewSection {
+    margin: 8px 0 3px;
+    color: var(--note-subhead-color);
+    font-size: 11px;
+    font-weight: 850;
+    line-height: 1.2;
+  }
+  .practiceIntroReviewRow {
+    display: grid;
+    grid-template-columns: minmax(62px, max-content) minmax(0, 1fr);
+    gap: 8px;
+    align-items: baseline;
+  }
+  .practiceIntroReviewLabel {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .practiceIntroReviewValue {
+    color: var(--subhead);
+    font-size: 13px;
+    font-weight: 750;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
   .practiceIntroList {
     display: grid;
     gap: 7px;
@@ -2107,6 +2190,7 @@
     .practiceColumns,
     .practiceNextControls,
     .practiceSlotControls,
+    .practiceIntroReviewGrid,
     .practiceIntroTenseRow,
     .practiceImperativeGrid {
       grid-template-columns: 1fr;
@@ -3083,7 +3167,7 @@ window.addEventListener("resize", () => {
 <script src="core_notes_overrides.js"></script>
 <script src="core_notes_manual_fixes.js"></script>
 <script src="practice-challenges.js?v=essential-55-schedule-1"></script>
-<script src="interactive_verbs_app.js?v=startup-intro-1"></script>
+<script src="interactive_verbs_app.js?v=intro-review-1"></script>
 </body>
 </html>
 
