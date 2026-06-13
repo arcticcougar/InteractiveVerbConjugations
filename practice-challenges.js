@@ -42,16 +42,16 @@
   };
   const WEEKS = [
     { week: 1, verbs: ["hablar", "comer", "vivir"], focus: "Simplest regular -ar, -er, -ir verbs" },
-    { week: 2, verbs: ["cantar", "aprender", "escribir"], focus: "More regular verb confidence" },
+    { week: 2, verbs: ["cantar", "aprender", "escribir"], focus: "Mostly regular verbs with escribir's irregular participle" },
     { week: 3, verbs: ["estudiar", "comprar", "tomar"], focus: "Common regular -ar verbs" },
-    { week: 4, verbs: ["trabajar", "beber", "abrir"], focus: "Another clean -ar, -er, -ir set" },
+    { week: 4, verbs: ["trabajar", "beber", "abrir"], focus: "Regular endings with abrir's irregular participle" },
     { week: 5, verbs: ["necesitar", "comprender", "recibir"], focus: "Useful classroom and communication verbs" },
     { week: 6, verbs: ["escuchar", "vender", "subir"], focus: "Regular verbs across the three endings" },
     { week: 7, verbs: ["ayudar", "responder", "decidir"], focus: "Sentence-building regular verbs" },
     { week: 8, verbs: ["esperar", "correr", "asistir"], focus: "Regular verbs with useful everyday meanings" },
     { week: 9, verbs: ["viajar", "sufrir", "acabar"], focus: "Mostly regular; introduces acabar de + infinitive" },
     { week: 10, verbs: ["entrar", "deber", "llevar"], focus: "Useful regular verbs and common expressions" },
-    { week: 11, verbs: ["limpiar", "romper", "cumplir"], focus: "Final regular-pattern consolidation week" },
+    { week: 11, verbs: ["limpiar", "romper", "cumplir"], focus: "Regular endings with romper's irregular participle" },
     { week: 12, verbs: ["llamar", "llamarse", "usar"], focus: "First reflexive/nonreflexive contrast" },
     { week: 13, verbs: ["mirar", "mirarse", "preparar"], focus: "Reflexive meaning contrast, kept manageable" },
     { week: 14, verbs: ["caer", "caerse", "traer"], focus: "Related difficult forms: caigo, traigo" },
@@ -84,10 +84,11 @@
       ]
     },
     2: {
-      lead: "This week asks you to prove that last week's patterns transfer to new verbs. Cantar, aprender, and escribir are still regular, so the skill is to recognize the family quickly and apply the ending without hesitation.",
+      lead: "This week asks you to prove that last week's patterns mostly transfer to new verbs. Cantar and aprender are regular, while escribir follows the regular -ir endings but has the irregular past participle escrito.",
       watch: [
         "Cantar follows hablar exactly; if a cantar form feels uncertain, mentally swap in hablar and then return to the new stem.",
-        "Aprender and escribir reinforce the -er/-ir split: most forms match, but nosotros and vosotros tell the families apart.",
+        "Aprender and escribir reinforce the -er/-ir split: most finite forms match, but nosotros and vosotros tell the families apart.",
+        "Escribir does not use the regular participle escribido; the form to learn is escrito.",
         "Use the infinitive ending as your first decision point, then keep the stem steady while the endings do the work."
       ]
     },
@@ -100,10 +101,11 @@
       ]
     },
     4: {
-      lead: "Trabajar, beber, and abrir bring the three regular families back together. This is a fluency week: you are training yourself to see a new regular verb and immediately know which endings belong to it.",
+      lead: "Trabajar, beber, and abrir bring the three ending families back together. The finite endings are still friendly, but abrir has an important irregular past participle: abierto.",
       watch: [
         "Trabajar has a longer stem, but it is still just trabaj- plus regular -ar endings.",
-        "Beber and abrir are a clean -er/-ir pair; compare bebo/bebemos with abro/abrimos.",
+        "Beber and abrir are useful for the -er/-ir contrast; compare bebo/bebemos with abro/abrimos.",
+        "Abrir does not use the regular participle abrido; use abierto.",
         "The future is your breather: trabajaré, beberé, and abriré all use the infinitive plus the same future endings."
       ]
     },
@@ -156,10 +158,11 @@
       ]
     },
     11: {
-      lead: "Limpiar, romper, and cumplir are your final regular-pattern consolidation week. By this point, a new regular verb should feel manageable even when the vocabulary itself is less familiar.",
+      lead: "Limpiar, romper, and cumplir are mostly regular-pattern consolidation, with one important exception: romper has the irregular past participle roto.",
       watch: [
         "Limpiar is regular despite the i in the stem; do not let the spelling distract you from the -ar pattern.",
-        "Romper is your -er anchor and cumplir is your -ir anchor.",
+        "Romper keeps regular finite endings here, but its participle is roto, not rompido.",
+        "Cumplir is your regular -ir anchor for this week.",
         "If you hesitate, pause for the sequence: infinitive ending, stem, tense, subject."
       ]
     },

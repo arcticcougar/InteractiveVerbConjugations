@@ -3538,7 +3538,7 @@ function buildRegularExpectedCellMap(verb) {
     }
     const source = modelMap[cellKey] || "";
     out[cellKey] = source
-      ? transformModelFormToTarget(source, model, verb).value
+      ? transformModelFormToTarget(source, model, verb, { useRegularParticiple: true }).value
       : "";
   });
   return out;
@@ -5346,6 +5346,7 @@ function renderPracticeIntroReview(verbs, selectedKeys) {
   const rows = buildPracticeRows(verbs, selectedKeys);
   if (!rows.length) return "";
   const expectedByVerb = new Map(verbs.map(verb => [verb._key, getExpectedMap(verb) || {}]));
+  const regularByVerb = new Map(verbs.map(verb => [verb._key, buildRegularComparisonMap(verb)]));
   return `
     <details class="practiceIntroReview">
       <summary>Review this week's forms</summary>
@@ -5367,10 +5368,11 @@ function renderPracticeIntroReview(verbs, selectedKeys) {
                     return `<div class="practiceIntroReviewSection">${row.label}</div>`;
                   }
                   const expected = cleanText(expectedMap[row.cellKey] || "");
+                  const regular = regularByVerb.get(verb._key)?.byCell?.[row.cellKey]?.regular || "";
                   return `
                     <div class="practiceIntroReviewRow">
                       <div class="practiceIntroReviewLabel">${escapeHtml(row.label)}</div>
-                      <div class="practiceIntroReviewValue">${expected ? escapeHtml(expected) : "-"}</div>
+                      <div class="practiceIntroReviewValue">${expected ? renderCellText(expected, regular) : "-"}</div>
                     </div>
                   `;
                 }).join("")}
@@ -7000,13 +7002,15 @@ function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function transformModelFormToTarget(modelForm, modelVerb, targetVerb) {
+function transformModelFormToTarget(modelForm, modelVerb, targetVerb, options = {}) {
   let out = modelForm || "";
   let changed = false;
   const modelParts = splitInfinitive(modelVerb.infinitive);
   const targetParts = splitInfinitive(targetVerb.infinitive);
   const modelPart = cleanText(modelVerb.past_participle || guessRegularParticiple(modelVerb.infinitive));
-  const targetPart = cleanText(targetVerb.past_participle || guessRegularParticiple(targetVerb.infinitive));
+  const targetPart = options.useRegularParticiple
+    ? guessRegularParticiple(targetVerb.infinitive)
+    : cleanText(targetVerb.past_participle || guessRegularParticiple(targetVerb.infinitive));
 
   function replaceWord(from, to) {
     if (!from || from === to) return;
@@ -7020,7 +7024,7 @@ function transformModelFormToTarget(modelForm, modelVerb, targetVerb) {
 
   replaceWord(modelVerb.infinitive.toLowerCase(), targetVerb.infinitive.toLowerCase());
   replaceWord(modelPart.toLowerCase(), targetPart.toLowerCase());
-  if (modelParts.stem && targetParts.stem && modelParts.stem !== targetParts.stem) {
+  if (!changed && modelParts.stem && targetParts.stem && modelParts.stem !== targetParts.stem) {
     const stemRx = new RegExp(`(^|[^\\p{L}])${escapeRegExp(modelParts.stem)}([\\p{L}]+)`, "giu");
     const next = out.replace(stemRx, (_, prefix, suffix) => `${prefix}${targetParts.stem}${suffix}`);
     if (next !== out) {

@@ -163,13 +163,23 @@ def regular_participle(infinitive: str) -> str:
     return parts["base"]
 
 
-def transform_model_form(model_form: str, model_verb: dict, target_verb: dict) -> str:
+def transform_model_form(
+    model_form: str,
+    model_verb: dict,
+    target_verb: dict,
+    *,
+    use_regular_participle: bool = False,
+) -> str:
     out = clean_text(model_form)
     changed = False
     model_parts = split_infinitive(model_verb["infinitive"])
     target_parts = split_infinitive(target_verb["infinitive"])
     model_part = clean_text(model_verb.get("past_participle")) or regular_participle(model_verb["infinitive"])
-    target_part = clean_text(target_verb.get("past_participle")) or regular_participle(target_verb["infinitive"])
+    target_part = (
+        regular_participle(target_verb["infinitive"])
+        if use_regular_participle
+        else clean_text(target_verb.get("past_participle")) or regular_participle(target_verb["infinitive"])
+    )
 
     def replace_word(source: str, replacement: str) -> None:
         nonlocal out, changed
@@ -183,7 +193,7 @@ def transform_model_form(model_form: str, model_verb: dict, target_verb: dict) -
     replace_word(model_verb["infinitive"].lower(), target_verb["infinitive"].lower())
     replace_word(model_part.lower(), target_part.lower())
 
-    if model_parts["stem"] and target_parts["stem"] and model_parts["stem"] != target_parts["stem"]:
+    if not changed and model_parts["stem"] and target_parts["stem"] and model_parts["stem"] != target_parts["stem"]:
         pattern = rf"(^|[^\w]){re.escape(model_parts['stem'])}(\w+)"
         next_value = re.sub(pattern, lambda m: f"{m.group(1)}{target_parts['stem']}{m.group(2)}", out, flags=re.IGNORECASE)
         if next_value != out:
@@ -215,7 +225,12 @@ def regular_expected_map(verb: dict, verbs_by_infinitive: dict[str, dict]) -> di
         return {}
     model_map = canonical_cell_map(model)
     return {
-        cell_key: transform_model_form(model_map.get(cell_key, ""), model, verb)
+        cell_key: transform_model_form(
+            model_map.get(cell_key, ""),
+            model,
+            verb,
+            use_regular_participle=True,
+        )
         for cell_key in canonical_cell_map(verb)
     }
 
