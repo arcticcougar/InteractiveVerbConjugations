@@ -6981,7 +6981,8 @@ function splitInfinitive(infinitive) {
   const raw = cleanText(infinitive).toLowerCase();
   const reflexive = raw.endsWith("se");
   const base = reflexive ? raw.slice(0, -2) : raw;
-  const ending = /(?:ar|er|ir)$/.test(base) ? base.slice(-2) : "";
+  const normalizedBase = base.normalize("NFD").replace(/\p{Diacritic}/gu, "");
+  const ending = /(?:ar|er|ir)$/.test(normalizedBase) ? normalizedBase.slice(-2) : "";
   const stem = ending ? base.slice(0, -2) : base;
   return { raw, reflexive, base, ending, stem };
 }

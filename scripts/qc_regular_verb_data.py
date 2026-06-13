@@ -66,10 +66,20 @@ def main() -> int:
     verbs_by_infinitive = {helpers.normalize(verb["infinitive"]): verb for verb in data}
 
     regular_mismatches: list[str] = []
+    pattern_ending_mismatches: list[str] = []
     malformed_participles: list[str] = []
 
     for verb in data:
         notes = [helpers.clean_text(item) for item in (verb.get("pattern_notes") or []) if helpers.clean_text(item)]
+        note_text = normalize(" ".join(notes))
+        parts = helpers.split_infinitive(verb["infinitive"])
+        mentioned_regular_endings = set(re.findall(r"\bregular\s+-(ar|er|ir)\b", note_text))
+        if parts["ending"] and mentioned_regular_endings and parts["ending"] not in mentioned_regular_endings:
+            pattern_ending_mismatches.append(
+                f"{verb['infinitive']}: infinitive is -{parts['ending']} but notes say "
+                f"{', '.join('-' + ending for ending in sorted(mentioned_regular_endings))}"
+            )
+
         participle = helpers.clean_text(verb.get("past_participle"))
         if ("(" in participle or ")" in participle) and verb.get("infinitive") != "su(b)scribir":
             malformed_participles.append(f"{verb['infinitive']}: {participle}")
@@ -90,14 +100,20 @@ def main() -> int:
     if regular_mismatches:
         print("Plain-regular verbs with non-regular stored forms:")
         print("\n".join(f"- {line}" for line in regular_mismatches))
+    if pattern_ending_mismatches:
+        print("Pattern notes with the wrong regular ending:")
+        print("\n".join(f"- {line}" for line in pattern_ending_mismatches))
     if malformed_participles:
         print("Participle answer fields containing explanatory parentheses:")
         print("\n".join(f"- {line}" for line in malformed_participles))
 
-    if regular_mismatches or malformed_participles:
+    if regular_mismatches or pattern_ending_mismatches or malformed_participles:
         return 1
 
-    print(f"OK: {data_path} has no plain-regular mismatches or malformed participle answer fields.")
+    print(
+        f"OK: {data_path} has no plain-regular mismatches, wrong regular-ending notes, "
+        "or malformed participle answer fields."
+    )
     return 0
 
 

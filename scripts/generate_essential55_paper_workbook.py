@@ -91,7 +91,8 @@ def split_infinitive(infinitive: str) -> dict:
     raw = clean_text(infinitive).lower()
     reflexive = raw.endswith("se")
     base = raw[:-2] if reflexive else raw
-    ending = base[-2:] if re.search(r"(ar|er|ir)$", base) else ""
+    normalized_base = normalize(base)
+    ending = normalized_base[-2:] if re.search(r"(ar|er|ir)$", normalized_base) else ""
     stem = base[:-2] if ending else base
     return {"raw": raw, "reflexive": reflexive, "base": base, "ending": ending, "stem": stem}
 
