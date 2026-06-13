@@ -3704,8 +3704,15 @@ function formatPatternLabel(noteText) {
   const hasRegular = /\bregular\b/i.test(note);
   const hasIrregular = /\birregular\b/i.test(note);
   const hasSpelling = /spelling change/i.test(note);
+  const hasStem = /stem change/i.test(note);
+  const hasParticiple = /participle|part\.\s*pas/i.test(note);
 
-  if (hasRegular && ending && !hasSpelling && !hasIrregular) return ending;
+  if (hasIrregular && ending && hasParticiple) return `${ending} (irregular participle)`;
+  if (hasIrregular && ending) return `${ending} irregular`;
+  if (hasIrregular) return "irregular";
+  if (hasRegular && ending && !hasSpelling && !hasStem) return ending;
+  if (hasRegular && ending && hasStem && hasSpelling) return `${ending} (stem + spelling change)`;
+  if (hasRegular && ending && hasStem) return `${ending} (stem change)`;
   if (hasRegular && ending && hasSpelling) {
     const tail = cleanText((note.split(":").slice(1).join(":") || "").trim());
     if (!tail) return `${ending} (spelling change)`;
@@ -3715,19 +3722,24 @@ function formatPatternLabel(noteText) {
       .trim();
     return `${ending} (${conciseTail})`;
   }
-  if (hasIrregular && ending) return `${ending} irregular`;
-  if (hasIrregular) return "irregular";
   if (hasRegular && ending) return ending;
   return note;
 }
 
+function getPatternNoteSearchText(verb) {
+  return normalize(getPatternNotesForDisplay(verb).join(" "));
+}
+
+function getPatternLabelForVerb(verb) {
+  return formatPatternLabel(getPatternNotesForDisplay(verb).join("; "));
+}
+
 function inferPatternCategory(verb) {
-  const notes = getPatternNotesForDisplay(verb);
-  const primary = normalize(notes[0] || "");
-  if (primary.includes("irregular")) return "irregular";
-  if (primary.includes("regular") && primary.includes("-ar")) return "regular-ar";
-  if (primary.includes("regular") && primary.includes("-er")) return "regular-er";
-  if (primary.includes("regular") && primary.includes("-ir")) return "regular-ir";
+  const noteText = getPatternNoteSearchText(verb);
+  if (noteText.includes("irregular")) return "irregular";
+  if (noteText.includes("regular") && noteText.includes("-ar")) return "regular-ar";
+  if (noteText.includes("regular") && noteText.includes("-er")) return "regular-er";
+  if (noteText.includes("regular") && noteText.includes("-ir")) return "regular-ir";
   return "other";
 }
 
@@ -3920,7 +3932,7 @@ function renderList(filterText) {
     if (v._key === CURRENT_VERB_KEY) selectedVisible = true;
     const meaningInfo = splitMeaningAndCaution(v.meaning_en || "");
     const tags = getVerbTags(v);
-    const patternLabel = formatPatternLabel((getPatternNotesForDisplay(v)[0]) || "");
+    const patternLabel = getPatternLabelForVerb(v);
     const patternPill = patternLabel ? `<div class="pill typePill">${escapeHtml(patternLabel)}</div>` : "";
     btn.innerHTML = `
       <div class="verbTop">
