@@ -5047,7 +5047,7 @@
           "adelanta"
         ],
         "plural": [
-          "adlenatamos",
+          "adelantamos",
           "adelantáis",
           "adelantan"
         ]
@@ -6064,7 +6064,7 @@
         "singular": [
           "adoptaba",
           "adoptabas",
-          "adaptaba"
+          "adoptaba"
         ],
         "plural": [
           "adoptábamos",
@@ -6933,7 +6933,7 @@
         "plural": [
           "nos afeitáramos / nos afeitásemos",
           "os afeitarais / os afeitaseis",
-          "se afeitaran / se afeitase"
+          "se afeitaran / se afeitasen"
         ]
       }
     },
@@ -12364,7 +12364,7 @@
         "singular": [
           "apreciara / apreciase",
           "apreciaras / apreciases",
-          "apeciara / apreciase"
+          "apreciara / apreciase"
         ],
         "plural": [
           "apreciáramos / apreciásemos",
@@ -13739,7 +13739,7 @@
         ],
         "plural": [
           "arreglaremos",
-          "arrelgaréis",
+          "arreglaréis",
           "arreglarán"
         ]
       },
@@ -14160,7 +14160,7 @@
           "articularía"
         ],
         "plural": [
-          "artricularíamos",
+          "articularíamos",
           "articularíais",
           "articularían"
         ]
@@ -17360,7 +17360,7 @@
       "3 pretérito": {
         "singular": [
           "balbuceé",
-          "babluceaste",
+          "balbuceaste",
           "balbuceó"
         ],
         "plural": [
@@ -17378,7 +17378,7 @@
         "plural": [
           "balbucearemos",
           "balbucearéis",
-          "balbucerán"
+          "balbucearán"
         ]
       },
       "5 potencial simple": {
@@ -18333,9 +18333,9 @@
     "infinitive": "bendecir",
     "meaning_en": "to bless, to consecrate",
     "gerund": "bendiciendo",
-    "past_participle": "bendecido (bendito,",
+    "past_participle": "bendecido",
     "pattern_notes": [
-      "when used as an adj. with estar)",
+      "Bendito is used as an adjective with estar.",
       "Irregular verb"
     ],
     "simple": {
@@ -22958,8 +22958,8 @@
       "1 presente de indicativo": {
         "singular": [
           "cepillo",
-          "capillas",
-          "capilla"
+          "cepillas",
+          "cepilla"
         ],
         "plural": [
           "cepillamos",
@@ -32422,12 +32422,12 @@
         "singular": [
           "declarara / declarase",
           "declararas / declarases",
-          "declarara"
+          "declarara / declarase"
         ],
         "plural": [
           "declaráramos / declarásemos",
           "declararais / declaraseis",
-          "declararan"
+          "declararan / declarasen"
         ]
       }
     },
@@ -39084,10 +39084,10 @@
         "singular": [
           "me divorciaré",
           "te divorciarás",
-          "se divoricará"
+          "se divorciará"
         ],
         "plural": [
-          "nso divorciaremos",
+          "nos divorciaremos",
           "os divorciaréis",
           "se divorciarán"
         ]
@@ -39096,7 +39096,7 @@
         "singular": [
           "me divorciaría",
           "te divorciarías",
-          "se divoricaría"
+          "se divorciaría"
         ],
         "plural": [
           "nos divorciaríamos",
@@ -40902,7 +40902,7 @@
       "2 imperfecto de indicativo": {
         "singular": [
           "embebía",
-          "embebía",
+          "embebías",
           "embebía"
         ],
         "plural": [
@@ -46341,7 +46341,7 @@
         ],
         "plural": [
           "estimábamos",
-          "estmabais",
+          "estimabais",
           "estimaban"
         ]
       },
@@ -47946,7 +47946,7 @@
         "singular": [
           "festejaba",
           "festejabas",
-          "fetsejaba"
+          "festejaba"
         ],
         "plural": [
           "festejábamos",
@@ -47961,7 +47961,7 @@
           "festejó"
         ],
         "plural": [
-          "fetejamos",
+          "festejamos",
           "festejasteis",
           "festejaron"
         ]
@@ -49833,7 +49833,7 @@
         ],
         "plural": [
           "funcionáramos / funcionásemos",
-          "funcionarais / funionaseis",
+          "funcionarais / funcionaseis",
           "funcionaran / funcionasen"
         ]
       }
@@ -53233,8 +53233,8 @@
       },
       "5 potencial simple": {
         "singular": [
-          "ignoararía",
-          "ignoararías",
+          "ignoraría",
+          "ignorarías",
           "ignoraría"
         ],
         "plural": [
@@ -53588,7 +53588,7 @@
     "gerund": "imprimiendo",
     "past_participle": "impreso",
     "pattern_notes": [
-      "Regular -ir verb"
+      "Regular -ir verb with double participle: regular imprimido / irregular impreso"
     ],
     "simple": {
       "1 presente de indicativo": {
@@ -53791,10 +53791,11 @@
     "infinitive": "incluir",
     "meaning_en": "to include, to enclose",
     "gerund": "incluyendo",
-    "past_participle": "incluido (incluso, when used as an adj.)",
+    "past_participle": "incluido",
     "pattern_notes": [
       "Regular -ir verb endings with",
-      "spelling change: add y before a, e, or o"
+      "spelling change: add y before a, e, or o",
+      "Incluso is used as an adjective."
     ],
     "simple": {
       "1 presente de indicativo": {
@@ -55012,8 +55013,8 @@
     "gerund": "inscribiendo",
     "past_participle": "inscrito",
     "pattern_notes": [
-      "(inscripto, as an adj.)",
-      "Regular -ir verb"
+      "Regular -ir verb with irregular past participle: inscrito",
+      "Inscripto is a regional alternate participle."
     ],
     "simple": {
       "1 presente de indicativo": {
@@ -55215,7 +55216,8 @@
     "gerund": "inscribiéndose",
     "past_participle": "inscrito",
     "pattern_notes": [
-      "Reflexive regular -ir verb"
+      "Reflexive regular -ir verb with irregular past participle: inscrito",
+      "Inscripto is a regional alternate participle."
     ],
     "simple": {
       "1 presente de indicativo": {
@@ -57687,7 +57689,7 @@
           "se lastimaría"
         ],
         "plural": [
-          "nos lastimaría mos",
+          "nos lastimaríamos",
           "os lastimaríais",
           "se lastimarían"
         ]
@@ -58916,7 +58918,7 @@
           "limpiara / limpiase"
         ],
         "plural": [
-          "limiáramos / limpiásemos",
+          "limpiáramos / limpiásemos",
           "limpiarais / limpiaseis",
           "limpiaran / limpiasen"
         ]
@@ -60635,9 +60637,9 @@
     "infinitive": "maldecir",
     "meaning_en": "to curse",
     "gerund": "maldiciendo",
-    "past_participle": "maldecido (maldito, when",
+    "past_participle": "maldecido",
     "pattern_notes": [
-      "used as an adj. with estar)",
+      "Maldito is used as an adjective with estar.",
       "Irregular verb"
     ],
     "simple": {
@@ -64762,7 +64764,7 @@
       },
       "7 imperfecto de subjuntivo": {
         "singular": [
-          "me mudara / me mudasen",
+          "me mudara / me mudase",
           "te mudaras / te mudases",
           "se mudara / se mudase"
         ],
@@ -66127,7 +66129,7 @@
         "singular": [
           "observaba",
           "observabas",
-          "osbervaba"
+          "observaba"
         ],
         "plural": [
           "observábamos",
@@ -76468,7 +76470,7 @@
         ],
         "plural": [
           "proclamáramos / proclamásemos",
-          "proclamaras / proclamaseis",
+          "proclamarais / proclamaseis",
           "proclamaran / proclamasen"
         ]
       }
@@ -79288,7 +79290,7 @@
         "plural": [
           "recibiéramos / recibiésemos",
           "recibierais / recibieseis",
-          "recibiera n / recibiesen"
+          "recibieran / recibiesen"
         ]
       }
     },
@@ -81078,7 +81080,7 @@
           "regresará"
         ],
         "plural": [
-          "regesaremos",
+          "regresaremos",
           "regresaréis",
           "regresarán"
         ]
@@ -81110,7 +81112,7 @@
       "7 imperfecto de subjuntivo": {
         "singular": [
           "regresara / regresase",
-          "regresaras / regreases",
+          "regresaras / regresases",
           "regresara / regresase"
         ],
         "plural": [
@@ -81875,7 +81877,7 @@
       "3 pretérito": {
         "singular": [
           "remití",
-          "remitise",
+          "remitiste",
           "remitió"
         ],
         "plural": [
@@ -82326,9 +82328,9 @@
       },
       "7 imperfecto de subjuntivo": {
         "singular": [
-          "reparara / reparse",
+          "reparara / reparase",
           "repararas / reparases",
-          "reparara / reparse"
+          "reparara / reparase"
         ],
         "plural": [
           "reparáramos / reparásemos",
@@ -88708,7 +88710,7 @@
       "2 imperfecto de indicativo": {
         "singular": [
           "socorría",
-          "soccorrías",
+          "socorrías",
           "socorría"
         ],
         "plural": [
@@ -92337,9 +92339,10 @@
     "infinitive": "suprimir",
     "meaning_en": "to suppress, to abolish, to cancel (in mathematics), to eliminate, to delete",
     "gerund": "suprimiendo",
-    "past_participle": "suprimido (supreso, as an adj.)",
+    "past_participle": "suprimido",
     "pattern_notes": [
-      "Regular -ir verb"
+      "Regular -ir verb",
+      "Supreso is an older adjective form; current RAE usage lists suprimido as the participle."
     ],
     "simple": {
       "1 presente de indicativo": {
@@ -92349,7 +92352,7 @@
           "suprime"
         ],
         "plural": [
-          "suprimios",
+          "suprimimos",
           "suprimís",
           "suprimen"
         ]

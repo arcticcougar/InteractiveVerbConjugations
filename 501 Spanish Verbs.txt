@@ -9741,7 +9741,7 @@ Singular Plural
 
 1 presente de indicativo
 
-adelanto adlenatamos
+adelanto adelantamos
 
 adelantas adelantáis
 
@@ -10915,7 +10915,7 @@ adoptaba adoptábamos
 
 adoptabas adoptabais
 
-adaptaba adoptaban
+adoptaba adoptaban
 
 
 
@@ -11902,7 +11902,7 @@ me afeitase nos afeitásemos
 
 te afeitases os afeitaseis
 
-se afeitase se afeitase
+se afeitase se afeitasen
 
 
 
@@ -18219,7 +18219,7 @@ apreciara apreciáramos
 
 apreciaras apreciarais
 
-apeciara apreciaran
+apreciara apreciaran
 
 OR
 
@@ -19885,7 +19885,7 @@ arregló arreglaron
 
 arreglaré arreglaremos
 
-arreglarás arrelgaréis
+arreglarás arreglaréis
 
 arreglará arreglarán
 
@@ -20364,7 +20364,7 @@ articulará articularán
 
 5 potencial simple
 
-articularía artricularíamos
+articularía articularíamos
 
 articularías articularíais
 
@@ -24051,7 +24051,7 @@ balbuceaba balbuceaban
 
 balbuceé balbuceamos
 
-babluceaste balbuceasteis
+balbuceaste balbuceasteis
 
 balbuceó balbucearon
 
@@ -24064,7 +24064,7 @@ balbucearé balbucearemos
 
 balbucearás balbucearéis
 
-balbuceará balbucerán
+balbuceará balbucearán
 
 
 
@@ -25166,11 +25166,11 @@ Syn.: tomar (una bebida) to take a drink, to drink
 bendecir (92)
 
 
-Part. pas. bendecido (bendito,
+Part. pas. bendecido
 
 Gerundio bendiciendo
 
-when used as an adj. with estar)
+Bendito is used as an adjective with estar.
 
 Irregular verb
 
@@ -30714,9 +30714,9 @@ Singular Plural
 
 cepillo cepillamos
 
-capillas cepilláis
+cepillas cepilláis
 
-capilla cepillan
+cepilla cepillan
 
 
 
@@ -42976,6 +42976,8 @@ declarase declarásemos
 
 declarases declaraseis
 
+declarase declarasen
+
 
 
 The Seven Compound Tenses
@@ -50596,11 +50598,11 @@ se divorció se divorciaron
 
 4 futuro
 
-me divorciaré nso divorciaremos
+me divorciaré nos divorciaremos
 
 te divorciarás os divorciaréis
 
-se divoricará se divorciarán
+se divorciará se divorciarán
 
 
 
@@ -50611,7 +50613,7 @@ me divorciaría nos divorciaríamos
 
 te divorciarías os divorciaríais
 
-se divoricaría se divorciarían
+se divorciaría se divorciarían
 
 
 
@@ -52779,7 +52781,7 @@ embebe embeben
 
 embebía embebíamos
 
-embebía embebíais
+embebías embebíais
 
 embebía embebían
 
@@ -59401,7 +59403,7 @@ estima estiman
 
 estimaba estimábamos
 
-estimabas estmabais
+estimabas estimabais
 
 estimaba estimaban
 
@@ -61315,14 +61317,14 @@ festejaba festejábamos
 
 festejabas festejabais
 
-fetsejaba festejaban
+festejaba festejaban
 
 
 
 
 3 pretérito
 
-festejé fetejamos
+festejé festejamos
 
 festejaste festejasteis
 
@@ -63477,7 +63479,7 @@ OR
 
 funcionase funcionásemos
 
-funcionases funionaseis
+funcionases funcionaseis
 
 funcionase funcionasen
 
@@ -67835,9 +67837,9 @@ ignorará ignorarán
 
 5 potencial simple
 
-ignoararía ignoraríamos
+ignoraría ignoraríamos
 
-ignoararías ignoraríais
+ignorarías ignoraríais
 
 ignoraría ignorarían
 
@@ -68235,7 +68237,7 @@ Part. pas. impreso
 
 Gerundio imprimiendo
 
-Regular -ir verb
+Regular -ir verb with double participle: regular imprimido / irregular impreso
 
 
 
@@ -68464,7 +68466,9 @@ incluir (268)
 
 Gerundio incluyendo
 
-Part. pas. incluido (incluso, when used as an adj.)
+Part. pas. incluido
+
+Incluso is used as an adjective.
 
 Regular -ir verb endings with
 
@@ -69868,9 +69872,9 @@ Gerundio inscribiendo
 
 Part. pas. inscrito
 
-(inscripto, as an adj.)
+Inscripto is a regional alternate participle.
 
-Regular -ir verb
+Regular -ir verb with irregular past participle: inscrito
 
 
 
@@ -70107,7 +70111,7 @@ Part. pas. inscrito
 
 Gerundio inscribiéndose
 
-Reflexive regular -ir verb
+Reflexive regular -ir verb with irregular past participle: inscrito
 
 
 
@@ -73045,7 +73049,7 @@ se lastimará se lastimarán
 
 5 potencial simple
 
-me lastimaría nos lastimaría mos
+me lastimaría nos lastimaríamos
 
 te lastimarías os lastimaríais
 
@@ -74541,7 +74545,7 @@ limpie limpien
 
 7 imperfecto de subjuntivo
 
-limpiara limiáramos
+limpiara limpiáramos
 
 limpiaras limpiarais
 
@@ -76692,9 +76696,9 @@ maldecir (302)
 
 Gerundio maldiciendo
 
-Part. pas. maldecido (maldito, when
+Part. pas. maldecido
 
-used as an adj. with estar)
+Maldito is used as an adjective with estar.
 
 Irregular verb
 
@@ -81569,7 +81573,7 @@ OR
 
 
 
-me mudasen nos mudásemos
+me mudase nos mudásemos
 
 te mudases os mudaseis
 
@@ -83159,7 +83163,7 @@ observaba observábamos
 
 observabas observabais
 
-osbervaba observaban
+observaba observaban
 
 
 
@@ -95870,7 +95874,7 @@ proclame proclamen
 
 proclamara proclamáramos
 
-proclamaras proclamaras
+proclamaras proclamarais
 
 proclamara proclamaran
 
@@ -99317,7 +99321,7 @@ recibiera recibiéramos
 
 recibieras recibierais
 
-recibiera recibiera n
+recibiera recibieran
 
 OR
 
@@ -101407,7 +101411,7 @@ regresó regresaron
 
 4 futuro
 
-regresaré regesaremos
+regresaré regresaremos
 
 regresarás regresaréis
 
@@ -101452,7 +101456,7 @@ OR
 
 regresase regresásemos
 
-regreases regresaseis
+regresases regresaseis
 
 regresase regresasen
 
@@ -102344,7 +102348,7 @@ remitía remitían
 
 remití remitimos
 
-remitise remitisteis
+remitiste remitisteis
 
 remitió remitieron
 
@@ -102860,11 +102864,11 @@ OR
 
 
 
-reparse reparásemos
+reparase reparásemos
 
 reparases reparaseis
 
-reparse reparasen
+reparase reparasen
 
 
 
@@ -110804,7 +110808,7 @@ socorre socorren
 
 socorría socorríamos
 
-soccorrías socorríais
+socorrías socorríais
 
 socorría socorrían
 
@@ -114993,7 +114997,9 @@ suprimir (459)
 
 Gerundio suprimiendo
 
-Part. pas. suprimido (supreso, as an adj.)
+Part. pas. suprimido
+
+Supreso is an older adjective form; current RAE usage lists suprimido as the participle.
 
 Regular -ir verb
 
@@ -115019,7 +115025,7 @@ Singular Plural
 
 1 presente de indicativo
 
-suprimo suprimios
+suprimo suprimimos
 
 suprimes suprimís
 
