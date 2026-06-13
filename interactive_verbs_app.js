@@ -5312,6 +5312,36 @@ function renderPracticeIntroVideo(intro) {
   `;
 }
 
+function normalizePracticeIntroDownloads(intro) {
+  const source = Array.isArray(intro?.downloads) ? intro.downloads : [];
+  return source
+    .map(item => {
+      const href = typeof item === "string" ? item : item?.href;
+      if (!href) return null;
+      return {
+        href,
+        title: typeof item === "object" ? item.title || "Download" : "Download",
+        detail: typeof item === "object" ? item.detail || "" : ""
+      };
+    })
+    .filter(Boolean);
+}
+
+function renderPracticeIntroDownloads(intro) {
+  const downloads = normalizePracticeIntroDownloads(intro);
+  if (!downloads.length) return "";
+  return `
+    <div class="practiceIntroDownloads">
+      ${downloads.map(item => `
+        <a class="practiceIntroDownloadLink" href="${escapeHtml(item.href)}" download>
+          <span>${escapeHtml(item.title)}</span>
+          ${item.detail ? `<small>${escapeHtml(item.detail)}</small>` : ""}
+        </a>
+      `).join("")}
+    </div>
+  `;
+}
+
 function renderPracticeIntroReview(verbs, selectedKeys) {
   const rows = buildPracticeRows(verbs, selectedKeys);
   if (!rows.length) return "";
@@ -5388,6 +5418,7 @@ function renderPracticeIntro(verbKey, selectedKeys, verbKeys = null, options = {
     <div class="practicePanel practiceIntroPanel">
       ${challenge?.focus ? `<div class="practiceIntroFocus">${escapeHtml(challenge.focus)}</div>` : ""}
       ${renderPracticeIntroVideo(intro)}
+      ${renderPracticeIntroDownloads(intro)}
       ${renderPracticeIntroReview(verbs, keys)}
       <div class="practiceIntroLead">${escapeHtml(intro.lead || "")}</div>
       ${watchItems ? `

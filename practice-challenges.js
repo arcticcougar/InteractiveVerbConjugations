@@ -30,6 +30,11 @@
     src: "Essential55_Welcome.mp4",
     title: "Essential 55 course welcome"
   };
+  const COURSE_PAPER_WORKBOOK = {
+    href: "Essential55_Paper_Practice_Workbook.xlsx",
+    title: "Download paper practice workbook",
+    detail: "30 printable weekly sheets"
+  };
   const WEEK_1_PRONUNCIATION_AUDIO = {
     type: "audio",
     src: "Essential55-Week1%20Verb%20Pronunciation.mp3",
@@ -325,10 +330,14 @@
       ...(intro.audio ? [intro.audio] : []),
       ...(Array.isArray(intro.audios) ? intro.audios : [])
     ];
-    const { video, videos, audio, audios, media, ...introCopy } = intro;
+    const { video, videos, audio, audios, media, downloads, ...introCopy } = intro;
     challenge.intro = {
       ...introCopy,
-      media: [COURSE_WELCOME_VIDEO, ...extraMedia]
+      media: [COURSE_WELCOME_VIDEO, ...extraMedia],
+      downloads: [
+        COURSE_PAPER_WORKBOOK,
+        ...(Array.isArray(intro.downloads) ? intro.downloads : [])
+      ]
     };
   });
 
