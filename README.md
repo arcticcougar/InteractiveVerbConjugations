@@ -30,7 +30,7 @@ The current production deployment is hosted from this repo via Vercel.
 - Optional model-verb linkage for custom verbs.
 - Model-based answer-key generation for custom verbs.
 - Finalize flow for custom verbs (locks and queues for review, does not mutate canonical core data).
-- Weekly Essential 55 challenge presets.
+- Weekly Essential 55 challenge presets, with a setup picker for revisiting missed weeks.
 - Combined online leaderboard with filters for player, verbs, tenses, and challenge week.
 
 ## Practice Input
@@ -38,6 +38,7 @@ The current production deployment is hosted from this repo via Vercel.
 The old global `Ctrl+Shift` learner shortcuts have been retired so practice runs are driven by visible buttons and setup controls.
 
 - Double-space, Enter, or Tab moves through practice answer boxes.
+- The scheduled Essential 55 week opens by default; use the challenge week picker in setup to practise an earlier week.
 - Practice scoring normalizes an initial capital letter before checking an answer.
 - Accent/diacritic differences are scored separately from fully wrong answers.
 - `Ctrl/Cmd+Shift+A/E/I/O/U` inserts `á/é/í/ó/ú` while editing.

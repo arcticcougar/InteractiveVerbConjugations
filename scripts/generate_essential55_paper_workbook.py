@@ -391,11 +391,18 @@ def main() -> None:
     if missing:
         raise SystemExit("Missing weekly verbs:\n" + "\n".join(missing))
 
-    wb = load_workbook(TEMPLATE_PATH)
+    source_path = TEMPLATE_PATH if TEMPLATE_PATH.exists() else OUTPUT_PATH
+    if not source_path.exists():
+        raise SystemExit(f"Missing workbook template: {TEMPLATE_PATH.name}")
+
+    wb = load_workbook(source_path)
     template = wb.active
-    sheets = [template]
+    sheets = list(wb.worksheets)
     while len(sheets) < len(data["weeks"]):
         sheets.append(wb.copy_worksheet(template))
+    for ws in sheets[len(data["weeks"]):]:
+        wb.remove(ws)
+    sheets = sheets[:len(data["weeks"])]
 
     for ws, week in zip(sheets, data["weeks"]):
         fill_week_sheet(ws, week, verbs_by_infinitive)

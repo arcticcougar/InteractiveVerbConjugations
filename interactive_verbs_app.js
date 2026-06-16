@@ -2110,6 +2110,7 @@ let PRACTICE_STATE = {
   nextTagFilter: "all",
   tabOrder: "column",
   setupSkipsIntro: false,
+  challengeWeekOverride: "",
   playerName: loadPracticePlayerName(),
   startedAtMs: 0,
   submittedAtMs: 0,
@@ -5107,6 +5108,25 @@ function getPracticeChallengeByWeek(week) {
   return PRACTICE_CHALLENGE_PROGRAM?.byWeek ? PRACTICE_CHALLENGE_PROGRAM.byWeek(week) : null;
 }
 
+function getPracticeChallengeForWeek(week) {
+  const n = Number(week) || 0;
+  if (!n) return null;
+  if (PRACTICE_CHALLENGE_PROGRAM?.forWeek) {
+    return PRACTICE_CHALLENGE_PROGRAM.forWeek(n, new Date());
+  }
+  return getPracticeChallengeByWeek(n);
+}
+
+function getSelectedPracticeChallenge() {
+  const overrideWeek = Number(PRACTICE_STATE.challengeWeekOverride) || 0;
+  const overrideChallenge = overrideWeek ? getPracticeChallengeForWeek(overrideWeek) : null;
+  return overrideChallenge || getCurrentPracticeChallenge() || getPracticeChallengeForWeek(1);
+}
+
+function resetPracticeChallengeWeekDefault() {
+  PRACTICE_STATE.challengeWeekOverride = "";
+}
+
 function getPracticeChallengeLabel(challenge) {
   return PRACTICE_CHALLENGE_PROGRAM?.label ? PRACTICE_CHALLENGE_PROGRAM.label(challenge) : "";
 }
@@ -5124,7 +5144,7 @@ function sameStringSet(left, right) {
 }
 
 function isCurrentChallengeDefaultSelection(verbKeys, selectedKeys) {
-  const challenge = getCurrentPracticeChallenge();
+  const challenge = getSelectedPracticeChallenge();
   const currentVerbKeys = resolveChallengeVerbKeys(challenge);
   if (!challenge || currentVerbKeys.length !== 3) return false;
   return (
@@ -5157,13 +5177,31 @@ function getPracticeChallengeForVerbs(verbs, selectedKeys = null) {
 }
 
 function applyCurrentPracticeChallengeDefault() {
-  const challenge = getCurrentPracticeChallenge();
+  const challenge = getSelectedPracticeChallenge();
   const verbKeys = resolveChallengeVerbKeys(challenge);
   if (!challenge || verbKeys.length !== 3) return null;
   setPracticeSlotsFromVerbKeys(verbKeys);
   PRACTICE_STATE.selectedKeys = getPracticeChallengeTenseKeys(challenge);
   PRACTICE_STATE.verbKeys = verbKeys;
   return { challenge, verbKeys };
+}
+
+function renderPracticeChallengeWeekSelector(selectedChallenge) {
+  const weeks = PRACTICE_CHALLENGE_PROGRAM?.WEEKS || [];
+  if (!weeks.length) return "";
+  const selectedWeek = String(selectedChallenge?.week || "");
+  const currentWeek = String(getCurrentPracticeChallenge()?.week || "");
+  const options = weeks.map(challenge => {
+    const verbs = (challenge.verbs || []).join(" / ");
+    const currentNote = currentWeek && String(challenge.week) === currentWeek ? " (current)" : "";
+    return `<option value="${escapeHtml(String(challenge.week))}" ${String(challenge.week) === selectedWeek ? "selected" : ""}>Week ${escapeHtml(String(challenge.week))}: ${escapeHtml(verbs)}${escapeHtml(currentNote)}</option>`;
+  }).join("");
+  return `
+    <label class="practiceChallengeWeekPicker">
+      <span>Challenge week</span>
+      <select data-practice-challenge-week>${options}</select>
+    </label>
+  `;
 }
 
 function renderPracticeChallengeSetupPanel(challenge) {
@@ -5174,6 +5212,7 @@ function renderPracticeChallengeSetupPanel(challenge) {
   return `
     <div class="practicePanel practiceChallengePanel">
       <div class="practiceSectionTitle">${escapeHtml(getPracticeChallengeLabel(challenge))}</div>
+      ${renderPracticeChallengeWeekSelector(challenge)}
       <div class="practiceChallengeFocus">${escapeHtml(challenge.focus || "")}</div>
       ${cycleNote}
     </div>
@@ -6668,6 +6707,7 @@ function resetPracticeSession() {
   PRACTICE_STATE.onlineScoreMessage = "";
   PRACTICE_STATE.onlineLeaderboard = null;
   PRACTICE_STATE.onlineAttemptId = "";
+  resetPracticeChallengeWeekDefault();
   renderPracticeSetup(PRACTICE_STATE.verbKey || CURRENT_VERB_KEY, { useCurrentChallengeDefault: true });
 }
 
@@ -6687,6 +6727,12 @@ function bindPracticeModalInteractions() {
   };
   modal.querySelectorAll("[data-practice-close]").forEach(btn => {
     btn.addEventListener("click", hidePracticeModal);
+  });
+  modal.querySelector("[data-practice-challenge-week]")?.addEventListener("change", (e) => {
+    const week = Number(e.currentTarget.value) || 0;
+    PRACTICE_STATE.challengeWeekOverride = week ? String(week) : "";
+    PRACTICE_STATE.setupSkipsIntro = false;
+    renderPracticeSetup(PRACTICE_STATE.verbKey || CURRENT_VERB_KEY, { useCurrentChallengeDefault: true });
   });
   modal.querySelector("[data-practice-start]")?.addEventListener("click", () => {
     const selected = getPracticeSelectedKeysFromModal();
@@ -6752,6 +6798,7 @@ function bindPracticeModalInteractions() {
   modal.querySelector("[data-practice-submit]")?.addEventListener("click", submitPracticeAttempt);
   modal.querySelectorAll("[data-practice-setup]").forEach(btn => {
     btn.addEventListener("click", () => {
+      resetPracticeChallengeWeekDefault();
       renderPracticeSetup(PRACTICE_STATE.verbKey || CURRENT_VERB_KEY, { useCurrentChallengeDefault: true });
     });
   });
@@ -6843,6 +6890,7 @@ function bindPracticeLaunch(detailRoot) {
       e.stopPropagation();
       if (ACTIVE_EDITOR) commitInlineEdit(0);
       hidePopover();
+      resetPracticeChallengeWeekDefault();
       renderPracticeSetup(btn.dataset.practiceLaunch || CURRENT_VERB_KEY, { useCurrentChallengeDefault: true });
     });
   });
@@ -6860,6 +6908,7 @@ function bindPracticeLaunch(detailRoot) {
 
 function openInitialPracticeSetup() {
   if (isPracticeOverlayOpen()) return;
+  resetPracticeChallengeWeekDefault();
   const appliedChallenge = applyCurrentPracticeChallengeDefault();
   if (appliedChallenge?.verbKeys?.length) {
     renderPracticeIntro(
