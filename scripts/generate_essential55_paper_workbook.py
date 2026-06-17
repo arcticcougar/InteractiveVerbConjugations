@@ -25,11 +25,13 @@ REGULAR_PATTERN_MODEL_INFINITIVES = {
 }
 
 BLOCKS = [
-    {"row": 1, "col": 2, "label": "Reference", "filled": True},
-    {"row": 1, "col": 8, "label": "Practice", "filled": False},
-    {"row": 34, "col": 2, "label": "Practice", "filled": False},
-    {"row": 34, "col": 8, "label": "Practice", "filled": False},
+    {"row": 2, "label_col": 3, "answer_col": 4, "label": "Reference", "filled": True},
+    {"row": 2, "label_col": 8, "answer_col": 9, "label": "Practice", "filled": False},
+    {"row": 32, "label_col": 3, "answer_col": 4, "label": "Practice", "filled": False},
+    {"row": 32, "label_col": 8, "answer_col": 9, "label": "Practice", "filled": False},
 ]
+
+INFINITIVE_ROW_OFFSET = 2
 
 FORM_ROWS = {
     "h:gerund": 4,
@@ -337,22 +339,23 @@ def set_form_cell(cell, value: str, regular_value: str = "") -> None:
     cell.value = CellRichText(*parts)
 
 
-def clear_answer_cells(ws, block: dict) -> None:
+def clear_answer_area(ws, block: dict) -> None:
     row0 = block["row"]
-    col0 = block["col"]
-    for offset in FORM_ROWS.values():
-        for col in range(col0 + 1, col0 + 4):
+    col0 = block["answer_col"]
+    for offset in range(2, 30):
+        for col in range(col0, col0 + 3):
             ws.cell(row0 + offset, col).value = None
 
 
 def fill_block(ws, week: dict, verbs: list[dict], maps: list[dict], regular_maps: list[dict], block: dict) -> None:
     row0 = block["row"]
-    col0 = block["col"]
-    ws.cell(row0, col0).value = f"Essential 55 - Week {week['week']} {block['label']}"
+    label_col = block["label_col"]
+    answer_col = block["answer_col"]
+    ws.cell(row0, label_col).value = f"Essential 55 - Week {week['week']} {block['label']}"
+    clear_answer_area(ws, block)
     for index, verb in enumerate(verbs):
-        set_form_cell(ws.cell(row0 + 2, col0 + 1 + index), verb["infinitive"])
+        set_form_cell(ws.cell(row0 + INFINITIVE_ROW_OFFSET, answer_col + index), verb["infinitive"])
 
-    clear_answer_cells(ws, block)
     if not block["filled"]:
         return
 
@@ -360,7 +363,7 @@ def fill_block(ws, week: dict, verbs: list[dict], maps: list[dict], regular_maps
         regular_map = regular_maps[index]
         for cell_key, offset in FORM_ROWS.items():
             set_form_cell(
-                ws.cell(row0 + offset, col0 + 1 + index),
+                ws.cell(row0 + offset, answer_col + index),
                 verb_map.get(cell_key, ""),
                 regular_map.get(cell_key, ""),
             )
@@ -372,6 +375,8 @@ def fill_week_sheet(ws, week: dict, verbs_by_infinitive: dict[str, dict]) -> Non
     regular_maps = [regular_expected_map(verb, verbs_by_infinitive) for verb in verbs]
     ws.title = f"Week {week['week']}"
     ws.sheet_view.showGridLines = False
+    ws.row_dimensions[3].height = 1.8
+    ws.row_dimensions[35].height = 1.8
     for block in BLOCKS:
         fill_block(ws, week, verbs, maps, regular_maps, block)
 
