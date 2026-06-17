@@ -31,7 +31,7 @@
     title: "Essential 55 course welcome"
   };
   const COURSE_PAPER_WORKBOOK = {
-    href: "Essential55_Paper_Practice_Workbook.xlsx",
+    href: "Essential55_Paper_Practice_Workbook.xlsx?v=course-reorder-week-picker-2",
     title: "Download paper practice workbook",
     detail: "30 printable weekly sheets"
   };
