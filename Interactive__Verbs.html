@@ -765,6 +765,9 @@
   .leaderboardLaunchBtn {
     font-size: 14px;
   }
+  .infinitiveGameLaunchBtn {
+    font-size: 14px;
+  }
   .meaning {
     font-size: 16px;
     color: var(--muted);
@@ -1973,6 +1976,156 @@
     font-size: 10px;
     font-weight: 800;
     line-height: 1.1;
+  }
+  .infinitiveGameChoice span,
+  .infinitiveGameSetOption span {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+  .infinitiveGameChoice strong,
+  .infinitiveGameSetOption strong {
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.1;
+  }
+  .infinitiveGameChoice small,
+  .infinitiveGameSetOption small {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+  .infinitiveGameTop {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+  }
+  .infinitiveGameProgress {
+    color: var(--big-color);
+    font-size: 24px;
+    font-weight: 950;
+    line-height: 1;
+  }
+  .infinitiveGamePills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .infinitiveGameLife {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-left: 3px;
+    border-radius: 999px;
+    background: #555;
+    vertical-align: middle;
+  }
+  .infinitiveGameLife.isAlive {
+    background: var(--good);
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 8%);
+  }
+  .infinitiveGamePromptPanel {
+    min-width: min(520px, calc(100vw - 72px));
+  }
+  .infinitiveGamePrompt {
+    color: var(--text);
+    font-size: 24px;
+    font-weight: 900;
+    line-height: 1.12;
+  }
+  .infinitiveGameSubPrompt {
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .infinitiveGameMask {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    align-items: center;
+  }
+  .infinitiveGameLetter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 30px;
+    border: 1px solid var(--pill-border);
+    border-radius: 7px;
+    background: var(--input-bg);
+    color: var(--muted);
+    font-size: 18px;
+    font-weight: 900;
+    line-height: 1;
+  }
+  .infinitiveGameLetter.isRevealed {
+    color: var(--good);
+    border-color: rgb(57 217 138 / 45%);
+  }
+  .infinitiveGameMessage {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.25;
+  }
+  .infinitiveGameInputRow {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) max-content;
+    gap: 8px;
+    align-items: center;
+  }
+  .infinitiveGameInput {
+    min-height: 40px;
+    font-size: 18px;
+  }
+  .infinitiveGameResultGrid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(95px, 1fr));
+    gap: 8px;
+  }
+  .infinitiveGameResultGrid div {
+    display: grid;
+    gap: 3px;
+    padding: 8px;
+    border-radius: 8px;
+    background: var(--chip-bg);
+  }
+  .infinitiveGameResultGrid span {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .infinitiveGameResultGrid strong {
+    color: var(--good);
+    font-size: 18px;
+    font-weight: 950;
+    line-height: 1;
+  }
+  .infinitiveGameAnswerReveal {
+    margin-top: 8px;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.25;
+  }
+  .infinitiveGameAnswerReveal strong {
+    color: var(--good);
+  }
+  .infinitiveGameAnswerReveal span {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+  }
+  .infinitiveGameLeaderboardTable th,
+  .infinitiveGameLeaderboardTable td {
+    white-space: nowrap;
   }
   .practiceMiniBtn {
     padding: 4px 7px;
@@ -3229,7 +3382,7 @@ window.addEventListener("resize", () => {
 <script src="core_notes_overrides.js"></script>
 <script src="core_notes_manual_fixes.js"></script>
 <script src="practice-challenges.js?v=paper-workbook-qc-1"></script>
-<script src="interactive_verbs_app.js?v=course-reorder-week-picker-1"></script>
+<script src="interactive_verbs_app.js?v=infinitive-game-1"></script>
 </body>
 </html>
 
