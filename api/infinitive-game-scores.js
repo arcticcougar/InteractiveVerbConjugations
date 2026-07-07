@@ -4,8 +4,9 @@ const fs = require("fs");
 const path = require("path");
 const { createHash, randomUUID } = require("crypto");
 
-const SCORE_VERSION = "infinitive-game-v1";
+const SCORE_VERSION = "infinitive-game-v2";
 const SET_COUNT = 5;
+const FULL_SET_NUMBER = 0;
 const MAX_DURATION_MS = 4 * 60 * 60 * 1000;
 const MAX_BLOB_ATTEMPTS_PER_BOARD = 1000;
 const MAX_LEADERBOARD_ENTRIES = 20;
@@ -163,6 +164,14 @@ function getInfinitiveGameSets(listId) {
   return sets;
 }
 
+function getInfinitiveGameSet(listId, setNumber) {
+  const n = normalizeSetNumber(setNumber);
+  if (n === FULL_SET_NUMBER) {
+    return deterministicShuffle(getInfinitiveGamePool(listId), `${SCORE_VERSION}:${listId}`);
+  }
+  return getInfinitiveGameSets(listId)[n - 1] || [];
+}
+
 function normalizeListId(value) {
   const listId = cleanText(value);
   if (!VALID_LISTS.has(listId)) throw new Error("Choose Essential 55 or Full 501.");
@@ -170,19 +179,20 @@ function normalizeListId(value) {
 }
 
 function normalizeSetNumber(value) {
+  if (String(value) === "0" || String(value).toLowerCase() === "full") return FULL_SET_NUMBER;
   const n = Math.round(Number(value) || 0);
-  if (n < 1 || n > SET_COUNT) throw new Error("Choose a set from 1 to 5.");
+  if (n < 1 || n > SET_COUNT) throw new Error("Choose a set from 1 to 5, or the full list.");
   return n;
 }
 
 function buildLeaderboardKey(listId, setNumber) {
-  return `${SCORE_VERSION}|list:${listId}|set:${setNumber}`;
+  return `${SCORE_VERSION}|list:${listId}|set:${setNumber === FULL_SET_NUMBER ? "full" : setNumber}`;
 }
 
 function summarizeAttempt(body) {
   const listId = normalizeListId(body.listId);
   const setNumber = normalizeSetNumber(body.setNumber);
-  const expectedSet = getInfinitiveGameSets(listId)[setNumber - 1] || [];
+  const expectedSet = getInfinitiveGameSet(listId, setNumber);
   if (!expectedSet.length) throw new Error("No verbs are available for that game set.");
   const answers = Array.isArray(body.answers) ? body.answers : [];
   let score = 0;
@@ -206,6 +216,8 @@ function summarizeAttempt(body) {
     percent,
     completed,
     wrongCount: Math.max(0, Math.round(Number(body.wrongCount) || 0)),
+    shapeRevealed: !!body.shapeRevealed,
+    hintCount: Math.max(0, Math.round(Number(body.hintCount) || 0)),
     verbKeys: expectedSet.map(verb => `core:${Number(verb.id)}`),
     verbLabels: expectedSet.map(verb => ({
       verbKey: `core:${Number(verb.id)}`,
@@ -288,10 +300,14 @@ function compareAttempts(a, b) {
   if (scoreDiff) return scoreDiff;
   const completedDiff = Number(!!b.completed) - Number(!!a.completed);
   if (completedDiff) return completedDiff;
-  const durationDiff = (Number(a.durationMs) || 0) - (Number(b.durationMs) || 0);
-  if (durationDiff) return durationDiff;
+  const shapeDiff = Number(!!a.shapeRevealed) - Number(!!b.shapeRevealed);
+  if (shapeDiff) return shapeDiff;
+  const hintDiff = (Number(a.hintCount) || 0) - (Number(b.hintCount) || 0);
+  if (hintDiff) return hintDiff;
   const wrongDiff = (Number(a.wrongCount) || 0) - (Number(b.wrongCount) || 0);
   if (wrongDiff) return wrongDiff;
+  const durationDiff = (Number(a.durationMs) || 0) - (Number(b.durationMs) || 0);
+  if (durationDiff) return durationDiff;
   const submittedDiff = (Date.parse(a.submittedAt || "") || 0) - (Date.parse(b.submittedAt || "") || 0);
   if (submittedDiff) return submittedDiff;
   return String(a.attemptId || "").localeCompare(String(b.attemptId || ""));
@@ -305,8 +321,10 @@ function rankedLeaderboardFromAttempts(leaderboardKey, attempts, attemptId = "")
     const key = [
       Number(attempt.score) || 0,
       attempt.completed ? 1 : 0,
-      Number(attempt.durationMs) || 0,
+      attempt.shapeRevealed ? 1 : 0,
+      Number(attempt.hintCount) || 0,
       Number(attempt.wrongCount) || 0,
+      Number(attempt.durationMs) || 0,
       Date.parse(attempt.submittedAt || "") || 0,
       String(attempt.attemptId || "")
     ].join("|");
@@ -328,6 +346,8 @@ function rankedLeaderboardFromAttempts(leaderboardKey, attempts, attemptId = "")
       total: Number(attempt.total) || 0,
       percent: Number(attempt.percent) || 0,
       completed: !!attempt.completed,
+      shapeRevealed: !!attempt.shapeRevealed,
+      hintCount: Number(attempt.hintCount) || 0,
       wrongCount: Number(attempt.wrongCount) || 0,
       durationMs: Number(attempt.durationMs) || 0,
       submittedAt: attempt.submittedAt || "",
@@ -389,6 +409,8 @@ async function ensureSchema(pool) {
       total INTEGER NOT NULL,
       percent INTEGER NOT NULL,
       completed BOOLEAN NOT NULL,
+      shape_revealed BOOLEAN NOT NULL DEFAULT FALSE,
+      hint_count INTEGER NOT NULL DEFAULT 0,
       wrong_count INTEGER NOT NULL,
       duration_ms INTEGER NOT NULL,
       started_at TIMESTAMPTZ,
@@ -396,7 +418,9 @@ async function ensureSchema(pool) {
       app_version TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_infinitive_game_scores_board
-      ON infinitive_game_scores (leaderboard_key, score DESC, duration_ms ASC, submitted_at ASC);
+      ON infinitive_game_scores (leaderboard_key, score DESC, completed DESC, shape_revealed ASC, hint_count ASC, wrong_count ASC, duration_ms ASC, submitted_at ASC);
+    ALTER TABLE infinitive_game_scores ADD COLUMN IF NOT EXISTS shape_revealed BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE infinitive_game_scores ADD COLUMN IF NOT EXISTS hint_count INTEGER NOT NULL DEFAULT 0;
   `);
   SCHEMA_READY = true;
 }
@@ -422,6 +446,8 @@ function mapPostgresRow(row, attemptId = "") {
     total: Number(row.total) || 0,
     percent: Number(row.percent) || 0,
     completed: !!row.completed,
+    shapeRevealed: !!row.shape_revealed,
+    hintCount: Number(row.hint_count) || 0,
     wrongCount: Number(row.wrong_count) || 0,
     durationMs: Number(row.duration_ms) || 0,
     submittedAt: row.submitted_at,
@@ -441,11 +467,13 @@ async function getPostgresLeaderboard(pool, leaderboardKey, attemptId = "") {
         total,
         percent,
         completed,
+        shape_revealed,
+        hint_count,
         wrong_count,
         duration_ms,
         submitted_at,
         RANK() OVER (
-          ORDER BY score DESC, completed DESC, duration_ms ASC, wrong_count ASC, submitted_at ASC, id ASC
+          ORDER BY score DESC, completed DESC, shape_revealed ASC, hint_count ASC, wrong_count ASC, duration_ms ASC, submitted_at ASC, id ASC
         ) AS rank
       FROM infinitive_game_scores
       WHERE leaderboard_key = $1
@@ -514,6 +542,8 @@ function buildStoredAttempt({ attemptId, playerName, scored, durationMs, started
     total: scored.total,
     percent: scored.percent,
     completed: scored.completed,
+    shapeRevealed: scored.shapeRevealed,
+    hintCount: scored.hintCount,
     wrongCount: scored.wrongCount,
     durationMs,
     startedAt,
@@ -569,13 +599,15 @@ async function handlePost(req, res) {
       total,
       percent,
       completed,
+      shape_revealed,
+      hint_count,
       wrong_count,
       duration_ms,
       started_at,
       submitted_at,
       app_version
     ) VALUES (
-      $1, $2, $3, $4, $5, $6::jsonb, $7::jsonb, $8, $9, $10, $11, $12, $13, $14, $15, $16
+      $1, $2, $3, $4, $5, $6::jsonb, $7::jsonb, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
     )
     ON CONFLICT (attempt_id) DO NOTHING
   `, [
@@ -590,6 +622,8 @@ async function handlePost(req, res) {
     scored.total,
     scored.percent,
     scored.completed,
+    scored.shapeRevealed,
+    scored.hintCount,
     scored.wrongCount,
     durationMs,
     startedAt,

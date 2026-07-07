@@ -1996,6 +1996,12 @@
     font-weight: 700;
     line-height: 1.15;
   }
+  .infinitiveGameWarning {
+    color: var(--warn);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.25;
+  }
   .infinitiveGameTop {
     display: flex;
     flex-wrap: wrap;
@@ -2049,6 +2055,16 @@
     gap: 5px;
     align-items: center;
   }
+  .infinitiveGameShapeHidden {
+    padding: 8px 9px;
+    border: 1px dashed var(--pill-border);
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.25;
+  }
   .infinitiveGameLetter {
     display: inline-flex;
     align-items: center;
@@ -2073,6 +2089,24 @@
     font-weight: 800;
     line-height: 1.25;
   }
+  .infinitiveGameHelpActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .infinitiveGameHelpActions .practiceSecondaryBtn:disabled {
+    cursor: default;
+    opacity: 0.52;
+    filter: none;
+  }
+  .infinitiveGameClue {
+    margin-top: 7px;
+    color: var(--subhead);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.25;
+  }
   .infinitiveGameInputRow {
     display: grid;
     grid-template-columns: minmax(220px, 1fr) max-content;
@@ -2085,7 +2119,7 @@
   }
   .infinitiveGameResultGrid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(95px, 1fr));
+    grid-template-columns: repeat(5, minmax(88px, 1fr));
     gap: 8px;
   }
   .infinitiveGameResultGrid div {
@@ -2126,6 +2160,29 @@
   .infinitiveGameLeaderboardTable th,
   .infinitiveGameLeaderboardTable td {
     white-space: nowrap;
+  }
+  .infinitiveGameReviewDetails {
+    max-width: min(900px, calc(100vw - 56px));
+  }
+  .infinitiveGameReviewWrap {
+    max-height: min(420px, 58vh);
+    margin-top: 8px;
+  }
+  .infinitiveGameReviewTable {
+    min-width: 760px;
+  }
+  .infinitiveGameReviewTable td:nth-child(2),
+  .infinitiveGameReviewTable td:nth-child(3),
+  .infinitiveGameReviewTable td:nth-child(4) {
+    white-space: normal;
+  }
+  .infinitiveGameReviewCorrect td:last-child {
+    color: var(--good);
+    font-weight: 900;
+  }
+  .infinitiveGameReviewMissed td:last-child {
+    color: var(--accent);
+    font-weight: 900;
   }
   .practiceMiniBtn {
     padding: 4px 7px;
@@ -2410,11 +2467,18 @@
     .practiceImperativeGrid {
       grid-template-columns: 1fr;
     }
+    .infinitiveGameResultGrid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
     .practiceModal {
       width: calc(100vw - 20px);
     }
   }
   @media (max-width: 560px) {
+    .infinitiveGameInputRow,
+    .infinitiveGameResultGrid {
+      grid-template-columns: 1fr;
+    }
     .practiceTenseGrid {
       grid-template-columns: max-content minmax(0, 1fr);
       min-width: 0;
@@ -3382,7 +3446,7 @@ window.addEventListener("resize", () => {
 <script src="core_notes_overrides.js"></script>
 <script src="core_notes_manual_fixes.js"></script>
 <script src="practice-challenges.js?v=paper-workbook-qc-1"></script>
-<script src="interactive_verbs_app.js?v=infinitive-game-1"></script>
+<script src="interactive_verbs_app.js?v=infinitive-game-2"></script>
 </body>
 </html>
 
