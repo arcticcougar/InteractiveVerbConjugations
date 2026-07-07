@@ -6968,6 +6968,7 @@ function renderInfinitiveGameRun() {
       >
       <button type="button" class="practiceActionBtn" data-infinitive-game-submit>Submit</button>
     </div>
+    <div class="practiceTypingHint">Spanish characters: Ctrl/Cmd+Shift+A/E/I/O/U/N. Number-pad shortcuts from the main app work here too. Double-space submits.</div>
   `;
   showPracticeModal(
     "Infinitive game",
@@ -7271,19 +7272,31 @@ function getInfinitiveGameAnswerByIndex(game) {
   return map;
 }
 
+function getInfinitiveGameHelpedIndexes(game) {
+  const indexes = new Set();
+  (game.helpedVerbKeys || []).forEach(key => {
+    const index = Number(key);
+    if (Number.isInteger(index) && index >= 0) indexes.add(index);
+  });
+  return indexes;
+}
+
 function getInfinitiveGameReviewRows(game) {
   const answers = getInfinitiveGameAnswerByIndex(game);
+  const helpedIndexes = getInfinitiveGameHelpedIndexes(game);
   return (game.entries || []).map((entry, idx) => {
     const answer = answers.get(idx) || null;
     const correct = !!answer?.correct;
     const attempted = !!answer;
+    const helped = helpedIndexes.has(idx);
     return {
       index: idx,
       entry,
       input: answer?.input || "",
       correct,
+      helped,
       attempted,
-      status: correct ? "Correct" : attempted ? "Missed" : "Not reached"
+      status: correct ? (helped ? "Correct with help" : "Correct") : attempted ? (helped ? "Missed with help" : "Missed") : "Not reached"
     };
   });
 }
@@ -7291,6 +7304,12 @@ function getInfinitiveGameReviewRows(game) {
 function getInfinitiveGameMissedEntries(game) {
   return getInfinitiveGameReviewRows(game)
     .filter(row => !row.correct)
+    .map(row => row.entry);
+}
+
+function getInfinitiveGameReviewEntries(game, options = {}) {
+  return getInfinitiveGameReviewRows(game)
+    .filter(row => !row.correct || (options.includeHelped && row.helped))
     .map(row => row.entry);
 }
 
@@ -7322,7 +7341,7 @@ function renderInfinitiveGameReview(game) {
   `;
 }
 
-function startInfinitiveGameStudyRun(entries, sourceGame) {
+function startInfinitiveGameStudyRun(entries, sourceGame, options = {}) {
   if (!entries?.length) return;
   PRACTICE_STATE.infinitiveGame = defaultInfinitiveGameState({
     mode: "run",
@@ -7333,7 +7352,7 @@ function startInfinitiveGameStudyRun(entries, sourceGame) {
     startedAtMs: Date.now(),
     attemptId: createInfinitiveGameAttemptId(),
     leaderboardEligible: false,
-    message: "Missed-verbs study run. This score will not be posted to the leaderboard."
+    message: options.message || "Focused study run. This score will not be posted to the leaderboard."
   });
   renderInfinitiveGameRun();
 }
@@ -7343,6 +7362,10 @@ function renderInfinitiveGameResult() {
   const failedEntry = game.failed ? currentInfinitiveGameEntry(game) : null;
   const percent = game.entries?.length ? Math.round((game.correctCount / game.entries.length) * 100) : 0;
   const missedCount = getInfinitiveGameMissedEntries(game).length;
+  const missedAndHelpedCount = getInfinitiveGameReviewEntries(game, { includeHelped: true }).length;
+  const helpedRetryLabel = missedCount
+    ? `Practice missed + helped (${missedAndHelpedCount})`
+    : `Practice helped (${missedAndHelpedCount})`;
   const helpSummary = formatInfinitiveGameHelpSummary({
     helpedVerbCount: game.helpedVerbCount,
     hintCount: game.hintCount
@@ -7368,6 +7391,7 @@ function renderInfinitiveGameResult() {
     ${renderInfinitiveGameLeaderboardPanel()}
     <div class="practiceActions">
       ${missedCount ? `<button type="button" class="practiceSecondaryBtn" data-infinitive-game-missed>Practice missed (${missedCount})</button>` : ""}
+      ${missedAndHelpedCount > missedCount ? `<button type="button" class="practiceSecondaryBtn" data-infinitive-game-missed-helped>${escapeHtml(helpedRetryLabel)}</button>` : ""}
       <button type="button" class="practiceSecondaryBtn" data-infinitive-game-retry>Try this set again</button>
       <button type="button" class="practiceSecondaryBtn" data-infinitive-game-setup>Change setup</button>
       <button type="button" class="practiceActionBtn" data-infinitive-game-leaderboard>Leaderboard</button>
@@ -7865,7 +7889,15 @@ function bindPracticeModalInteractions() {
   });
   modal.querySelector("[data-infinitive-game-missed]")?.addEventListener("click", () => {
     const game = getInfinitiveGameState();
-    startInfinitiveGameStudyRun(getInfinitiveGameMissedEntries(game), game);
+    startInfinitiveGameStudyRun(getInfinitiveGameMissedEntries(game), game, {
+      message: "Missed-verbs study run. This score will not be posted to the leaderboard."
+    });
+  });
+  modal.querySelector("[data-infinitive-game-missed-helped]")?.addEventListener("click", () => {
+    const game = getInfinitiveGameState();
+    startInfinitiveGameStudyRun(getInfinitiveGameReviewEntries(game, { includeHelped: true }), game, {
+      message: "Missed and helped-verbs study run. This score will not be posted to the leaderboard."
+    });
   });
   modal.querySelector("[data-infinitive-game-leaderboard]")?.addEventListener("click", () => {
     const game = getInfinitiveGameState();
