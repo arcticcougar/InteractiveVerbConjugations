@@ -6408,7 +6408,7 @@ function renderPracticeLeaderboardBrowserPanel() {
   `;
 }
 
-const INFINITIVE_GAME_VERSION = "infinitive-game-v2";
+const INFINITIVE_GAME_VERSION = "infinitive-game-v3";
 const INFINITIVE_GAME_SET_COUNT = 5;
 const INFINITIVE_GAME_FULL_SET_NUMBER = 0;
 const INFINITIVE_GAME_LIVES = 3;
@@ -6429,7 +6429,28 @@ const INFINITIVE_GAME_LISTS = {
 const INFINITIVE_GAME_MEANING_FALLBACKS = {
   haber: "to have (auxiliary); there is / there are"
 };
+const INFINITIVE_GAME_PROMPT_OVERRIDES = {
+  conocer: "to know / be familiar with a person, place, or thing",
+  estar: "to be (state, condition, feeling, or location)",
+  haber: "to have as an auxiliary; there is / there are",
+  ir: "to go",
+  irse: "to leave / go away",
+  llevar: "to carry, wear, or take with you",
+  mirar: "to look at / watch",
+  oir: "to hear",
+  parecer: "to seem / appear",
+  saber: "to know a fact, information, or how to do something",
+  salir: "to leave / go out / come out",
+  ser: "to be (identity, origin, time, or essential quality)",
+  tener: "to have / possess",
+  tomar: "to take, drink, or have",
+  traer: "to bring toward the speaker",
+  venir: "to come",
+  ver: "to see"
+};
 const INFINITIVE_GAME_CLUE_NOTES = {
+  caer: "Think of falling or dropping.",
+  caerse: "Reflexive: falling down or falling over.",
   conocer: "Use this for knowing a person, place, or being familiar with something.",
   estar: "Use this for states, feelings, conditions, and location.",
   haber: "This is the auxiliary/existence verb, as in hay and he hablado.",
@@ -6441,19 +6462,20 @@ const INFINITIVE_GAME_CLUE_NOTES = {
   salir: "This is leaving, going out, or coming out.",
   ser: "Use this for identity, origin, time, and essential qualities.",
   tener: "This is having or possessing.",
+  tomar: "This is taking something, drinking something, or having food/drink.",
   traer: "This is bringing something toward the speaker.",
+  venir: "This is coming toward the speaker or destination.",
   ver: "This is seeing."
 };
 
 function normalizeInfinitiveGameToken(value) {
   return cleanText(value || "")
     .toLocaleLowerCase("es-ES")
-    .replace(/[áàâä]/g, "a")
-    .replace(/[éèêë]/g, "e")
-    .replace(/[íìîï]/g, "i")
-    .replace(/[óòôö]/g, "o")
-    .replace(/[úùûü]/g, "u")
-    .replace(/[^a-zñ0-9]/g, "");
+    .replace(/\u00f1/g, "__enye__")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/__enye__/g, "\u00f1")
+    .replace(/[^a-z\u00f10-9]/g, "");
 }
 
 function normalizeInfinitiveGameInputValue(value) {
@@ -6556,11 +6578,13 @@ function getInfinitiveGameSet(listId, setNumber) {
 }
 
 function formatInfinitiveGameMeaning(verb) {
+  const key = normalize(verb?.infinitive || "");
+  if (INFINITIVE_GAME_PROMPT_OVERRIDES[key]) return INFINITIVE_GAME_PROMPT_OVERRIDES[key];
   const info = splitMeaningAndCaution(verb?.meaning_en || "");
   return cleanText(
     info.meaning ||
     verb?.meaning_en ||
-    INFINITIVE_GAME_MEANING_FALLBACKS[normalize(verb?.infinitive || "")] ||
+    INFINITIVE_GAME_MEANING_FALLBACKS[key] ||
     ""
   );
 }
@@ -6586,6 +6610,11 @@ function defaultInfinitiveGameState(overrides = {}) {
     shapeRevealed: false,
     hintCount: 0,
     hintKeys: [],
+    helpedVerbKeys: [],
+    helpedVerbCount: 0,
+    shapeRevealCount: 0,
+    firstLetterCount: 0,
+    clueCount: 0,
     clueText: "",
     leaderboardEligible: true,
     message: "",
@@ -6714,7 +6743,7 @@ function renderInfinitiveGameSetup(options = {}) {
           <div class="practiceOptionsGrid">${renderInfinitiveGameSetOptions(listId, setNumber)}</div>
         </div>
         <div class="practiceTypingHint">
-          You will see the English meaning and type the Spanish infinitive. The answer shape starts hidden; using reveals or clues is tracked on the leaderboard.
+          You will see the English meaning and type the Spanish infinitive. You get three tries per verb, then the game moves on. The answer shape starts hidden; using reveals or clues is tracked on the leaderboard.
         </div>
         ${fullWarning}
       </div>
@@ -6786,6 +6815,15 @@ function markInfinitiveGameHintUsed(game, type) {
   if (game.hintKeys.includes(key)) return false;
   game.hintKeys.push(key);
   game.hintCount = Math.max(0, Number(game.hintCount) || 0) + 1;
+  if (!Array.isArray(game.helpedVerbKeys)) game.helpedVerbKeys = [];
+  const verbHelpKey = String(Number(game.currentIndex) || 0);
+  if (!game.helpedVerbKeys.includes(verbHelpKey)) {
+    game.helpedVerbKeys.push(verbHelpKey);
+    game.helpedVerbCount = Math.max(0, Number(game.helpedVerbCount) || 0) + 1;
+  }
+  if (type === "shape") game.shapeRevealCount = Math.max(0, Number(game.shapeRevealCount) || 0) + 1;
+  if (type === "first-letter") game.firstLetterCount = Math.max(0, Number(game.firstLetterCount) || 0) + 1;
+  if (type === "clue") game.clueCount = Math.max(0, Number(game.clueCount) || 0) + 1;
   return true;
 }
 
@@ -6803,7 +6841,10 @@ function revealInfinitiveGameFirstLetter() {
   const game = getInfinitiveGameState();
   const entry = currentInfinitiveGameEntry(game);
   if (!entry) return;
-  game.shapeRevealed = true;
+  if (!game.shapeRevealed) {
+    game.shapeRevealed = true;
+    markInfinitiveGameHintUsed(game, "shape");
+  }
   game.revealed = revealMatchingInfinitiveLetters(entry.infinitive, Array.from(entry.infinitive || "")[0] || "", game.revealed);
   game.revealed[0] = true;
   markInfinitiveGameHintUsed(game, "first-letter");
@@ -6811,10 +6852,23 @@ function revealInfinitiveGameFirstLetter() {
   renderInfinitiveGameRun();
 }
 
+function buildGenericInfinitiveGameClue(entry) {
+  const infinitive = cleanText(entry?.infinitive || "");
+  const lower = infinitive.toLocaleLowerCase("es-ES");
+  const reflexive = lower.endsWith("se");
+  const base = reflexive ? lower.slice(0, -2) : lower;
+  const ending = base.endsWith("ar") ? "-ar" : base.endsWith("er") ? "-er" : base.endsWith("ir") ? "-ir" : "";
+  const parts = [];
+  if (reflexive) parts.push("It is reflexive, so the infinitive ends in -se.");
+  if (ending) parts.push(`It belongs to the ${ending} infinitive family.`);
+  parts.push("Think of the infinitive form, not a conjugated form.");
+  return parts.join(" ");
+}
+
 function getInfinitiveGameClue(entry) {
   const key = normalize(entry?.infinitive || "");
-  const note = INFINITIVE_GAME_CLUE_NOTES[key] || "Use the verb number to place it in the main app list.";
-  return `#${entry?.displayNumber || ""}. ${note}`;
+  const note = INFINITIVE_GAME_CLUE_NOTES[key] || buildGenericInfinitiveGameClue(entry);
+  return note;
 }
 
 function showInfinitiveGameClue() {
@@ -6949,6 +7003,25 @@ function finishInfinitiveGame(completed) {
   submitInfinitiveGameScoreOnline(buildInfinitiveGameScorePayload(game));
 }
 
+function resetCurrentInfinitiveGameHelp(game) {
+  game.lives = INFINITIVE_GAME_LIVES;
+  game.revealed = [];
+  game.shapeRevealed = false;
+  game.clueText = "";
+}
+
+function advanceInfinitiveGame(message = "") {
+  const game = getInfinitiveGameState();
+  game.currentIndex += 1;
+  resetCurrentInfinitiveGameHelp(game);
+  game.message = message;
+  if (game.currentIndex >= (game.entries?.length || 0)) {
+    finishInfinitiveGame(true);
+    return;
+  }
+  renderInfinitiveGameRun();
+}
+
 function submitInfinitiveGameGuess() {
   const game = getInfinitiveGameState();
   const entry = currentInfinitiveGameEntry(game);
@@ -6971,16 +7044,7 @@ function submitInfinitiveGameGuess() {
       wrongBeforeCorrect: INFINITIVE_GAME_LIVES - game.lives
     });
     game.correctCount += 1;
-    game.currentIndex += 1;
-    game.lives = INFINITIVE_GAME_LIVES;
-    game.revealed = [];
-    game.clueText = "";
-    game.message = "Correct.";
-    if (game.currentIndex >= game.entries.length) {
-      finishInfinitiveGame(true);
-      return;
-    }
-    renderInfinitiveGameRun();
+    advanceInfinitiveGame("Correct.");
     return;
   }
 
@@ -6994,10 +7058,10 @@ function submitInfinitiveGameGuess() {
       infinitive: entry.infinitive,
       input: guess,
       correct: false,
-      failed: true
+      missed: true,
+      wrongAttempts: INFINITIVE_GAME_LIVES
     });
-    game.message = `Out of lives. The answer was ${entry.infinitive}.`;
-    finishInfinitiveGame(false);
+    advanceInfinitiveGame(`Missed: ${entry.infinitive}. Moving on.`);
     return;
   }
   game.message = game.shapeRevealed
@@ -7025,8 +7089,12 @@ function buildInfinitiveGameScorePayload(game) {
     total: game.entries?.length || 0,
     completed: !!game.completed,
     wrongCount: game.wrongCount,
-    shapeRevealed: !!game.shapeRevealed,
+    shapeRevealed: Math.max(0, Number(game.shapeRevealCount) || 0) > 0,
     hintCount: Math.max(0, Number(game.hintCount) || 0),
+    helpedVerbCount: Math.max(0, Number(game.helpedVerbCount) || 0),
+    shapeRevealCount: Math.max(0, Number(game.shapeRevealCount) || 0),
+    firstLetterCount: Math.max(0, Number(game.firstLetterCount) || 0),
+    clueCount: Math.max(0, Number(game.clueCount) || 0),
     leaderboardEligible: game.leaderboardEligible !== false,
     startedAt: new Date(startedAtMs).toISOString(),
     submittedAt: new Date(submittedAtMs).toISOString(),
@@ -7040,8 +7108,8 @@ function sortInfinitiveGameLeaderboardEntries(entries) {
     if (scoreDiff) return scoreDiff;
     const completedDiff = Number(!!b.completed) - Number(!!a.completed);
     if (completedDiff) return completedDiff;
-    const shapeDiff = Number(!!a.shapeRevealed) - Number(!!b.shapeRevealed);
-    if (shapeDiff) return shapeDiff;
+    const helpedVerbDiff = (Number(a.helpedVerbCount) || 0) - (Number(b.helpedVerbCount) || 0);
+    if (helpedVerbDiff) return helpedVerbDiff;
     const hintDiff = (Number(a.hintCount) || 0) - (Number(b.hintCount) || 0);
     if (hintDiff) return hintDiff;
     const wrongDiff = (Number(a.wrongCount) || 0) - (Number(b.wrongCount) || 0);
@@ -7050,6 +7118,13 @@ function sortInfinitiveGameLeaderboardEntries(entries) {
     if (durationDiff) return durationDiff;
     return (Number(a.rank) || 0) - (Number(b.rank) || 0);
   });
+}
+
+function formatInfinitiveGameHelpSummary(entry) {
+  const helped = Number(entry.helpedVerbCount) || 0;
+  const hints = Number(entry.hintCount) || 0;
+  if (!helped && !hints) return "None";
+  return `${helped} verbs / ${hints} hints`;
 }
 
 function renderInfinitiveGameLeaderboardTable(leaderboard, options = {}) {
@@ -7067,8 +7142,8 @@ function renderInfinitiveGameLeaderboardTable(leaderboard, options = {}) {
       <td>${entry.rank || ""}</td>
       <td>${escapeHtml(entry.playerName || "")}</td>
       <td class="practiceSummaryScore">${Number(entry.score) || 0}/${Number(entry.total) || 0}</td>
-      <td>${entry.completed ? "Complete" : "Out"}</td>
-      <td>${entry.shapeRevealed ? "Shape" : "Hidden"} / ${Number(entry.hintCount) || 0}</td>
+      <td>${entry.completed ? "Finished" : "Stopped"}</td>
+      <td>${escapeHtml(formatInfinitiveGameHelpSummary(entry))}</td>
       <td>${Number(entry.wrongCount) || 0}</td>
       <td>${formatPracticeDuration(entry.durationMs || 0)}</td>
     </tr>
@@ -7268,6 +7343,10 @@ function renderInfinitiveGameResult() {
   const failedEntry = game.failed ? currentInfinitiveGameEntry(game) : null;
   const percent = game.entries?.length ? Math.round((game.correctCount / game.entries.length) * 100) : 0;
   const missedCount = getInfinitiveGameMissedEntries(game).length;
+  const helpSummary = formatInfinitiveGameHelpSummary({
+    helpedVerbCount: game.helpedVerbCount,
+    hintCount: game.hintCount
+  });
   const body = `
     <div class="practicePanel">
       <div class="practiceSectionTitle">Result</div>
@@ -7276,7 +7355,7 @@ function renderInfinitiveGameResult() {
         <div><span>Percent</span><strong>${percent}%</strong></div>
         <div><span>Time</span><strong>${formatPracticeDuration(game.durationMs || 0)}</strong></div>
         <div><span>Wrong tries</span><strong>${game.wrongCount}</strong></div>
-        <div><span>Help used</span><strong>${game.shapeRevealed ? "Shape" : "No shape"}${game.hintCount ? ` / ${game.hintCount}` : ""}</strong></div>
+        <div><span>Help used</span><strong>${escapeHtml(helpSummary)}</strong></div>
       </div>
       ${failedEntry ? `
         <div class="infinitiveGameAnswerReveal">

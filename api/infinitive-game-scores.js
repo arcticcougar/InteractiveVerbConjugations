@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const { createHash, randomUUID } = require("crypto");
 
-const SCORE_VERSION = "infinitive-game-v2";
+const SCORE_VERSION = "infinitive-game-v3";
 const SET_COUNT = 5;
 const FULL_SET_NUMBER = 0;
 const MAX_DURATION_MS = 4 * 60 * 60 * 1000;
@@ -48,12 +48,11 @@ function normalize(value) {
 function normalizeAnswer(value) {
   return cleanText(value)
     .toLocaleLowerCase("es-ES")
-    .replace(/[áàâä]/g, "a")
-    .replace(/[éèêë]/g, "e")
-    .replace(/[íìîï]/g, "i")
-    .replace(/[óòôö]/g, "o")
-    .replace(/[úùûü]/g, "u")
-    .replace(/[^a-zñ0-9]/g, "");
+    .replace(/\u00f1/g, "__enye__")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/__enye__/g, "\u00f1")
+    .replace(/[^a-z\u00f10-9]/g, "");
 }
 
 function sanitizePlayerName(name) {
@@ -195,18 +194,31 @@ function summarizeAttempt(body) {
   const expectedSet = getInfinitiveGameSet(listId, setNumber);
   if (!expectedSet.length) throw new Error("No verbs are available for that game set.");
   const answers = Array.isArray(body.answers) ? body.answers : [];
+  const answersByIndex = new Map();
+  answers.forEach((answer, idx) => {
+    const rawIndex = Number(answer?.index);
+    const answerIndex = Number.isInteger(rawIndex) ? rawIndex : idx;
+    if (answerIndex >= 0 && answerIndex < expectedSet.length && !answersByIndex.has(answerIndex)) {
+      answersByIndex.set(answerIndex, answer);
+    }
+  });
   let score = 0;
   for (let idx = 0; idx < expectedSet.length; idx += 1) {
-    const answer = answers[idx];
-    if (!answer) break;
+    const answer = answersByIndex.get(idx);
+    if (!answer) continue;
     const expected = normalizeAnswer(expectedSet[idx].infinitive || "");
     const actual = normalizeAnswer(answer.input || "");
-    if (!actual || actual !== expected) break;
-    score += 1;
+    if (actual && actual === expected) score += 1;
   }
   const total = expectedSet.length;
-  const completed = score === total;
+  const completed = answersByIndex.size >= total;
   const percent = total ? Math.round((score / total) * 100) : 0;
+  const shapeRevealCount = Math.max(0, Math.round(Number(body.shapeRevealCount) || (body.shapeRevealed ? 1 : 0)));
+  const firstLetterCount = Math.max(0, Math.round(Number(body.firstLetterCount) || 0));
+  const clueCount = Math.max(0, Math.round(Number(body.clueCount) || 0));
+  const totalHints = shapeRevealCount + firstLetterCount + clueCount;
+  const hintCount = Math.max(totalHints, Math.max(0, Math.round(Number(body.hintCount) || 0)));
+  const helpedVerbCount = Math.min(total, Math.max(0, Math.round(Number(body.helpedVerbCount) || (hintCount ? 1 : 0))));
   return {
     listId,
     setNumber,
@@ -216,8 +228,12 @@ function summarizeAttempt(body) {
     percent,
     completed,
     wrongCount: Math.max(0, Math.round(Number(body.wrongCount) || 0)),
-    shapeRevealed: !!body.shapeRevealed,
-    hintCount: Math.max(0, Math.round(Number(body.hintCount) || 0)),
+    shapeRevealed: shapeRevealCount > 0,
+    helpedVerbCount,
+    shapeRevealCount,
+    firstLetterCount,
+    clueCount,
+    hintCount,
     verbKeys: expectedSet.map(verb => `core:${Number(verb.id)}`),
     verbLabels: expectedSet.map(verb => ({
       verbKey: `core:${Number(verb.id)}`,
@@ -300,8 +316,8 @@ function compareAttempts(a, b) {
   if (scoreDiff) return scoreDiff;
   const completedDiff = Number(!!b.completed) - Number(!!a.completed);
   if (completedDiff) return completedDiff;
-  const shapeDiff = Number(!!a.shapeRevealed) - Number(!!b.shapeRevealed);
-  if (shapeDiff) return shapeDiff;
+  const helpedVerbDiff = (Number(a.helpedVerbCount) || 0) - (Number(b.helpedVerbCount) || 0);
+  if (helpedVerbDiff) return helpedVerbDiff;
   const hintDiff = (Number(a.hintCount) || 0) - (Number(b.hintCount) || 0);
   if (hintDiff) return hintDiff;
   const wrongDiff = (Number(a.wrongCount) || 0) - (Number(b.wrongCount) || 0);
@@ -321,7 +337,7 @@ function rankedLeaderboardFromAttempts(leaderboardKey, attempts, attemptId = "")
     const key = [
       Number(attempt.score) || 0,
       attempt.completed ? 1 : 0,
-      attempt.shapeRevealed ? 1 : 0,
+      Number(attempt.helpedVerbCount) || 0,
       Number(attempt.hintCount) || 0,
       Number(attempt.wrongCount) || 0,
       Number(attempt.durationMs) || 0,
@@ -347,6 +363,10 @@ function rankedLeaderboardFromAttempts(leaderboardKey, attempts, attemptId = "")
       percent: Number(attempt.percent) || 0,
       completed: !!attempt.completed,
       shapeRevealed: !!attempt.shapeRevealed,
+      helpedVerbCount: Number(attempt.helpedVerbCount) || 0,
+      shapeRevealCount: Number(attempt.shapeRevealCount) || 0,
+      firstLetterCount: Number(attempt.firstLetterCount) || 0,
+      clueCount: Number(attempt.clueCount) || 0,
       hintCount: Number(attempt.hintCount) || 0,
       wrongCount: Number(attempt.wrongCount) || 0,
       durationMs: Number(attempt.durationMs) || 0,
@@ -410,6 +430,10 @@ async function ensureSchema(pool) {
       percent INTEGER NOT NULL,
       completed BOOLEAN NOT NULL,
       shape_revealed BOOLEAN NOT NULL DEFAULT FALSE,
+      helped_verb_count INTEGER NOT NULL DEFAULT 0,
+      shape_reveal_count INTEGER NOT NULL DEFAULT 0,
+      first_letter_count INTEGER NOT NULL DEFAULT 0,
+      clue_count INTEGER NOT NULL DEFAULT 0,
       hint_count INTEGER NOT NULL DEFAULT 0,
       wrong_count INTEGER NOT NULL,
       duration_ms INTEGER NOT NULL,
@@ -418,8 +442,12 @@ async function ensureSchema(pool) {
       app_version TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_infinitive_game_scores_board
-      ON infinitive_game_scores (leaderboard_key, score DESC, completed DESC, shape_revealed ASC, hint_count ASC, wrong_count ASC, duration_ms ASC, submitted_at ASC);
+      ON infinitive_game_scores (leaderboard_key, score DESC, completed DESC, helped_verb_count ASC, hint_count ASC, wrong_count ASC, duration_ms ASC, submitted_at ASC);
     ALTER TABLE infinitive_game_scores ADD COLUMN IF NOT EXISTS shape_revealed BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE infinitive_game_scores ADD COLUMN IF NOT EXISTS helped_verb_count INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE infinitive_game_scores ADD COLUMN IF NOT EXISTS shape_reveal_count INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE infinitive_game_scores ADD COLUMN IF NOT EXISTS first_letter_count INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE infinitive_game_scores ADD COLUMN IF NOT EXISTS clue_count INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE infinitive_game_scores ADD COLUMN IF NOT EXISTS hint_count INTEGER NOT NULL DEFAULT 0;
   `);
   SCHEMA_READY = true;
@@ -447,6 +475,10 @@ function mapPostgresRow(row, attemptId = "") {
     percent: Number(row.percent) || 0,
     completed: !!row.completed,
     shapeRevealed: !!row.shape_revealed,
+    helpedVerbCount: Number(row.helped_verb_count) || 0,
+    shapeRevealCount: Number(row.shape_reveal_count) || 0,
+    firstLetterCount: Number(row.first_letter_count) || 0,
+    clueCount: Number(row.clue_count) || 0,
     hintCount: Number(row.hint_count) || 0,
     wrongCount: Number(row.wrong_count) || 0,
     durationMs: Number(row.duration_ms) || 0,
@@ -468,12 +500,16 @@ async function getPostgresLeaderboard(pool, leaderboardKey, attemptId = "") {
         percent,
         completed,
         shape_revealed,
+        helped_verb_count,
+        shape_reveal_count,
+        first_letter_count,
+        clue_count,
         hint_count,
         wrong_count,
         duration_ms,
         submitted_at,
         RANK() OVER (
-          ORDER BY score DESC, completed DESC, shape_revealed ASC, hint_count ASC, wrong_count ASC, duration_ms ASC, submitted_at ASC, id ASC
+          ORDER BY score DESC, completed DESC, helped_verb_count ASC, hint_count ASC, wrong_count ASC, duration_ms ASC, submitted_at ASC, id ASC
         ) AS rank
       FROM infinitive_game_scores
       WHERE leaderboard_key = $1
@@ -543,6 +579,10 @@ function buildStoredAttempt({ attemptId, playerName, scored, durationMs, started
     percent: scored.percent,
     completed: scored.completed,
     shapeRevealed: scored.shapeRevealed,
+    helpedVerbCount: scored.helpedVerbCount,
+    shapeRevealCount: scored.shapeRevealCount,
+    firstLetterCount: scored.firstLetterCount,
+    clueCount: scored.clueCount,
     hintCount: scored.hintCount,
     wrongCount: scored.wrongCount,
     durationMs,
@@ -600,6 +640,10 @@ async function handlePost(req, res) {
       percent,
       completed,
       shape_revealed,
+      helped_verb_count,
+      shape_reveal_count,
+      first_letter_count,
+      clue_count,
       hint_count,
       wrong_count,
       duration_ms,
@@ -607,7 +651,7 @@ async function handlePost(req, res) {
       submitted_at,
       app_version
     ) VALUES (
-      $1, $2, $3, $4, $5, $6::jsonb, $7::jsonb, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
+      $1, $2, $3, $4, $5, $6::jsonb, $7::jsonb, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
     )
     ON CONFLICT (attempt_id) DO NOTHING
   `, [
@@ -623,6 +667,10 @@ async function handlePost(req, res) {
     scored.percent,
     scored.completed,
     scored.shapeRevealed,
+    scored.helpedVerbCount,
+    scored.shapeRevealCount,
+    scored.firstLetterCount,
+    scored.clueCount,
     scored.hintCount,
     scored.wrongCount,
     durationMs,
