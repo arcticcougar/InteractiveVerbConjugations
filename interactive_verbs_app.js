@@ -2160,6 +2160,10 @@ const SPANISH_CHAR_SHORTCUTS_NUMPAD = {
   Numpad0: { char: "Ñ", base: "n" }
 };
 
+const SPANISH_CHAR_SHORTCUTS_BY_CODE = {
+  Semicolon: { char: "\u00f1", base: "n" }
+};
+
 PRONOUNS["2-sg"] = "t\u00fa";
 PRONOUNS["3-sg"] = "\u00e9l";
 IMPERATIVE_META.tu.label = "t\u00fa";
@@ -2672,7 +2676,7 @@ function renderTenseHelper(context) {
         <div class="helperSectionTitle">Spanish characters</div>
         <ul class="helperList">
           <li>Ctrl/Cmd+Shift+A / E / I / O / U -> á / é / í / ó / ú.</li>
-          <li>Ctrl/Cmd+Shift+N -> ñ.</li>
+          <li>Ctrl/Cmd+Shift+; -> ñ.</li>
           <li>Ctrl/Cmd+Shift+Numpad1..0 -> á, é, í, ó, ú, ñ, ü, ¿, ¡, Ñ.</li>
           <li>On Mac keyboards, native Option accent shortcuts also work in normal text fields.</li>
         </ul>
@@ -4536,7 +4540,8 @@ function handleSpanishCharShortcut(e, input) {
   const letterKey = (e.key || "").toLowerCase();
   const letterShortcut = SPANISH_CHAR_SHORTCUTS_BY_LETTER[letterKey] || null;
   const numpadShortcut = SPANISH_CHAR_SHORTCUTS_NUMPAD[e.code || ""] || null;
-  const shortcut = letterShortcut || numpadShortcut;
+  const codeShortcut = SPANISH_CHAR_SHORTCUTS_BY_CODE[e.code || ""] || null;
+  const shortcut = letterShortcut || numpadShortcut || codeShortcut;
   if (!shortcut) return false;
   e.preventDefault();
   e.stopPropagation();
@@ -6968,7 +6973,7 @@ function renderInfinitiveGameRun() {
       >
       <button type="button" class="practiceActionBtn" data-infinitive-game-submit>Submit</button>
     </div>
-    <div class="practiceTypingHint">Spanish characters: Ctrl/Cmd+Shift+A/E/I/O/U/N. Number-pad shortcuts from the main app work here too. Double-space submits.</div>
+    <div class="practiceTypingHint">Spanish characters: Ctrl/Cmd+Shift+A/E/I/O/U, ñ: Ctrl/Cmd+Shift+;. Number-pad shortcuts from the main app work here too. Double-space submits.</div>
   `;
   showPracticeModal(
     "Infinitive game",
@@ -7535,7 +7540,7 @@ function renderPracticeRun() {
   const body = `
     ${scoreHtml ? `<div class="practiceRunTop">${scoreHtml}</div>` : ""}
     ${PRACTICE_STATE.submitted ? renderPracticeLeaderboard() : ""}
-    ${PRACTICE_STATE.submitted ? "" : `<div class="practiceTypingHint">Accents: Ctrl/Cmd+Shift+A/E/I/O/U/N. Mac also supports Option+E then vowel, Option+N then n. Double-space moves next.</div>`}
+    ${PRACTICE_STATE.submitted ? "" : `<div class="practiceTypingHint">Accents: Ctrl/Cmd+Shift+A/E/I/O/U, ñ: Ctrl/Cmd+Shift+;. Mac also supports Option+E then vowel, Option+N then n. Double-space moves next.</div>`}
     ${renderPracticeMatrix(verbs, PRACTICE_STATE.selectedKeys)}
     ${submittedControls}
   `;
