@@ -2676,7 +2676,7 @@ function renderTenseHelper(context) {
         <div class="helperSectionTitle">Spanish characters</div>
         <ul class="helperList">
           <li>Ctrl/Cmd+Shift+A / E / I / O / U -> á / é / í / ó / ú.</li>
-          <li>Ctrl/Cmd+Shift+; -> ñ.</li>
+          <li>Ctrl/Cmd+Shift+N -> ñ. Ctrl/Cmd+Shift+; also works if your browser catches N.</li>
           <li>Ctrl/Cmd+Shift+Numpad1..0 -> á, é, í, ó, ú, ñ, ü, ¿, ¡, Ñ.</li>
           <li>On Mac keyboards, native Option accent shortcuts also work in normal text fields.</li>
         </ul>
@@ -4547,6 +4547,22 @@ function handleSpanishCharShortcut(e, input) {
   e.stopPropagation();
   applySpanishCharShortcut(input, shortcut);
   return true;
+}
+
+function getPracticeOverlaySpanishShortcutInput(e) {
+  if (!isPracticeOverlayOpen()) return null;
+  const target = e.target;
+  const focusedInput = target && typeof target.closest === "function"
+    ? target.closest("#practiceModal input[data-infinitive-game-input], #practiceModal input.practiceInput:not([disabled])")
+    : null;
+  if (focusedInput) return focusedInput;
+  return document.querySelector("#practiceModal input[data-infinitive-game-input]");
+}
+
+function handlePracticeOverlaySpanishShortcutCapture(e) {
+  const input = getPracticeOverlaySpanishShortcutInput(e);
+  if (!input) return;
+  if (handleSpanishCharShortcut(e, input)) input.focus();
 }
 
 function startInlineEdit(btn, verb) {
@@ -6475,6 +6491,7 @@ const INFINITIVE_GAME_CLUE_NOTES = {
 
 function normalizeInfinitiveGameToken(value) {
   return cleanText(value || "")
+    .normalize("NFC")
     .toLocaleLowerCase("es-ES")
     .replace(/\u00f1/g, "__enye__")
     .normalize("NFD")
@@ -6484,7 +6501,7 @@ function normalizeInfinitiveGameToken(value) {
 }
 
 function normalizeInfinitiveGameInputValue(value) {
-  return cleanText(value || "").toLocaleLowerCase("es-ES");
+  return cleanText(value || "").normalize("NFC").toLocaleLowerCase("es-ES");
 }
 
 function infinitiveGameListLabel(listId) {
@@ -6973,7 +6990,7 @@ function renderInfinitiveGameRun() {
       >
       <button type="button" class="practiceActionBtn" data-infinitive-game-submit>Submit</button>
     </div>
-    <div class="practiceTypingHint">Spanish characters: Ctrl/Cmd+Shift+A/E/I/O/U, ñ: Ctrl/Cmd+Shift+;. Number-pad shortcuts from the main app work here too. Double-space submits.</div>
+    <div class="practiceTypingHint">Spanish characters: Ctrl/Cmd+Shift+A/E/I/O/U/N. If Chrome catches N, Ctrl/Cmd+Shift+; also gives ñ. Double-space submits.</div>
   `;
   showPracticeModal(
     "Infinitive game",
@@ -7540,7 +7557,7 @@ function renderPracticeRun() {
   const body = `
     ${scoreHtml ? `<div class="practiceRunTop">${scoreHtml}</div>` : ""}
     ${PRACTICE_STATE.submitted ? renderPracticeLeaderboard() : ""}
-    ${PRACTICE_STATE.submitted ? "" : `<div class="practiceTypingHint">Accents: Ctrl/Cmd+Shift+A/E/I/O/U, ñ: Ctrl/Cmd+Shift+;. Mac also supports Option+E then vowel, Option+N then n. Double-space moves next.</div>`}
+    ${PRACTICE_STATE.submitted ? "" : `<div class="practiceTypingHint">Accents: Ctrl/Cmd+Shift+A/E/I/O/U/N. If Chrome catches N, Ctrl/Cmd+Shift+; also gives ñ. Mac also supports Option+E then vowel, Option+N then n. Double-space moves next.</div>`}
     ${renderPracticeMatrix(verbs, PRACTICE_STATE.selectedKeys)}
     ${submittedControls}
   `;
@@ -8925,6 +8942,8 @@ function handleShortcut(e) {
 }
 
 popClose.addEventListener("click", hidePopover);
+
+document.addEventListener("keydown", handlePracticeOverlaySpanishShortcutCapture, true);
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && isPracticeOverlayOpen()) {
