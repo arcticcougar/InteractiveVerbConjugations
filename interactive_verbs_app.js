@@ -4939,6 +4939,16 @@ function getFlashcardPasscodeFromModal() {
   return sanitizeFlashcardPasscode(document.querySelector("#practiceModal [data-flashcard-passcode]")?.value || "");
 }
 
+function clearFlashcardPasscode(playerName) {
+  const storageKey = flashcardAccountSessionKey(playerName);
+  if (!storageKey) return;
+  try {
+    sessionStorage.removeItem(storageKey);
+  } catch {
+    // Session storage is optional.
+  }
+}
+
 function getFlashcardAccountFor(playerName) {
   const account = PRACTICE_STATE.flashcardAccount || {};
   const cleaned = sanitizePracticePlayerName(playerName);
@@ -4957,7 +4967,8 @@ function setFlashcardAccountStatus(status, message = "", updates = {}) {
 function renderFlashcardAccountControls(playerName, passcode = "") {
   const account = getFlashcardAccountFor(playerName);
   const status = account?.status || "idle";
-  const message = account?.message || "Use a simple passcode to keep this learner's online progress separate.";
+  const signedIn = account?.authenticated && account?.playerName === sanitizePracticePlayerName(playerName);
+  const message = account?.message || "Use a simple passcode to protect this learner's scores and progress.";
   const statusClass = status === "synced"
     ? "flashcardAccountStatus flashcardAccountStatus--good"
     : status === "error"
@@ -4979,6 +4990,7 @@ function renderFlashcardAccountControls(playerName, passcode = "") {
         >
       </label>
       <div class="${statusClass}" data-flashcard-account-status>${escapeHtml(message)}</div>
+      ${signedIn ? `<button type="button" class="practiceSecondaryBtn learnerSwitchBtn" data-learner-logout>Switch learner</button>` : ""}
     </div>
   `;
 }
@@ -5346,11 +5358,14 @@ function renderPracticeSetup(verbKey = CURRENT_VERB_KEY, options = {}) {
   }
   PRACTICE_STATE.verbKey = setupVerb._key;
   PRACTICE_STATE.setupSkipsIntro = !!options.skipIntroOnStart;
+  const playerName = sanitizePracticePlayerName(PRACTICE_STATE.playerName || "");
+  const passcode = sanitizeFlashcardPasscode(getFlashcardAccountFor(playerName)?.passcode || loadFlashcardPasscode(playerName));
   const body = `
     ${renderPracticeChallengeSetupPanel(appliedChallenge?.challenge)}
     <div class="practicePanel">
       <div class="practiceSectionTitle">Player</div>
-      ${renderPracticePlayerControls(PRACTICE_STATE.playerName)}
+      ${renderPracticePlayerControls(playerName)}
+      ${renderFlashcardAccountControls(playerName, passcode)}
     </div>
     <div class="practiceActions practiceActions--primary">
       <button type="button" class="practiceActionBtn" data-practice-start>Start</button>
@@ -6715,6 +6730,7 @@ function defaultInfinitiveGameState(overrides = {}) {
     listId: "essential55",
     setNumber: 1,
     playerName: PRACTICE_STATE.playerName || loadPracticePlayerName(),
+    passcode: "",
     entries: [],
     currentIndex: 0,
     lives: INFINITIVE_GAME_LIVES,
@@ -6827,11 +6843,13 @@ function renderInfinitiveGameSetup(options = {}) {
   const listId = getInfinitiveGameListId(options.listId || current.listId);
   const setNumber = getInfinitiveGameSetNumber(options.setNumber ?? current.setNumber);
   const playerName = sanitizePracticePlayerName(options.playerName || current.playerName || PRACTICE_STATE.playerName);
+  const passcode = sanitizeFlashcardPasscode(options.passcode || current.passcode || getFlashcardAccountFor(playerName)?.passcode || loadFlashcardPasscode(playerName));
   PRACTICE_STATE.infinitiveGame = defaultInfinitiveGameState({
     mode: "setup",
     listId,
     setNumber,
-    playerName
+    playerName,
+    passcode
   });
   const selectedSet = getInfinitiveGameSet(listId, setNumber);
   const setLabel = formatInfinitiveGameSetLabel(setNumber);
@@ -6842,6 +6860,7 @@ function renderInfinitiveGameSetup(options = {}) {
     <div class="practicePanel">
       <div class="practiceSectionTitle">Player</div>
       ${renderPracticePlayerControls(playerName)}
+      ${renderFlashcardAccountControls(playerName, passcode)}
     </div>
     <div class="practiceActions practiceActions--primary">
       <button type="button" class="practiceActionBtn" data-infinitive-game-start>Start recall</button>
@@ -6885,9 +6904,14 @@ function buildInfinitiveGameEntries(listId, setNumber) {
   }));
 }
 
-function startInfinitiveGame(listId, setNumber, playerName) {
+function startInfinitiveGame(listId, setNumber, playerName, passcode = "") {
   if (!playerName) {
     alert("Enter a player name for online scoring.");
+    return;
+  }
+  const cleanPasscode = sanitizeFlashcardPasscode(passcode || getFlashcardAccountFor(playerName)?.passcode || loadFlashcardPasscode(playerName));
+  if (cleanPasscode.length < 4) {
+    alert("Enter a passcode of at least 4 characters before starting.");
     return;
   }
   PRACTICE_STATE.playerName = savePracticePlayerName(playerName);
@@ -6901,6 +6925,7 @@ function startInfinitiveGame(listId, setNumber, playerName) {
     listId,
     setNumber,
     playerName,
+    passcode: cleanPasscode,
     entries,
     startedAtMs: Date.now(),
     attemptId: createInfinitiveGameAttemptId()
@@ -6908,16 +6933,20 @@ function startInfinitiveGame(listId, setNumber, playerName) {
   renderInfinitiveGameRun();
 }
 
-function startInfinitiveGameFromSetup() {
+async function startInfinitiveGameFromSetup() {
   const hasPlayerControls = !!document.querySelector("#practiceModal input[data-practice-player-preset]");
   const playerName = hasPlayerControls
     ? getPracticePlayerNameFromModal()
     : sanitizePracticePlayerName(getInfinitiveGameState().playerName || PRACTICE_STATE.playerName);
+  const passcode = getFlashcardPasscodeFromModal() ||
+    sanitizeFlashcardPasscode(getInfinitiveGameState().passcode || getFlashcardAccountFor(playerName)?.passcode || loadFlashcardPasscode(playerName));
   const hasSetupControls = !!document.querySelector("#practiceModal input[data-infinitive-game-list]");
   const setup = hasSetupControls
     ? getInfinitiveGameSetupFromModal()
     : getInfinitiveGameState();
-  startInfinitiveGame(setup.listId, setup.setNumber, playerName);
+  const signedIn = await authenticateLearnerAccountOnline({ playerName, passcode });
+  if (!signedIn) return;
+  startInfinitiveGame(setup.listId, setup.setNumber, playerName, passcode);
 }
 
 function currentInfinitiveGameEntry(game = getInfinitiveGameState()) {
@@ -7192,6 +7221,7 @@ function buildInfinitiveGameScorePayload(game) {
   return {
     attemptId: game.attemptId,
     playerName: game.playerName,
+    passcode: sanitizeFlashcardPasscode(game.passcode || getFlashcardAccountFor(game.playerName)?.passcode || loadFlashcardPasscode(game.playerName)),
     listId: game.listId,
     setNumber: game.setNumber,
     setVersion: INFINITIVE_GAME_VERSION,
@@ -7880,6 +7910,67 @@ async function postFlashcardProgressOnline(payload) {
     throw new Error(data.message || "Online flashcard progress could not be saved.");
   }
   return data;
+}
+
+async function authenticateLearnerAccountOnline(setup, options = {}) {
+  const playerName = sanitizePracticePlayerName(setup?.playerName || "");
+  const passcode = sanitizeFlashcardPasscode(setup?.passcode || "");
+  if (!playerName) {
+    if (options.alert !== false) alert("Choose a learner or enter a name.");
+    return false;
+  }
+  if (passcode.length < 4) {
+    if (options.alert !== false) alert("Enter a passcode of at least 4 characters.");
+    return false;
+  }
+  setFlashcardAccountStatus("syncing", "Signing in...", {
+    playerName,
+    passcode,
+    authenticated: false
+  });
+  updateFlashcardAccountDomStatus("syncing", "Signing in...");
+  try {
+    const res = await fetch("/api/learner-account", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "auth", playerName, passcode })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.ok === false) {
+      throw new Error(data.message || "Learner account could not be verified.");
+    }
+    if (data.configured === false) {
+      setFlashcardAccountStatus("unavailable", data.message || "Learner accounts need storage setup.", {
+        playerName,
+        passcode,
+        authenticated: false,
+        storage: ""
+      });
+      updateFlashcardAccountDomStatus("unavailable", PRACTICE_STATE.flashcardAccount.message);
+      return false;
+    }
+    saveFlashcardPasscode(playerName, passcode);
+    setFlashcardAccountStatus("synced", data.account?.created ? `Created and signed in as ${playerName}.` : `Signed in as ${playerName}.`, {
+      playerName,
+      passcode,
+      authenticated: true,
+      storage: data.storage || "",
+      created: !!data.account?.created,
+      lastSyncedAt: Date.now()
+    });
+    updateFlashcardAccountDomStatus("synced", PRACTICE_STATE.flashcardAccount.message);
+    return true;
+  } catch (err) {
+    const message = err?.message || "Learner account could not be reached.";
+    setFlashcardAccountStatus("error", message, {
+      playerName,
+      passcode,
+      authenticated: false
+    });
+    updateFlashcardAccountDomStatus("error", message);
+    if (options.alert !== false) alert(message);
+    return false;
+  }
 }
 
 function updateFlashcardAccountDomStatus(status, message) {
@@ -9339,6 +9430,7 @@ function buildPracticeScorePayload(verbs, inputs, scored, attemptId) {
   return {
     attemptId,
     playerName: PRACTICE_STATE.playerName,
+    passcode: sanitizeFlashcardPasscode(getFlashcardAccountFor(PRACTICE_STATE.playerName)?.passcode || loadFlashcardPasscode(PRACTICE_STATE.playerName)),
     verbKeys: verbs.map(verb => verb._key),
     selectedKeys: [...PRACTICE_STATE.selectedKeys],
     inputs,
@@ -9661,7 +9753,7 @@ function bindPracticeModalInteractions() {
     PRACTICE_STATE.setupSkipsIntro = false;
     renderPracticeSetup(PRACTICE_STATE.verbKey || CURRENT_VERB_KEY, { useCurrentChallengeDefault: true });
   });
-  modal.querySelector("[data-practice-start]")?.addEventListener("click", () => {
+  modal.querySelector("[data-practice-start]")?.addEventListener("click", async () => {
     const selected = getPracticeSelectedKeysFromModal();
     if (!selected.length) {
       alert("Select at least one form to practice.");
@@ -9672,6 +9764,10 @@ function bindPracticeModalInteractions() {
       alert("Enter a player name for online scoring.");
       return;
     }
+    const passcode = getFlashcardPasscodeFromModal() ||
+      sanitizeFlashcardPasscode(getFlashcardAccountFor(playerName)?.passcode || loadFlashcardPasscode(playerName));
+    const signedIn = await authenticateLearnerAccountOnline({ playerName, passcode });
+    if (!signedIn) return;
     PRACTICE_STATE.playerName = savePracticePlayerName(playerName);
     const slots = getPracticeExtraSlotsFromModal();
     PRACTICE_STATE.extraVerbSlots = slots;
@@ -9737,13 +9833,57 @@ function bindPracticeModalInteractions() {
   };
   modal.querySelectorAll("input[data-practice-player-preset]").forEach(input => {
     input.addEventListener("change", () => {
-      if (!input.checked || !modal.querySelector("[data-flashcard-start]")) return;
+      if (!input.checked) return;
       if (input.dataset.practicePlayerPreset === "custom" && !getPracticePlayerNameFromModal()) {
         customPlayerInput?.focus();
         return;
       }
-      renderFlashcardSetup(getFlashcardSetupFromModal());
+      if (modal.querySelector("[data-flashcard-start]")) {
+        renderFlashcardSetup(getFlashcardSetupFromModal());
+        return;
+      }
+      const playerName = getPracticePlayerNameFromModal();
+      const passcode = loadFlashcardPasscode(playerName);
+      const passcodeInput = modal.querySelector("[data-flashcard-passcode]");
+      if (passcodeInput) passcodeInput.value = passcode;
+      setFlashcardAccountStatus("idle", "Use a simple passcode to protect this learner's scores and progress.", {
+        playerName,
+        passcode,
+        authenticated: false
+      });
+      updateFlashcardAccountDomStatus("idle", PRACTICE_STATE.flashcardAccount.message);
     });
+  });
+  modal.querySelector("[data-learner-logout]")?.addEventListener("click", () => {
+    const playerName = getPracticePlayerNameFromModal() || PRACTICE_STATE.playerName || "";
+    clearFlashcardPasscode(playerName);
+    setFlashcardAccountStatus("idle", "Choose a learner and enter their passcode.", {
+      playerName: "",
+      passcode: "",
+      authenticated: false,
+      storage: "",
+      created: false
+    });
+    PRACTICE_STATE.playerName = "";
+    if (modal.querySelector("[data-flashcard-start]")) {
+      renderFlashcardSetup({ ...getFlashcardSetupFromModal(), playerName: "", passcode: "" });
+      return;
+    }
+    if (modal.querySelector("[data-infinitive-game-start]")) {
+      const game = getInfinitiveGameState();
+      renderInfinitiveGameSetup({
+        listId: game.listId,
+        setNumber: game.setNumber,
+        playerName: "",
+        passcode: ""
+      });
+      return;
+    }
+    if (modal.querySelector("[data-practice-start]")) {
+      renderPracticeSetup(PRACTICE_STATE.verbKey || CURRENT_VERB_KEY, {
+        skipIntroOnStart: PRACTICE_STATE.setupSkipsIntro
+      });
+    }
   });
   modal.querySelector("[data-flashcard-profile-refresh]")?.addEventListener("click", refreshFlashcardProfile);
   modal.querySelectorAll("input[data-flashcard-deck]").forEach(input => {
@@ -9973,7 +10113,7 @@ function bindPracticeModalInteractions() {
   });
   modal.querySelector("[data-infinitive-game-retry]")?.addEventListener("click", () => {
     const game = getInfinitiveGameState();
-    startInfinitiveGame(game.listId, game.setNumber, game.playerName);
+    startInfinitiveGame(game.listId, game.setNumber, game.playerName, game.passcode);
   });
   modal.querySelector("[data-infinitive-game-missed]")?.addEventListener("click", () => {
     const game = getInfinitiveGameState();

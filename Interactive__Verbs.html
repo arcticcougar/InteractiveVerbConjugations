@@ -1625,7 +1625,7 @@
   }
   .flashcardAccountControls {
     display: grid;
-    grid-template-columns: minmax(180px, 260px) minmax(220px, 1fr);
+    grid-template-columns: minmax(180px, 260px) minmax(220px, 1fr) max-content;
     gap: 10px;
     align-items: end;
     margin-top: 10px;
@@ -1653,6 +1653,11 @@
   .flashcardAccountStatus--bad {
     border-color: rgb(255 111 176 / 36%);
     color: var(--accent);
+  }
+  .learnerSwitchBtn {
+    min-height: 34px;
+    align-self: end;
+    white-space: nowrap;
   }
   .practiceColumns {
     display: grid;
@@ -3829,6 +3834,6 @@ window.addEventListener("resize", () => {
 <script src="core_notes_overrides.js"></script>
 <script src="core_notes_manual_fixes.js"></script>
 <script src="practice-challenges.js?v=paper-workbook-qc-1"></script>
-<script src="interactive_verbs_app.js?v=adaptive-flashcards-8"></script>
+<script src="interactive_verbs_app.js?v=adaptive-flashcards-9"></script>
 </body>
 </html>

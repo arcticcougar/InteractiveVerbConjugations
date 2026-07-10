@@ -3,6 +3,7 @@
 const fs = require("fs");
 const path = require("path");
 const { createHash, randomUUID } = require("crypto");
+const learnerAccounts = require("./learner-accounts");
 
 const SCORE_VERSION = "infinitive-game-v3";
 const SET_COUNT = 5;
@@ -597,6 +598,12 @@ async function handlePost(req, res) {
   const playerName = sanitizePlayerName(body.playerName);
   if (!playerName) throw new Error("Player name is required.");
 
+  const auth = await learnerAccounts.authenticateLearner({
+    playerName,
+    passcode: body.passcode
+  }, { create: true });
+  if (!auth.ok) return json(res, auth.status, auth.payload);
+
   const scored = summarizeAttempt(body);
   const attemptId = sanitizeAttemptId(body.attemptId);
   const durationMs = normalizeDurationMs(body.durationMs);
@@ -611,6 +618,7 @@ async function handlePost(req, res) {
       configured: true,
       storage: "blob",
       scored,
+      account: learnerAccounts.accountPayload(auth),
       leaderboard
     });
   }
@@ -685,6 +693,7 @@ async function handlePost(req, res) {
     configured: true,
     storage: "postgres",
     scored,
+    account: learnerAccounts.accountPayload(auth),
     leaderboard
   });
 }
