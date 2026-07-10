@@ -4825,9 +4825,9 @@ function sanitizePracticePlayerName(value) {
 
 function loadPracticePlayerName() {
   try {
-    return sanitizePracticePlayerName(localStorage.getItem(PRACTICE_PLAYER_KEY) || "") || "Scott";
+    return "";
   } catch {
-    return "Scott";
+    return "";
   }
 }
 
@@ -7550,7 +7550,7 @@ let FLASHCARD_PROGRESS_CACHE = null;
 const FLASHCARD_EXAMPLE_PAIR_CACHE = new Map();
 
 function defaultFlashcardProgressStore() {
-  const playerName = sanitizePracticePlayerName(loadPracticePlayerName()) || "Scott";
+  const playerName = sanitizePracticePlayerName(loadPracticePlayerName());
   return {
     version: FLASHCARD_VERSION,
     profiles: {},
@@ -7564,8 +7564,9 @@ function defaultFlashcardProgressStore() {
 }
 
 function flashcardProfileKey(playerName) {
-  const cleaned = sanitizePracticePlayerName(playerName) || "Scott";
-  return normalize(cleaned).replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "") || "scott";
+  const cleaned = sanitizePracticePlayerName(playerName);
+  if (!cleaned) return "";
+  return normalize(cleaned).replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "") || "";
 }
 
 function getFlashcardProgressStore() {
@@ -7578,7 +7579,8 @@ function getFlashcardProgressStore() {
       return FLASHCARD_PROGRESS_CACHE;
     }
     const parsedSettings = parsed.settings && typeof parsed.settings === "object" ? parsed.settings : {};
-    const playerName = sanitizePracticePlayerName(parsedSettings.playerName || fallback.settings.playerName) || "Scott";
+    const storedPlayerName = sanitizePracticePlayerName(parsedSettings.playerName || "");
+    const playerName = sanitizePracticePlayerName(fallback.settings.playerName);
     const rawSelectedKeys = Array.isArray(parsedSettings.selectedKeys)
       ? parsedSettings.selectedKeys
       : fallback.settings.selectedKeys;
@@ -7590,17 +7592,20 @@ function getFlashcardProgressStore() {
       ? { ...parsed.profiles }
       : {};
     if (parsed.cards && typeof parsed.cards === "object") {
-      const profileKey = flashcardProfileKey(playerName);
-      const existing = profiles[profileKey] && typeof profiles[profileKey] === "object"
-        ? profiles[profileKey]
-        : {};
-      profiles[profileKey] = {
-        displayName: playerName,
-        cards: {
-          ...parsed.cards,
-          ...(existing.cards && typeof existing.cards === "object" ? existing.cards : {})
-        }
-      };
+      const migrationPlayerName = storedPlayerName || "Scott";
+      const profileKey = flashcardProfileKey(migrationPlayerName);
+      if (profileKey) {
+        const existing = profiles[profileKey] && typeof profiles[profileKey] === "object"
+          ? profiles[profileKey]
+          : {};
+        profiles[profileKey] = {
+          displayName: migrationPlayerName,
+          cards: {
+            ...parsed.cards,
+            ...(existing.cards && typeof existing.cards === "object" ? existing.cards : {})
+          }
+        };
+      }
     }
     FLASHCARD_PROGRESS_CACHE = {
       version: FLASHCARD_VERSION,
@@ -7634,8 +7639,10 @@ function getFlashcardProgressCards(playerName) {
     PRACTICE_STATE.flashcards?.playerName ||
     store.settings?.playerName ||
     loadPracticePlayerName()
-  ) || "Scott";
+  );
+  if (!displayName) return {};
   const profileKey = flashcardProfileKey(displayName);
+  if (!profileKey) return {};
   const current = store.profiles[profileKey];
   if (!current || typeof current !== "object") {
     store.profiles[profileKey] = { displayName, cards: {} };
@@ -7686,7 +7693,7 @@ function defaultFlashcardState(overrides = {}) {
     deckId: "essential55-verbs",
     selectedKeys: [...FLASHCARD_DEFAULT_TENSE_KEYS],
     sessionSize: 20,
-    playerName: sanitizePracticePlayerName(loadPracticePlayerName()) || "Scott",
+    playerName: sanitizePracticePlayerName(loadPracticePlayerName()),
     progressSort: "hardest",
     queue: [],
     currentIndex: 0,
@@ -7707,7 +7714,7 @@ function getFlashcardState() {
       deckId: getFlashcardDeck(settings.deckId).id,
       selectedKeys: sanitizeFlashcardTenseKeys(settings.selectedKeys),
       sessionSize: sanitizeFlashcardSessionSize(settings.sessionSize),
-      playerName: sanitizePracticePlayerName(settings.playerName || loadPracticePlayerName()) || "Scott"
+      playerName: sanitizePracticePlayerName(PRACTICE_STATE.playerName || loadPracticePlayerName())
     });
   }
   return PRACTICE_STATE.flashcards;
@@ -7722,7 +7729,7 @@ function saveFlashcardSettings(game) {
     deckId,
     selectedKeys,
     sessionSize: sanitizeFlashcardSessionSizeForMax(game.sessionSize, sessionMax),
-    playerName: sanitizePracticePlayerName(game.playerName || loadPracticePlayerName()) || "Scott"
+    playerName: sanitizePracticePlayerName(game.playerName || loadPracticePlayerName())
   };
   saveFlashcardProgressStore();
 }
@@ -8366,14 +8373,15 @@ function renderFlashcardSetup(options = {}) {
   const playerName = sanitizePracticePlayerName(
     options.playerName ||
     current.playerName ||
-    getFlashcardProgressStore().settings?.playerName ||
+    PRACTICE_STATE.playerName ||
     loadPracticePlayerName()
-  ) || "Scott";
-  PRACTICE_STATE.playerName = savePracticePlayerName(playerName);
+  );
+  PRACTICE_STATE.playerName = playerName ? savePracticePlayerName(playerName) : "";
   PRACTICE_STATE.flashcards = defaultFlashcardState({ deckId, selectedKeys, sessionSize, playerName });
   const game = getFlashcardState();
   saveFlashcardSettings(game);
   const stats = getFlashcardDeckStats(refs, Date.now(), playerName);
+  const playerMeta = playerName || "Choose learner";
   const tensePanel = deck.cardType === "cloze" ? `
     <div class="practicePanel flashcardFlatPanel">
       <div class="practiceSectionTitle">Tenses</div>
@@ -8421,7 +8429,7 @@ function renderFlashcardSetup(options = {}) {
   `;
   showPracticeModal(
     "Adaptive flashcard setup",
-    `${playerName} · ${deck.label} · ${stats.totalCount} cards`,
+    `${playerMeta} · ${deck.label} · ${stats.totalCount} cards`,
     body
   );
 }
@@ -8561,7 +8569,8 @@ function renderFlashcardProgressView(options = {}) {
   const selectedKeys = sanitizeFlashcardTenseKeys(options.selectedKeys || current.selectedKeys);
   const refs = buildFlashcardDeckRefs(deckId, selectedKeys);
   const sessionSize = sanitizeFlashcardSessionSizeForMax(options.sessionSize || current.sessionSize, refs.length);
-  const playerName = sanitizePracticePlayerName(options.playerName || current.playerName) || "Scott";
+  const playerName = sanitizePracticePlayerName(options.playerName || current.playerName);
+  const playerMeta = playerName || "Choose learner";
   const allowedSorts = new Set(["hardest", "easiest", "most-reviewed", "alphabetical"]);
   const progressSort = allowedSorts.has(options.progressSort || current.progressSort)
     ? (options.progressSort || current.progressSort)
@@ -8627,7 +8636,7 @@ function renderFlashcardProgressView(options = {}) {
   `;
   showPracticeModal(
     "Flashcard progress",
-    `${playerName} · ${deck.label}`,
+    `${playerMeta} · ${deck.label}`,
     body
   );
 }
@@ -8935,6 +8944,10 @@ function renderFlashcardResult() {
 
 function resetCurrentFlashcardDeckProgress() {
   const setup = getFlashcardSetupFromModal();
+  if (!setup.playerName) {
+    alert("Choose a learner or enter a name before resetting progress.");
+    return;
+  }
   const deck = getFlashcardDeck(setup.deckId);
   const resetKeys = deck.cardType === "cloze" ? FLASHCARD_CLOZE_TENSE_KEYS : setup.selectedKeys;
   const refs = buildFlashcardDeckRefs(setup.deckId, resetKeys);
