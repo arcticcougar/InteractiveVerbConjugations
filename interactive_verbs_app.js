@@ -2,6 +2,7 @@
 
 const STATE_KEY = "ivc_state_v1";
 const PRACTICE_PLAYER_KEY = "ivc_practice_player_v1";
+const FLASHCARD_STORAGE_KEY = "ivc_flashcards_v1";
 const BACKUP_VERSION = 1;
 
 function initialInfinitiveKey(verb) {
@@ -2135,6 +2136,7 @@ let PRACTICE_STATE = {
     selectedKeys: []
   },
   infinitiveGame: null,
+  flashcards: null,
   modalLocked: false
 };
 
@@ -4283,6 +4285,7 @@ function renderDetail(verbKey) {
           <span class="pill">#${getDisplayVerbNumber(verb)}</span>
           <button type="button" class="practiceLaunchBtn" data-practice-launch="${verb._key}" aria-label="Start practice mode" title="Practice mode">&#127918;</button>
           <button type="button" class="practiceLaunchBtn infinitiveGameLaunchBtn" data-infinitive-game-launch aria-label="Start infinitive game" title="Infinitive game">&#127919;</button>
+          <button type="button" class="practiceLaunchBtn flashcardLaunchBtn" data-flashcard-launch aria-label="Start adaptive flashcards" title="Adaptive flashcards">&#128218;</button>
           <button type="button" class="practiceLaunchBtn leaderboardLaunchBtn" data-leaderboard-launch="${verb._key}" aria-label="View leaderboard" title="Leaderboard">&#127942;</button>
         </div>
         <div class="meaning">${escapeHtml(meaningInfo.meaning || "")}</div>
@@ -7462,6 +7465,1103 @@ function renderInfinitiveGameLeaderboardView(options = {}) {
   if (!options.skipLoad) loadInfinitiveGameLeaderboardOnline(listId, setNumber);
 }
 
+const FLASHCARD_VERSION = 1;
+const FLASHCARD_DAY_MS = 24 * 60 * 60 * 1000;
+const FLASHCARD_AGAIN_DELAY_MS = 10 * 60 * 1000;
+const FLASHCARD_AGAIN_GAP = 3;
+const FLASHCARD_SESSION_SIZES = [10, 20, 50];
+const FLASHCARD_CLOZE_TENSE_KEYS = [
+  "1", "2", "3", "4", "5", "6", "7",
+  "8", "9", "10", "11", "12", "13", "14",
+  "imperative"
+];
+const FLASHCARD_DEFAULT_TENSE_KEYS = ["1", "2", "3", "4", "5"];
+const FLASHCARD_DECKS = {
+  "essential55-verbs": {
+    id: "essential55-verbs",
+    listId: "essential55",
+    cardType: "verb",
+    label: "Essential 55 - verb cards",
+    description: "Spanish infinitives with their English meanings."
+  },
+  "core501-verbs": {
+    id: "core501-verbs",
+    listId: "core501",
+    cardType: "verb",
+    label: "Full 501 - verb cards",
+    description: "All numbered verbs with their English meanings."
+  },
+  "essential55-cloze": {
+    id: "essential55-cloze",
+    listId: "essential55",
+    cardType: "cloze",
+    label: "Essential 55 - sentence cloze",
+    description: "Conjugated verbs blanked inside translated sentences."
+  },
+  "core501-cloze": {
+    id: "core501-cloze",
+    listId: "core501",
+    cardType: "cloze",
+    label: "Full 501 - sentence cloze",
+    description: "Tense-selectable sentence cards for all numbered verbs."
+  }
+};
+const FLASHCARD_PERSON_SPECS = [
+  { number: "sg", tableKey: "singular", index: 0, es: "yo", en: "I", objectEn: "me", bePresent: "am", bePast: "was", have: "have" },
+  { number: "sg", tableKey: "singular", index: 1, es: "tú", en: "you", objectEn: "you", bePresent: "are", bePast: "were", have: "have" },
+  { number: "sg", tableKey: "singular", index: 2, es: "él", en: "he", objectEn: "him", bePresent: "is", bePast: "was", have: "has" },
+  { number: "pl", tableKey: "plural", index: 0, es: "nosotros", en: "we", objectEn: "us", bePresent: "are", bePast: "were", have: "have" },
+  { number: "pl", tableKey: "plural", index: 1, es: "vosotros", en: "you all", objectEn: "you all", bePresent: "are", bePast: "were", have: "have" },
+  { number: "pl", tableKey: "plural", index: 2, es: "ellos", en: "they", objectEn: "them", bePresent: "are", bePast: "were", have: "have" }
+];
+const FLASHCARD_IMPERATIVE_SPECS = [
+  { slot: "tu", label: "tú" },
+  { slot: "usted", label: "usted" },
+  { slot: "nosotros", label: "nosotros" },
+  { slot: "vosotros", label: "vosotros" },
+  { slot: "ustedes", label: "ustedes" }
+];
+let FLASHCARD_PROGRESS_CACHE = null;
+const FLASHCARD_EXAMPLE_PAIR_CACHE = new Map();
+
+function defaultFlashcardProgressStore() {
+  return {
+    version: FLASHCARD_VERSION,
+    cards: {},
+    settings: {
+      deckId: "essential55-verbs",
+      selectedKeys: [...FLASHCARD_DEFAULT_TENSE_KEYS],
+      sessionSize: 20
+    }
+  };
+}
+
+function getFlashcardProgressStore() {
+  if (FLASHCARD_PROGRESS_CACHE) return FLASHCARD_PROGRESS_CACHE;
+  const fallback = defaultFlashcardProgressStore();
+  try {
+    const parsed = JSON.parse(localStorage.getItem(FLASHCARD_STORAGE_KEY) || "null");
+    if (!parsed || typeof parsed !== "object") {
+      FLASHCARD_PROGRESS_CACHE = fallback;
+      return FLASHCARD_PROGRESS_CACHE;
+    }
+    FLASHCARD_PROGRESS_CACHE = {
+      version: FLASHCARD_VERSION,
+      cards: parsed.cards && typeof parsed.cards === "object" ? parsed.cards : {},
+      settings: {
+        ...fallback.settings,
+        ...(parsed.settings && typeof parsed.settings === "object" ? parsed.settings : {})
+      }
+    };
+  } catch {
+    FLASHCARD_PROGRESS_CACHE = fallback;
+  }
+  return FLASHCARD_PROGRESS_CACHE;
+}
+
+function saveFlashcardProgressStore() {
+  try {
+    localStorage.setItem(FLASHCARD_STORAGE_KEY, JSON.stringify(getFlashcardProgressStore()));
+  } catch {
+    // Keep the current session usable if local storage is unavailable.
+  }
+}
+
+function getFlashcardDeck(deckId) {
+  return FLASHCARD_DECKS[deckId] || FLASHCARD_DECKS["essential55-verbs"];
+}
+
+function sanitizeFlashcardTenseKeys(keys) {
+  const allowed = new Set(FLASHCARD_CLOZE_TENSE_KEYS);
+  const out = [];
+  (Array.isArray(keys) ? keys : []).forEach(key => {
+    const value = String(key || "");
+    if (allowed.has(value) && !out.includes(value)) out.push(value);
+  });
+  return out.length ? out : [...FLASHCARD_DEFAULT_TENSE_KEYS];
+}
+
+function sanitizeFlashcardSessionSize(value) {
+  const size = Math.round(Number(value) || 20);
+  return FLASHCARD_SESSION_SIZES.includes(size) ? size : 20;
+}
+
+function defaultFlashcardState(overrides = {}) {
+  return {
+    mode: "setup",
+    deckId: "essential55-verbs",
+    selectedKeys: [...FLASHCARD_DEFAULT_TENSE_KEYS],
+    sessionSize: 20,
+    queue: [],
+    currentIndex: 0,
+    revealed: false,
+    startedAtMs: 0,
+    finishedAtMs: 0,
+    durationMs: 0,
+    initialCardCount: 0,
+    ratingCounts: { again: 0, hard: 0, good: 0, easy: 0 },
+    ...overrides
+  };
+}
+
+function getFlashcardState() {
+  if (!PRACTICE_STATE.flashcards) {
+    const settings = getFlashcardProgressStore().settings || {};
+    PRACTICE_STATE.flashcards = defaultFlashcardState({
+      deckId: getFlashcardDeck(settings.deckId).id,
+      selectedKeys: sanitizeFlashcardTenseKeys(settings.selectedKeys),
+      sessionSize: sanitizeFlashcardSessionSize(settings.sessionSize)
+    });
+  }
+  return PRACTICE_STATE.flashcards;
+}
+
+function saveFlashcardSettings(game) {
+  const store = getFlashcardProgressStore();
+  store.settings = {
+    deckId: getFlashcardDeck(game.deckId).id,
+    selectedKeys: sanitizeFlashcardTenseKeys(game.selectedKeys),
+    sessionSize: sanitizeFlashcardSessionSize(game.sessionSize)
+  };
+  saveFlashcardProgressStore();
+}
+
+function flashcardAnswerVariants(rawValue, options = {}) {
+  const text = cleanText(rawValue || "");
+  if (!text || text === "--" || text === "-") return [];
+  const primary = options.imperative ? cleanText(text.split(/\s*;\s*/)[0] || "") : text;
+  if (!primary || !primary.includes("/")) return primary ? [primary] : [];
+  const sides = primary.split(/\s*\/\s*/).map(cleanText).filter(Boolean);
+  if (sides.length !== 2) return sides;
+  const leftWords = sides[0].split(/\s+/).filter(Boolean);
+  const rightWords = sides[1].split(/\s+/).filter(Boolean);
+  const prefix = leftWords.slice(0, -1);
+  if (rightWords.length > 1) {
+    if (leftWords[0] === rightWords[0]) return sides;
+    const tail = rightWords.slice(1);
+    return [
+      [...leftWords, ...tail].join(" "),
+      [...prefix, ...rightWords].join(" ")
+    ];
+  }
+  if (!prefix.length) return sides;
+  return [sides[0], [...prefix, rightWords[0]].join(" ")];
+}
+
+function parseFlashcardImperativeForms(verb) {
+  const lines = (verb.imperative_raw || verb.imperative || []).map(cleanText).filter(Boolean);
+  const fallback = verb.imperativeParsed || parseImperativeLines(verb.imperative || []);
+  const positive = value => cleanText((value || "").split(/\s*;\s*/)[0] || "")
+    .replace(/^[-—]\s*/, "")
+    .trim();
+  const splitCommandPairs = value => cleanText(value || "")
+    .split(/\s+(?=[^\s;]+;\s*no\s+)/i)
+    .map(cleanText)
+    .filter(Boolean);
+  const secondPersonPairs = splitCommandPairs(lines[1] || "");
+  const thirdPersonPairs = splitCommandPairs(lines[2] || "");
+  const thirdPersonTokens = cleanText(lines[2] || "").split(/\s+/).filter(Boolean);
+  return {
+    nosotros: positive(lines[0]) || fallback.nosotros || "",
+    tu: positive(secondPersonPairs[0]) || positive(fallback.tu) || "",
+    vosotros: positive(secondPersonPairs[1]) || positive(fallback.vosotros) || "",
+    usted: (
+      thirdPersonPairs.length >= 2 ? positive(thirdPersonPairs[0]) : thirdPersonTokens[0]
+    ) || positive(fallback.usted) || "",
+    ustedes: positive(thirdPersonPairs[1]) || (
+      thirdPersonPairs.length < 2 && thirdPersonTokens.length > 1
+        ? thirdPersonTokens[thirdPersonTokens.length - 1]
+        : ""
+    ) || positive(fallback.ustedes) || ""
+  };
+}
+
+function getFlashcardTenseForms(verb, tenseKey) {
+  const key = String(tenseKey || "");
+  if (key === "imperative") {
+    const parsed = parseFlashcardImperativeForms(verb);
+    return FLASHCARD_IMPERATIVE_SPECS.flatMap(spec => {
+      const variants = flashcardAnswerVariants(parsed[spec.slot] || "", { imperative: true });
+      return variants.length ? [{
+        answer: variants[0],
+        variants,
+        personLabel: spec.label,
+        imperative: true
+      }] : [];
+    });
+  }
+  const tenseNumber = Number(key);
+  const source = tenseNumber <= 7 ? verb.simple : verb.compound;
+  const tableEntry = Object.entries(source || {}).find(([rawKey]) => extractTenseNumber(rawKey) === tenseNumber);
+  const table = tableEntry?.[1];
+  if (!table) return [];
+  return FLASHCARD_PERSON_SPECS.flatMap(person => {
+    const raw = table[person.tableKey]?.[person.index] || "";
+    const variants = flashcardAnswerVariants(raw);
+    return variants.length ? [{
+      answer: variants[0],
+      variants,
+      personLabel: person.es,
+      person,
+      imperative: false
+    }] : [];
+  });
+}
+
+function buildFlashcardDeckRefs(deckId, selectedKeys) {
+  const deck = getFlashcardDeck(deckId);
+  const verbs = getInfinitiveGamePool(deck.listId);
+  if (deck.cardType === "verb") {
+    return verbs.map(verb => ({
+      cardId: `verb|${verb._key}`,
+      verbKey: verb._key,
+      tenseKey: "",
+      cardType: "verb"
+    }));
+  }
+  const keys = sanitizeFlashcardTenseKeys(selectedKeys);
+  return verbs.flatMap(verb => keys.flatMap(tenseKey => (
+    getFlashcardTenseForms(verb, tenseKey).length ? [{
+      cardId: `cloze|${verb._key}|${tenseKey}`,
+      verbKey: verb._key,
+      tenseKey,
+      cardType: "cloze"
+    }] : []
+  )));
+}
+
+function getFlashcardProgressRecord(cardId) {
+  const raw = getFlashcardProgressStore().cards[cardId];
+  if (!raw || typeof raw !== "object") return null;
+  return {
+    reps: Math.max(0, Number(raw.reps) || 0),
+    lapses: Math.max(0, Number(raw.lapses) || 0),
+    ease: Math.max(1.3, Number(raw.ease) || 2.5),
+    intervalDays: Math.max(0, Number(raw.intervalDays) || 0),
+    dueAt: Math.max(0, Number(raw.dueAt) || 0),
+    lastReviewedAt: Math.max(0, Number(raw.lastReviewedAt) || 0),
+    lastRating: cleanText(raw.lastRating || "")
+  };
+}
+
+function getFlashcardDeckStats(refs, now = Date.now()) {
+  return (refs || []).reduce((stats, ref) => {
+    const progress = getFlashcardProgressRecord(ref.cardId);
+    if (!progress?.reps) {
+      stats.newCount += 1;
+      return stats;
+    }
+    stats.learnedCount += 1;
+    if (progress.dueAt <= now) stats.dueCount += 1;
+    if (
+      progress.lapses > 0 ||
+      progress.ease < 2.35 ||
+      progress.lastRating === "again" ||
+      progress.lastRating === "hard"
+    ) {
+      stats.difficultCount += 1;
+    }
+    return stats;
+  }, {
+    totalCount: refs?.length || 0,
+    newCount: 0,
+    learnedCount: 0,
+    dueCount: 0,
+    difficultCount: 0
+  });
+}
+
+function flashcardDifficultyScore(ref) {
+  const progress = getFlashcardProgressRecord(ref.cardId);
+  if (!progress) return 0;
+  const ratingBoost = progress.lastRating === "again" ? 4 : progress.lastRating === "hard" ? 2 : 0;
+  return (progress.lapses * 3) + Math.max(0, (2.5 - progress.ease) * 4) + ratingBoost;
+}
+
+function selectFlashcardSessionRefs(refs, sessionSize, seedText) {
+  const now = Date.now();
+  const due = [];
+  const unseen = [];
+  const future = [];
+  (refs || []).forEach(ref => {
+    const progress = getFlashcardProgressRecord(ref.cardId);
+    if (!progress?.reps) {
+      unseen.push(ref);
+    } else if (progress.dueAt <= now) {
+      due.push(ref);
+    } else {
+      future.push(ref);
+    }
+  });
+  due.sort((a, b) => {
+    const difficulty = flashcardDifficultyScore(b) - flashcardDifficultyScore(a);
+    if (difficulty) return difficulty;
+    return (getFlashcardProgressRecord(a.cardId)?.dueAt || 0) - (getFlashcardProgressRecord(b.cardId)?.dueAt || 0);
+  });
+  const orderedNew = deterministicShuffle(unseen, `flashcards-v${FLASHCARD_VERSION}:${seedText}`);
+  future.sort((a, b) => {
+    const dueDiff = (getFlashcardProgressRecord(a.cardId)?.dueAt || 0) - (getFlashcardProgressRecord(b.cardId)?.dueAt || 0);
+    return dueDiff || flashcardDifficultyScore(b) - flashcardDifficultyScore(a);
+  });
+  return [...due, ...orderedNew, ...future].slice(0, sanitizeFlashcardSessionSize(sessionSize));
+}
+
+function getFlashcardExamplePairs(verb) {
+  if (FLASHCARD_EXAMPLE_PAIR_CACHE.has(verb._key)) {
+    return FLASHCARD_EXAMPLE_PAIR_CACHE.get(verb._key);
+  }
+  const pairs = [];
+  (verb.extras?.related || []).forEach(line => {
+    cleanText(line).split(/\s*;\s*/).map(cleanText).filter(Boolean).forEach(chunk => {
+      const parts = chunk.split(/\s+-\s+/).map(cleanText).filter(Boolean);
+      if (parts.length < 2) return;
+      for (let idx = 0; idx + 1 < parts.length; idx += 2) {
+        const es = parts[idx];
+        const en = parts[idx + 1];
+        const spanishWords = es.match(/\p{L}+/gu) || [];
+        const englishWords = en.match(/\p{L}+/gu) || [];
+        if (spanishWords.length < 3 || englishWords.length < 2) continue;
+        pairs.push({ es, en });
+      }
+    });
+  });
+  FLASHCARD_EXAMPLE_PAIR_CACHE.set(verb._key, pairs);
+  return pairs;
+}
+
+function matchFlashcardPhrase(sentence, phrase) {
+  const value = cleanText(phrase || "");
+  if (!value) return null;
+  const pattern = escapeRegExp(value).replace(/\s+/g, "\\s+");
+  const rx = new RegExp(`(^|[^\\p{L}])(${pattern})(?=$|[^\\p{L}])`, "iu");
+  const match = rx.exec(sentence);
+  if (!match) return null;
+  const start = match.index + match[1].length;
+  return { start, end: start + match[2].length, matched: match[2] };
+}
+
+function findFlashcardTranslatedExample(verb, forms) {
+  const searchableForms = (forms || [])
+    .flatMap(form => form.variants.map(variant => ({ form, variant })))
+    .sort((a, b) => b.variant.length - a.variant.length);
+  for (const pair of getFlashcardExamplePairs(verb)) {
+    for (const candidate of searchableForms) {
+      const match = matchFlashcardPhrase(pair.es, candidate.variant);
+      if (!match) continue;
+      return {
+        answer: match.matched,
+        personLabel: candidate.form.personLabel,
+        spanish: pair.es,
+        clozeSpanish: `${pair.es.slice(0, match.start)}____${pair.es.slice(match.end)}`,
+        english: pair.en,
+        source: "translated example"
+      };
+    }
+  }
+  return null;
+}
+
+function getFlashcardEnglishAction(verb) {
+  let meaning = formatInfinitiveGameMeaning(verb)
+    .replace(/^to\s+/i, "")
+    .replace(/\([^)]*\)/g, "")
+    .trim();
+  meaning = cleanText(meaning.split(/\s*(?:[,;/]|\bor\b)\s*/i)[0] || meaning);
+  return meaning || "perform this action";
+}
+
+function adaptFlashcardReflexiveEnglish(action, personLabel) {
+  const reflexiveByPerson = {
+    yo: "myself",
+    "tú": "yourself",
+    "él": "himself",
+    nosotros: "ourselves",
+    vosotros: "yourselves",
+    ellos: "themselves",
+    usted: "yourself",
+    ustedes: "yourselves"
+  };
+  const reflexive = reflexiveByPerson[personLabel] || "oneself";
+  return String(action || "").replace(/\boneself\b/gi, reflexive);
+}
+
+function capitalizeFlashcardText(value) {
+  const text = String(value || "");
+  return text ? `${text.charAt(0).toUpperCase()}${text.slice(1)}` : "";
+}
+
+function flashcardPresentEnglish(person, action) {
+  if (/^be(?:\s|$)/i.test(action)) {
+    return `${capitalizeFlashcardText(person.en)} ${person.bePresent}${action.slice(2)}`;
+  }
+  const helper = person.index === 2 && person.number === "sg" ? "does" : "do";
+  return `${capitalizeFlashcardText(person.en)} ${helper} ${action}`;
+}
+
+function flashcardPreteriteEnglish(person, action) {
+  if (/^be(?:\s|$)/i.test(action)) {
+    return `${person.en} ${person.bePast}${action.slice(2)}`;
+  }
+  return `${person.en} did ${action}`;
+}
+
+function buildSpecialGeneratedFlashcardSentence(verb, tenseKey, form) {
+  const verbKey = normalize(verb?.infinitive || "");
+  const answer = form.answer;
+  if (verbKey === "haber") {
+    const special = {
+      "1": {
+        spanish: `Él ${answer} terminado.`,
+        clozeSpanish: "Él ____ terminado.",
+        english: "He has finished."
+      },
+      "2": {
+        spanish: `Antes, él ${answer} terminado.`,
+        clozeSpanish: "Antes, él ____ terminado.",
+        english: "He had finished before."
+      },
+      "3": {
+        spanish: `Apenas él ${answer} terminado, salió.`,
+        clozeSpanish: "Apenas él ____ terminado, salió.",
+        english: "As soon as he had finished, he left."
+      },
+      "4": {
+        spanish: `Para mañana, él ${answer} terminado.`,
+        clozeSpanish: "Para mañana, él ____ terminado.",
+        english: "By tomorrow, he will have finished."
+      },
+      "5": {
+        spanish: `En otras circunstancias, él ${answer} terminado.`,
+        clozeSpanish: "En otras circunstancias, él ____ terminado.",
+        english: "In other circumstances, he would have finished."
+      },
+      "6": {
+        spanish: `Es posible que él ${answer} terminado.`,
+        clozeSpanish: "Es posible que él ____ terminado.",
+        english: "It is possible that he has finished."
+      },
+      "7": {
+        spanish: `Querían que él ${answer} terminado.`,
+        clozeSpanish: "Querían que él ____ terminado.",
+        english: "They wanted him to have finished."
+      },
+      "8": {
+        spanish: `Hasta ahora, ${answer} cambios.`,
+        clozeSpanish: "Hasta ahora, ____ cambios.",
+        english: "Up to now, there have been changes."
+      },
+      "9": {
+        spanish: `Para entonces, ya ${answer} cambios.`,
+        clozeSpanish: "Para entonces, ya ____ cambios.",
+        english: "By then, there had already been changes."
+      },
+      "10": {
+        spanish: `Apenas ${answer} cambios, continuó la historia.`,
+        clozeSpanish: "Apenas ____ cambios, continuó la historia.",
+        english: "As soon as there had been changes, the story continued."
+      },
+      "11": {
+        spanish: `Para mañana, ya ${answer} cambios.`,
+        clozeSpanish: "Para mañana, ya ____ cambios.",
+        english: "By tomorrow, there will have been changes."
+      },
+      "12": {
+        spanish: `En otras circunstancias, ${answer} cambios.`,
+        clozeSpanish: "En otras circunstancias, ____ cambios.",
+        english: "In other circumstances, there would have been changes."
+      },
+      "13": {
+        spanish: `Es posible que ya ${answer} cambios.`,
+        clozeSpanish: "Es posible que ya ____ cambios.",
+        english: "It is possible that there have already been changes."
+      },
+      "14": {
+        spanish: `Ojalá que ${answer} cambios antes.`,
+        clozeSpanish: "Ojalá que ____ cambios antes.",
+        english: "If only there had been changes earlier."
+      },
+      imperative: {
+        spanish: `${capitalizeFlashcardText(answer)} paciencia.`,
+        clozeSpanish: "____ paciencia.",
+        english: "Let there be patience."
+      }
+    }[String(tenseKey)];
+    return special ? {
+      answer,
+      personLabel: tenseKey === "imperative" ? "usted" : "él",
+      ...special
+    } : null;
+  }
+  if (verbKey === "gustar") {
+    const special = {
+      "1": ["A Ana le {{answer}} esta idea.", "Ana likes this idea."],
+      "2": ["Antes, a Ana le {{answer}} esta idea.", "Ana used to like this idea."],
+      "3": ["Ayer, a Ana le {{answer}} esta idea.", "Ana liked this idea yesterday."],
+      "4": ["Mañana, a Ana le {{answer}} esta idea.", "Ana will like this idea tomorrow."],
+      "5": ["En esa situación, a Ana le {{answer}} esta idea.", "Ana would like this idea in that situation."],
+      "6": ["Es importante que a Ana le {{answer}} esta idea.", "It is important that Ana like this idea."],
+      "7": ["Querían que a Ana le {{answer}} esta idea.", "They wanted Ana to like this idea."],
+      "8": ["Hasta ahora, a Ana le {{answer}} esta idea.", "Up to now, Ana has liked this idea."],
+      "9": ["Para entonces, a Ana ya le {{answer}} esta idea.", "By then, Ana had already liked this idea."],
+      "10": ["Apenas a Ana le {{answer}} la idea, sonrió.", "As soon as Ana had liked the idea, she smiled."],
+      "11": ["Para mañana, a Ana ya le {{answer}} esta idea.", "By tomorrow, Ana will have liked this idea."],
+      "12": ["En otras circunstancias, a Ana le {{answer}} esta idea.", "In other circumstances, Ana would have liked this idea."],
+      "13": ["Es posible que a Ana le {{answer}} esta idea.", "It is possible that Ana has liked this idea."],
+      "14": ["Ojalá que a Ana le {{answer}} la idea antes.", "If only Ana had liked the idea earlier."],
+      imperative: ["¡Que le {{answer}} esta idea!", "May he or she like this idea!"]
+    }[String(tenseKey)];
+    if (!special) return null;
+    return {
+      answer,
+      personLabel: tenseKey === "imperative" ? "usted" : "él",
+      spanish: special[0].replace("{{answer}}", answer),
+      clozeSpanish: special[0].replace("{{answer}}", "____"),
+      english: special[1]
+    };
+  }
+  return null;
+}
+
+function buildGeneratedFlashcardSentence(verb, tenseKey, form) {
+  const special = buildSpecialGeneratedFlashcardSentence(verb, tenseKey, form);
+  if (special) {
+    return {
+      ...special,
+      source: "generated practice sentence"
+    };
+  }
+  const action = adaptFlashcardReflexiveEnglish(getFlashcardEnglishAction(verb), form.personLabel);
+  const actionInfinitive = `to ${action}`;
+  const answer = form.answer;
+  if (tenseKey === "imperative") {
+    return {
+      answer,
+      personLabel: form.personLabel,
+      spanish: `Por favor, ${answer} ahora.`,
+      clozeSpanish: "Por favor, ____ ahora.",
+      english: `Please ${action} now.`,
+      source: "generated practice sentence"
+    };
+  }
+  const person = form.person || FLASHCARD_PERSON_SPECS[0];
+  const es = person.es;
+  const en = person.en;
+  const enStart = capitalizeFlashcardText(en);
+  const generated = {
+    "1": {
+      spanish: `En este ejemplo, ${es} ${answer}.`,
+      clozeSpanish: `En este ejemplo, ${es} ____.`,
+      english: `${flashcardPresentEnglish(person, action)}.`
+    },
+    "2": {
+      spanish: `Antes, ${es} ${answer} a menudo.`,
+      clozeSpanish: `Antes, ${es} ____ a menudo.`,
+      english: `${enStart} used to ${action} often.`
+    },
+    "3": {
+      spanish: `Ayer, ${es} ${answer}.`,
+      clozeSpanish: `Ayer, ${es} ____.`,
+      english: `Yesterday, ${flashcardPreteriteEnglish(person, action)}.`
+    },
+    "4": {
+      spanish: `Mañana, ${es} ${answer}.`,
+      clozeSpanish: `Mañana, ${es} ____.`,
+      english: `Tomorrow, ${en} will ${action}.`
+    },
+    "5": {
+      spanish: `En esa situación, ${es} ${answer}.`,
+      clozeSpanish: `En esa situación, ${es} ____.`,
+      english: `In that situation, ${en} would ${action}.`
+    },
+    "6": {
+      spanish: `Es importante que ${es} ${answer}.`,
+      clozeSpanish: `Es importante que ${es} ____.`,
+      english: `It is important that ${en} ${action}.`
+    },
+    "7": {
+      spanish: `Querían que ${es} ${answer}.`,
+      clozeSpanish: `Querían que ${es} ____.`,
+      english: `They wanted ${person.objectEn} to ${action}.`
+    },
+    "8": {
+      spanish: `Hasta ahora, ${es} ${answer}.`,
+      clozeSpanish: `Hasta ahora, ${es} ____.`,
+      english: `Up to now, ${en} ${person.have} completed the action "${actionInfinitive}".`
+    },
+    "9": {
+      spanish: `Para entonces, ${es} ya ${answer}.`,
+      clozeSpanish: `Para entonces, ${es} ya ____.`,
+      english: `By then, ${en} had already completed the action "${actionInfinitive}".`
+    },
+    "10": {
+      spanish: `Apenas ${es} ${answer}, continuó la historia.`,
+      clozeSpanish: `Apenas ${es} ____, continuó la historia.`,
+      english: `As soon as ${en} had completed the action "${actionInfinitive}", the story continued.`
+    },
+    "11": {
+      spanish: `Para mañana, ${es} ya ${answer}.`,
+      clozeSpanish: `Para mañana, ${es} ya ____.`,
+      english: `By tomorrow, ${en} will have completed the action "${actionInfinitive}".`
+    },
+    "12": {
+      spanish: `En otras circunstancias, ${es} ${answer}.`,
+      clozeSpanish: `En otras circunstancias, ${es} ____.`,
+      english: `In other circumstances, ${en} would have completed the action "${actionInfinitive}".`
+    },
+    "13": {
+      spanish: `Es posible que ${es} ya ${answer}.`,
+      clozeSpanish: `Es posible que ${es} ya ____.`,
+      english: `It is possible that ${en} ${person.have} already completed the action "${actionInfinitive}".`
+    },
+    "14": {
+      spanish: `Ojalá que ${es} ${answer} antes.`,
+      clozeSpanish: `Ojalá que ${es} ____ antes.`,
+      english: `If only ${en} had completed the action "${actionInfinitive}" earlier.`
+    }
+  }[String(tenseKey)];
+  return {
+    answer,
+    personLabel: form.personLabel,
+    ...(generated || {
+      spanish: `${es} ${answer}.`,
+      clozeSpanish: `${es} ____.`,
+      english: `${enStart}: ${formatInfinitiveGameMeaning(verb)}.`
+    }),
+    source: "generated practice sentence"
+  };
+}
+
+function buildFlashcard(ref) {
+  const verb = findVerbByKey(ref.verbKey);
+  if (!verb) return null;
+  if (ref.cardType === "verb") {
+    return {
+      ...ref,
+      infinitive: cleanText(verb.infinitive || ""),
+      meaning: formatInfinitiveGameMeaning(verb),
+      displayNumber: getDisplayVerbNumber(verb)
+    };
+  }
+  const forms = getFlashcardTenseForms(verb, ref.tenseKey);
+  if (!forms.length) return null;
+  const translated = findFlashcardTranslatedExample(verb, forms);
+  const specialVerb = ["haber", "gustar"].includes(normalize(verb.infinitive || ""));
+  const fallbackForm = ref.tenseKey === "imperative"
+    ? (forms.find(form => form.personLabel === "usted") || forms[0])
+    : specialVerb
+    ? (forms.find(form => form.personLabel === "él") || forms[0])
+    : forms[hashStringSeed(ref.cardId) % forms.length];
+  return {
+    ...ref,
+    infinitive: cleanText(verb.infinitive || ""),
+    meaning: formatInfinitiveGameMeaning(verb),
+    displayNumber: getDisplayVerbNumber(verb),
+    tenseLabel: TENSE_SELECTION_LABELS[ref.tenseKey] || ref.tenseKey,
+    ...(translated || buildGeneratedFlashcardSentence(verb, ref.tenseKey, fallbackForm))
+  };
+}
+
+function renderFlashcardDeckOptions(selectedDeckId) {
+  return Object.values(FLASHCARD_DECKS).map(deck => `
+    <label class="practiceOption flashcardDeckOption">
+      <input
+        type="radio"
+        name="flashcardDeck"
+        data-flashcard-deck="${escapeHtml(deck.id)}"
+        ${selectedDeckId === deck.id ? "checked" : ""}
+      >
+      <span>
+        <strong>${escapeHtml(deck.label)}</strong>
+        <small>${escapeHtml(deck.description)}</small>
+      </span>
+    </label>
+  `).join("");
+}
+
+function renderFlashcardTenseOptions(selectedKeys) {
+  const selected = new Set(sanitizeFlashcardTenseKeys(selectedKeys));
+  return FLASHCARD_CLOZE_TENSE_KEYS.map(key => `
+    <label class="practiceOption">
+      <input type="checkbox" data-flashcard-tense="${escapeHtml(key)}" ${selected.has(key) ? "checked" : ""}>
+      <span>${escapeHtml(TENSE_SELECTION_LABELS[key] || key)}</span>
+    </label>
+  `).join("");
+}
+
+function renderFlashcardSessionSizeOptions(selectedSize) {
+  return FLASHCARD_SESSION_SIZES.map(size => `
+    <label class="practiceOption">
+      <input
+        type="radio"
+        name="flashcardSessionSize"
+        data-flashcard-session-size="${size}"
+        ${selectedSize === size ? "checked" : ""}
+      >
+      <span>${size} cards</span>
+    </label>
+  `).join("");
+}
+
+function getFlashcardSetupFromModal() {
+  const current = getFlashcardState();
+  const deckId = getFlashcardDeck(
+    document.querySelector("#practiceModal input[data-flashcard-deck]:checked")?.dataset.flashcardDeck ||
+    current.deckId
+  ).id;
+  const checkedTenses = Array.from(document.querySelectorAll("#practiceModal input[data-flashcard-tense]:checked"))
+    .map(input => input.dataset.flashcardTense || "");
+  const selectedKeys = checkedTenses.length
+    ? sanitizeFlashcardTenseKeys(checkedTenses)
+    : sanitizeFlashcardTenseKeys(current.selectedKeys);
+  const sessionSize = sanitizeFlashcardSessionSize(
+    document.querySelector("#practiceModal input[data-flashcard-session-size]:checked")?.dataset.flashcardSessionSize ||
+    current.sessionSize
+  );
+  return { deckId, selectedKeys, sessionSize };
+}
+
+function renderFlashcardSetup(options = {}) {
+  const current = getFlashcardState();
+  const deckId = getFlashcardDeck(options.deckId || current.deckId).id;
+  const deck = getFlashcardDeck(deckId);
+  const selectedKeys = sanitizeFlashcardTenseKeys(options.selectedKeys || current.selectedKeys);
+  const sessionSize = sanitizeFlashcardSessionSize(options.sessionSize || current.sessionSize);
+  PRACTICE_STATE.flashcards = defaultFlashcardState({ deckId, selectedKeys, sessionSize });
+  const game = getFlashcardState();
+  saveFlashcardSettings(game);
+  const refs = buildFlashcardDeckRefs(deckId, selectedKeys);
+  const stats = getFlashcardDeckStats(refs);
+  const tensePanel = deck.cardType === "cloze" ? `
+    <div class="practicePanel">
+      <div class="practiceSectionTitle">Tenses</div>
+      <div class="practiceOptionsGrid">${renderFlashcardTenseOptions(selectedKeys)}</div>
+      <div class="practiceTypingHint">Each selected tense adds one stable card per verb. Translated examples are used when they match reliably; otherwise a tense-aware practice sentence is supplied.</div>
+    </div>
+  ` : "";
+  const body = `
+    <div class="practicePanel flashcardIntroPanel">
+      <div class="practiceSectionTitle">Adaptive study</div>
+      <div class="flashcardIntroText">Rate each answer Again, Hard, Good, or Easy. Missed and difficult cards return sooner, while well-known cards are spaced further apart. Progress is saved on this device.</div>
+      <div class="flashcardStatsGrid">
+        <div><span>Cards</span><strong>${stats.totalCount}</strong></div>
+        <div><span>Due</span><strong>${stats.dueCount}</strong></div>
+        <div><span>New</span><strong>${stats.newCount}</strong></div>
+        <div><span>Difficult</span><strong>${stats.difficultCount}</strong></div>
+      </div>
+    </div>
+    <div class="practicePanel">
+      <div class="practiceSectionTitle">Card set</div>
+      <div class="practiceOptionsGrid practiceOptionsGrid--two">${renderFlashcardDeckOptions(deckId)}</div>
+    </div>
+    ${tensePanel}
+    <div class="practicePanel">
+      <div class="practiceSectionTitle">Session size</div>
+      <div class="practiceOptionsGrid">${renderFlashcardSessionSizeOptions(sessionSize)}</div>
+    </div>
+    <div class="practiceActions practiceActions--primary">
+      <button type="button" class="practiceActionBtn" data-flashcard-start>Study ${sessionSize} cards</button>
+    </div>
+    <div class="practiceActions">
+      ${stats.learnedCount ? `<button type="button" class="practiceSecondaryBtn" data-flashcard-reset>Reset this deck's progress</button>` : ""}
+      <button type="button" class="practiceSecondaryBtn" data-practice-setup>Conjugation practice</button>
+      <button type="button" class="practiceSecondaryBtn" data-flashcard-infinitive-game>Infinitive game</button>
+    </div>
+  `;
+  showPracticeModal(
+    "Adaptive flashcard setup",
+    `${deck.label} - ${stats.totalCount} cards`,
+    body
+  );
+}
+
+function startFlashcardSession(deckId, selectedKeys, sessionSize) {
+  const deck = getFlashcardDeck(deckId);
+  const keys = sanitizeFlashcardTenseKeys(selectedKeys);
+  const size = sanitizeFlashcardSessionSize(sessionSize);
+  const refs = buildFlashcardDeckRefs(deck.id, keys);
+  if (!refs.length) {
+    alert("No cards are available for that setup. Select at least one tense.");
+    return;
+  }
+  const selectedRefs = selectFlashcardSessionRefs(refs, size, `${deck.id}:${keys.join(",")}`);
+  const queue = selectedRefs.map(buildFlashcard).filter(Boolean);
+  if (!queue.length) {
+    alert("No cards could be built for that setup.");
+    return;
+  }
+  PRACTICE_STATE.flashcards = defaultFlashcardState({
+    mode: "run",
+    deckId: deck.id,
+    selectedKeys: keys,
+    sessionSize: size,
+    queue,
+    initialCardCount: queue.length,
+    startedAtMs: Date.now()
+  });
+  saveFlashcardSettings(getFlashcardState());
+  renderFlashcardRun();
+}
+
+function startFlashcardSessionFromSetup() {
+  const setup = getFlashcardSetupFromModal();
+  if (getFlashcardDeck(setup.deckId).cardType === "cloze") {
+    const checked = document.querySelectorAll("#practiceModal input[data-flashcard-tense]:checked");
+    if (!checked.length) {
+      alert("Select at least one tense for sentence cloze cards.");
+      return;
+    }
+  }
+  startFlashcardSession(setup.deckId, setup.selectedKeys, setup.sessionSize);
+}
+
+function currentFlashcard(game = getFlashcardState()) {
+  return game.queue?.[game.currentIndex] || null;
+}
+
+function calculateFlashcardSchedule(progress, rating, now = Date.now()) {
+  const previous = progress || {
+    reps: 0,
+    lapses: 0,
+    ease: 2.5,
+    intervalDays: 0
+  };
+  let ease = Math.max(1.3, Number(previous.ease) || 2.5);
+  let intervalDays = Math.max(0, Number(previous.intervalDays) || 0);
+  let lapses = Math.max(0, Number(previous.lapses) || 0);
+  let dueAt = now;
+  if (rating === "again") {
+    ease = Math.max(1.3, ease - 0.2);
+    intervalDays = 0;
+    lapses += 1;
+    dueAt = now + FLASHCARD_AGAIN_DELAY_MS;
+  } else if (rating === "hard") {
+    ease = Math.max(1.3, ease - 0.15);
+    intervalDays = intervalDays ? Math.max(1, Math.round(intervalDays * 1.2)) : 1;
+    dueAt = now + (intervalDays * FLASHCARD_DAY_MS);
+  } else if (rating === "easy") {
+    ease = Math.min(3.2, ease + 0.15);
+    intervalDays = intervalDays ? Math.max(4, Math.round(intervalDays * ease * 1.3)) : 4;
+    dueAt = now + (intervalDays * FLASHCARD_DAY_MS);
+  } else {
+    intervalDays = intervalDays ? Math.max(2, Math.round(intervalDays * ease)) : 2;
+    dueAt = now + (intervalDays * FLASHCARD_DAY_MS);
+  }
+  return {
+    reps: Math.max(0, Number(previous.reps) || 0) + 1,
+    lapses,
+    ease,
+    intervalDays,
+    dueAt,
+    lastReviewedAt: now,
+    lastRating: rating
+  };
+}
+
+function formatFlashcardInterval(schedule, rating) {
+  if (rating === "again") return "<10m";
+  const days = Math.max(1, Number(schedule.intervalDays) || 1);
+  if (days < 30) return `${days}d`;
+  const months = Math.max(1, Math.round(days / 30));
+  return `${months}mo`;
+}
+
+function renderFlashcardRatingButtons(card) {
+  const progress = getFlashcardProgressRecord(card.cardId);
+  const ratings = [
+    ["again", "Again", "1"],
+    ["hard", "Hard", "2"],
+    ["good", "Good", "3"],
+    ["easy", "Easy", "4"]
+  ];
+  return ratings.map(([value, label, shortcut]) => {
+    const schedule = calculateFlashcardSchedule(progress, value);
+    return `
+      <button type="button" class="flashcardRatingBtn flashcardRatingBtn--${value}" data-flashcard-rate="${value}">
+        <span>${label}</span>
+        <small>${formatFlashcardInterval(schedule, value)} · ${shortcut}</small>
+      </button>
+    `;
+  }).join("");
+}
+
+function renderFlashcardRun() {
+  const game = getFlashcardState();
+  const card = currentFlashcard(game);
+  if (!card) {
+    finishFlashcardSession();
+    return;
+  }
+  const deck = getFlashcardDeck(game.deckId);
+  const progress = getFlashcardProgressRecord(card.cardId);
+  const cardStatus = progress?.reps
+    ? `${progress.lapses ? `${progress.lapses} lapse${progress.lapses === 1 ? "" : "s"}` : "Review card"}`
+    : "New card";
+  const progressText = `${Math.min(game.currentIndex + 1, game.queue.length)} / ${game.queue.length}`;
+  const ratingTotal = Object.values(game.ratingCounts || {}).reduce((sum, count) => sum + (Number(count) || 0), 0);
+  const front = card.cardType === "verb" ? `
+    <div class="flashcardPromptLabel">Spanish infinitive</div>
+    <div class="flashcardInfinitive">${escapeHtml(card.infinitive)}</div>
+    <div class="flashcardInstruction">Recall the English meaning, then show the answer.</div>
+    ${game.revealed ? `
+      <div class="flashcardAnswer">
+        <span>English meaning</span>
+        <strong>${escapeHtml(card.meaning)}</strong>
+      </div>
+    ` : ""}
+  ` : `
+    <div class="flashcardPromptLabel">Complete the Spanish sentence</div>
+    <div class="flashcardSentence flashcardSentence--cloze">${escapeHtml(card.clozeSpanish)}</div>
+    <div class="flashcardTranslation">
+      <span>English translation</span>
+      <strong>${escapeHtml(card.english)}</strong>
+    </div>
+    ${game.revealed ? `
+      <div class="flashcardAnswer">
+        <span>Answer</span>
+        <strong>${escapeHtml(card.answer)}</strong>
+        <div class="flashcardFullSentence">${escapeHtml(card.spanish)}</div>
+      </div>
+    ` : ""}
+  `;
+  const action = game.revealed ? `
+    <div class="flashcardRatingHelp">How well did you know it? Keyboard: 1 Again, 2 Hard, 3 Good, 4 Easy.</div>
+    <div class="flashcardRatingGrid">${renderFlashcardRatingButtons(card)}</div>
+  ` : `
+    <div class="practiceActions practiceActions--primary">
+      <button type="button" class="practiceActionBtn flashcardRevealBtn" data-flashcard-reveal>Show answer <span>Space</span></button>
+    </div>
+  `;
+  const metadata = card.cardType === "cloze"
+    ? `${card.tenseLabel} · ${card.personLabel} · ${card.source}`
+    : `#${card.displayNumber} · ${cardStatus}`;
+  const body = `
+    <div class="flashcardTop">
+      <div>
+        <div class="practiceSectionTitle">Progress</div>
+        <div class="infinitiveGameProgress">${escapeHtml(progressText)}</div>
+      </div>
+      <div class="infinitiveGamePills">
+        <div class="practiceScorePill">${escapeHtml(cardStatus)}</div>
+        <div class="practiceScorePill">Reviewed ${ratingTotal}</div>
+        <div class="practiceScorePill practiceScorePill--warn">Again ${game.ratingCounts.again || 0}</div>
+      </div>
+    </div>
+    <article class="practicePanel flashcardCard" aria-live="polite">
+      <div class="flashcardCardMeta">${escapeHtml(metadata)}</div>
+      ${front}
+    </article>
+    ${action}
+    <div class="flashcardSessionHint">Again cards return after a few other cards. Closing the window is safe; every rating is saved immediately.</div>
+  `;
+  showPracticeModal(
+    "Adaptive flashcards",
+    deck.label,
+    body
+  );
+  setTimeout(() => {
+    const modal = document.getElementById("practiceModal");
+    if (!modal) return;
+    modal.tabIndex = -1;
+    modal.focus();
+  }, 0);
+}
+
+function revealCurrentFlashcard() {
+  const game = getFlashcardState();
+  if (game.mode !== "run") return;
+  game.revealed = true;
+  renderFlashcardRun();
+}
+
+function rateCurrentFlashcard(rating) {
+  const allowed = new Set(["again", "hard", "good", "easy"]);
+  const value = allowed.has(rating) ? rating : "good";
+  const game = getFlashcardState();
+  const card = currentFlashcard(game);
+  if (!card || !game.revealed) return;
+  const store = getFlashcardProgressStore();
+  const previous = getFlashcardProgressRecord(card.cardId);
+  store.cards[card.cardId] = calculateFlashcardSchedule(previous, value);
+  saveFlashcardProgressStore();
+  game.ratingCounts[value] = Math.max(0, Number(game.ratingCounts[value]) || 0) + 1;
+  if (value === "again") {
+    const insertAt = Math.min(game.queue.length, game.currentIndex + FLASHCARD_AGAIN_GAP + 1);
+    game.queue.splice(insertAt, 0, { ...card });
+  }
+  game.currentIndex += 1;
+  game.revealed = false;
+  if (game.currentIndex >= game.queue.length) {
+    finishFlashcardSession();
+    return;
+  }
+  renderFlashcardRun();
+}
+
+function finishFlashcardSession() {
+  const game = getFlashcardState();
+  if (game.mode === "result") {
+    renderFlashcardResult();
+    return;
+  }
+  game.mode = "result";
+  game.finishedAtMs = Date.now();
+  game.durationMs = Math.max(0, game.finishedAtMs - (Number(game.startedAtMs) || game.finishedAtMs));
+  renderFlashcardResult();
+}
+
+function renderFlashcardResult() {
+  const game = getFlashcardState();
+  const deck = getFlashcardDeck(game.deckId);
+  const refs = buildFlashcardDeckRefs(game.deckId, game.selectedKeys);
+  const stats = getFlashcardDeckStats(refs);
+  const ratings = game.ratingCounts || {};
+  const reviewed = Object.values(ratings).reduce((sum, count) => sum + (Number(count) || 0), 0);
+  const body = `
+    <div class="practicePanel">
+      <div class="practiceSectionTitle">Session complete</div>
+      <div class="infinitiveGameResultGrid flashcardResultGrid">
+        <div><span>Reviews</span><strong>${reviewed}</strong></div>
+        <div><span>Again</span><strong>${ratings.again || 0}</strong></div>
+        <div><span>Hard</span><strong>${ratings.hard || 0}</strong></div>
+        <div><span>Good + Easy</span><strong>${(ratings.good || 0) + (ratings.easy || 0)}</strong></div>
+        <div><span>Time</span><strong>${formatPracticeDuration(game.durationMs || 0)}</strong></div>
+      </div>
+    </div>
+    <div class="practicePanel">
+      <div class="practiceSectionTitle">Deck now</div>
+      <div class="flashcardStatsGrid">
+        <div><span>Due</span><strong>${stats.dueCount}</strong></div>
+        <div><span>New</span><strong>${stats.newCount}</strong></div>
+        <div><span>Learned</span><strong>${stats.learnedCount}</strong></div>
+        <div><span>Difficult</span><strong>${stats.difficultCount}</strong></div>
+      </div>
+    </div>
+    <div class="practiceActions">
+      <button type="button" class="practiceSecondaryBtn" data-flashcard-setup>Change card set</button>
+      <button type="button" class="practiceActionBtn" data-flashcard-retry>Study next cards</button>
+    </div>
+  `;
+  showPracticeModal(
+    "Flashcard session complete",
+    deck.label,
+    body
+  );
+}
+
+function resetCurrentFlashcardDeckProgress() {
+  const setup = getFlashcardSetupFromModal();
+  const deck = getFlashcardDeck(setup.deckId);
+  const resetKeys = deck.cardType === "cloze" ? FLASHCARD_CLOZE_TENSE_KEYS : setup.selectedKeys;
+  const refs = buildFlashcardDeckRefs(setup.deckId, resetKeys);
+  if (!window.confirm(`Reset saved progress for ${deck.label}? Shared cards will also be reset in the other deck.`)) return;
+  const store = getFlashcardProgressStore();
+  refs.forEach(ref => {
+    delete store.cards[ref.cardId];
+  });
+  saveFlashcardProgressStore();
+  renderFlashcardSetup(setup);
+}
+
 function buildPracticeScorePayload(verbs, inputs, scored, attemptId) {
   const startedAtMs = Number(PRACTICE_STATE.startedAtMs) || Date.now();
   const submittedAtMs = Number(PRACTICE_STATE.submittedAtMs) || Date.now();
@@ -7851,6 +8951,65 @@ function bindPracticeModalInteractions() {
     customPlayerInput.addEventListener("focus", selectCustomPlayer);
     customPlayerInput.addEventListener("input", selectCustomPlayer);
   }
+  modal.querySelectorAll("input[data-flashcard-deck]").forEach(input => {
+    input.addEventListener("change", () => {
+      if (!input.checked) return;
+      const setup = getFlashcardSetupFromModal();
+      renderFlashcardSetup(setup);
+    });
+  });
+  modal.querySelectorAll("input[data-flashcard-tense]").forEach(input => {
+    input.addEventListener("change", () => {
+      if (!document.querySelector("#practiceModal input[data-flashcard-tense]:checked")) {
+        input.checked = true;
+        return;
+      }
+      renderFlashcardSetup(getFlashcardSetupFromModal());
+    });
+  });
+  modal.querySelectorAll("input[data-flashcard-session-size]").forEach(input => {
+    input.addEventListener("change", () => {
+      if (!input.checked) return;
+      renderFlashcardSetup(getFlashcardSetupFromModal());
+    });
+  });
+  modal.querySelector("[data-flashcard-start]")?.addEventListener("click", startFlashcardSessionFromSetup);
+  modal.querySelector("[data-flashcard-reveal]")?.addEventListener("click", revealCurrentFlashcard);
+  modal.querySelectorAll("[data-flashcard-rate]").forEach(btn => {
+    btn.addEventListener("click", () => rateCurrentFlashcard(btn.dataset.flashcardRate || "good"));
+  });
+  modal.querySelector("[data-flashcard-setup]")?.addEventListener("click", () => {
+    const game = getFlashcardState();
+    renderFlashcardSetup({
+      deckId: game.deckId,
+      selectedKeys: game.selectedKeys,
+      sessionSize: game.sessionSize
+    });
+  });
+  modal.querySelector("[data-flashcard-retry]")?.addEventListener("click", () => {
+    const game = getFlashcardState();
+    startFlashcardSession(game.deckId, game.selectedKeys, game.sessionSize);
+  });
+  modal.querySelector("[data-flashcard-reset]")?.addEventListener("click", resetCurrentFlashcardDeckProgress);
+  modal.querySelector("[data-flashcard-infinitive-game]")?.addEventListener("click", () => {
+    renderInfinitiveGameSetup();
+  });
+  modal.onkeydown = (e) => {
+    const game = getFlashcardState();
+    if (game.mode !== "run" || !modal.querySelector(".flashcardCard")) return;
+    if (e.target?.closest?.("button, input, select, textarea, a, [contenteditable='true']")) return;
+    if (!game.revealed && (e.key === " " || e.code === "Space")) {
+      e.preventDefault();
+      revealCurrentFlashcard();
+      return;
+    }
+    if (!game.revealed) return;
+    const ratingByKey = { "1": "again", "2": "hard", "3": "good", "4": "easy" };
+    const rating = ratingByKey[e.key];
+    if (!rating) return;
+    e.preventDefault();
+    rateCurrentFlashcard(rating);
+  };
   modal.querySelectorAll("input[data-infinitive-game-list]").forEach(input => {
     input.addEventListener("change", () => {
       if (!input.checked) return;
@@ -8058,6 +9217,15 @@ function bindPracticeLaunch(detailRoot) {
       if (ACTIVE_EDITOR) commitInlineEdit(0);
       hidePopover();
       renderInfinitiveGameSetup();
+    });
+  });
+  detailRoot.querySelectorAll("[data-flashcard-launch]").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (ACTIVE_EDITOR) commitInlineEdit(0);
+      hidePopover();
+      renderFlashcardSetup();
     });
   });
 }
