@@ -7665,9 +7665,19 @@ function sanitizeFlashcardTenseKeys(keys) {
 }
 
 function sanitizeFlashcardSessionSize(value) {
+  return sanitizeFlashcardSessionSizeForMax(value, FLASHCARD_SESSION_SIZE_MAX);
+}
+
+function getFlashcardSessionSizeMax(totalCards) {
+  const count = Math.max(0, Number(totalCards) || 0);
+  return Math.max(FLASHCARD_SESSION_SIZE_MIN, Math.min(FLASHCARD_SESSION_SIZE_MAX, count || FLASHCARD_SESSION_SIZE_MAX));
+}
+
+function sanitizeFlashcardSessionSizeForMax(value, maxCards) {
+  const max = getFlashcardSessionSizeMax(maxCards);
   const raw = Math.round(Number(value) || 20);
   const stepped = Math.round(raw / FLASHCARD_SESSION_SIZE_STEP) * FLASHCARD_SESSION_SIZE_STEP;
-  return Math.max(FLASHCARD_SESSION_SIZE_MIN, Math.min(FLASHCARD_SESSION_SIZE_MAX, stepped));
+  return Math.max(FLASHCARD_SESSION_SIZE_MIN, Math.min(max, stepped));
 }
 
 function defaultFlashcardState(overrides = {}) {
@@ -7705,10 +7715,13 @@ function getFlashcardState() {
 
 function saveFlashcardSettings(game) {
   const store = getFlashcardProgressStore();
+  const deckId = getFlashcardDeck(game.deckId).id;
+  const selectedKeys = sanitizeFlashcardTenseKeys(game.selectedKeys);
+  const sessionMax = getFlashcardSessionSizeMax(buildFlashcardDeckRefs(deckId, selectedKeys).length);
   store.settings = {
-    deckId: getFlashcardDeck(game.deckId).id,
-    selectedKeys: sanitizeFlashcardTenseKeys(game.selectedKeys),
-    sessionSize: sanitizeFlashcardSessionSize(game.sessionSize),
+    deckId,
+    selectedKeys,
+    sessionSize: sanitizeFlashcardSessionSizeForMax(game.sessionSize, sessionMax),
     playerName: sanitizePracticePlayerName(game.playerName || loadPracticePlayerName()) || "Scott"
   };
   saveFlashcardProgressStore();
@@ -7897,7 +7910,7 @@ function selectFlashcardSessionRefs(refs, sessionSize, seedText, playerName = ""
       (getFlashcardProgressRecord(b.cardId, playerName)?.dueAt || 0);
     return dueDiff || flashcardDifficultyScore(b, playerName) - flashcardDifficultyScore(a, playerName);
   });
-  return [...due, ...orderedNew, ...future].slice(0, sanitizeFlashcardSessionSize(sessionSize));
+  return [...due, ...orderedNew, ...future].slice(0, sanitizeFlashcardSessionSizeForMax(sessionSize, refs?.length || 0));
 }
 
 function getFlashcardExamplePairs(verb) {
@@ -8288,14 +8301,15 @@ function renderFlashcardTenseOptions(selectedKeys) {
   `).join("");
 }
 
-function renderFlashcardSessionSizeOptions(selectedSize) {
-  const size = sanitizeFlashcardSessionSize(selectedSize);
+function renderFlashcardSessionSizeOptions(selectedSize, maxCards = FLASHCARD_SESSION_SIZE_MAX) {
+  const max = getFlashcardSessionSizeMax(maxCards);
+  const size = sanitizeFlashcardSessionSizeForMax(selectedSize, max);
   return `
     <div class="flashcardSessionSizeControl">
       <input
         type="range"
         min="${FLASHCARD_SESSION_SIZE_MIN}"
-        max="${FLASHCARD_SESSION_SIZE_MAX}"
+        max="${max}"
         step="${FLASHCARD_SESSION_SIZE_STEP}"
         value="${size}"
         data-flashcard-session-size
@@ -8305,13 +8319,14 @@ function renderFlashcardSessionSizeOptions(selectedSize) {
         class="practiceTextInput"
         type="number"
         min="${FLASHCARD_SESSION_SIZE_MIN}"
-        max="${FLASHCARD_SESSION_SIZE_MAX}"
+        max="${max}"
         step="${FLASHCARD_SESSION_SIZE_STEP}"
         value="${size}"
         data-flashcard-session-size-number
         aria-label="Cards in this session"
       >
       <span class="flashcardSessionSizeValue" data-flashcard-session-size-label>${size} cards</span>
+      <small class="flashcardSessionSizeMax">Max ${max}</small>
     </div>
   `;
 }
@@ -8328,9 +8343,10 @@ function getFlashcardSetupFromModal() {
   const selectedKeys = checkedTenses.length
     ? sanitizeFlashcardTenseKeys(checkedTenses)
     : sanitizeFlashcardTenseKeys(current.selectedKeys);
-  const sessionSize = sanitizeFlashcardSessionSize(
-    document.querySelector("#practiceModal [data-flashcard-session-size]")?.value ||
-    current.sessionSize
+  const sessionControl = document.querySelector("#practiceModal [data-flashcard-session-size]");
+  const sessionSize = sanitizeFlashcardSessionSizeForMax(
+    sessionControl?.value || current.sessionSize,
+    Number(sessionControl?.max) || FLASHCARD_SESSION_SIZE_MAX
   );
   const hasPlayerControls = !!document.querySelector("#practiceModal input[data-practice-player-preset]");
   const playerName = hasPlayerControls
@@ -8344,7 +8360,9 @@ function renderFlashcardSetup(options = {}) {
   const deckId = getFlashcardDeck(options.deckId || current.deckId).id;
   const deck = getFlashcardDeck(deckId);
   const selectedKeys = sanitizeFlashcardTenseKeys(options.selectedKeys || current.selectedKeys);
-  const sessionSize = sanitizeFlashcardSessionSize(options.sessionSize || current.sessionSize);
+  const refs = buildFlashcardDeckRefs(deckId, selectedKeys);
+  const sessionMax = getFlashcardSessionSizeMax(refs.length);
+  const sessionSize = sanitizeFlashcardSessionSizeForMax(options.sessionSize || current.sessionSize, sessionMax);
   const playerName = sanitizePracticePlayerName(
     options.playerName ||
     current.playerName ||
@@ -8355,7 +8373,6 @@ function renderFlashcardSetup(options = {}) {
   PRACTICE_STATE.flashcards = defaultFlashcardState({ deckId, selectedKeys, sessionSize, playerName });
   const game = getFlashcardState();
   saveFlashcardSettings(game);
-  const refs = buildFlashcardDeckRefs(deckId, selectedKeys);
   const stats = getFlashcardDeckStats(refs, Date.now(), playerName);
   const tensePanel = deck.cardType === "cloze" ? `
     <div class="practicePanel flashcardFlatPanel">
@@ -8390,7 +8407,7 @@ function renderFlashcardSetup(options = {}) {
     ${tensePanel}
     <div class="practicePanel flashcardFlatPanel">
       <div class="practiceSectionTitle">Session size</div>
-      <div class="practiceOptionsGrid">${renderFlashcardSessionSizeOptions(sessionSize)}</div>
+      <div class="practiceOptionsGrid">${renderFlashcardSessionSizeOptions(sessionSize, sessionMax)}</div>
     </div>
     <div class="practiceActions practiceActions--primary">
       <button type="button" class="practiceActionBtn" data-flashcard-start>Study ${sessionSize} cards</button>
@@ -8542,7 +8559,8 @@ function renderFlashcardProgressView(options = {}) {
   const deckId = getFlashcardDeck(options.deckId || current.deckId).id;
   const deck = getFlashcardDeck(deckId);
   const selectedKeys = sanitizeFlashcardTenseKeys(options.selectedKeys || current.selectedKeys);
-  const sessionSize = sanitizeFlashcardSessionSize(options.sessionSize || current.sessionSize);
+  const refs = buildFlashcardDeckRefs(deckId, selectedKeys);
+  const sessionSize = sanitizeFlashcardSessionSizeForMax(options.sessionSize || current.sessionSize, refs.length);
   const playerName = sanitizePracticePlayerName(options.playerName || current.playerName) || "Scott";
   const allowedSorts = new Set(["hardest", "easiest", "most-reviewed", "alphabetical"]);
   const progressSort = allowedSorts.has(options.progressSort || current.progressSort)
@@ -8557,7 +8575,6 @@ function renderFlashcardProgressView(options = {}) {
     progressSort
   });
   saveFlashcardSettings(getFlashcardState());
-  const refs = buildFlashcardDeckRefs(deckId, selectedKeys);
   const stats = getFlashcardDeckStats(refs, Date.now(), playerName);
   const rows = sortFlashcardProgressRows(buildFlashcardProgressRows(refs, playerName), progressSort);
   const difficultVerbCount = rows.filter(row =>
@@ -8618,7 +8635,6 @@ function renderFlashcardProgressView(options = {}) {
 function startFlashcardSession(deckId, selectedKeys, sessionSize, playerName) {
   const deck = getFlashcardDeck(deckId);
   const keys = sanitizeFlashcardTenseKeys(selectedKeys);
-  const size = sanitizeFlashcardSessionSize(sessionSize);
   const learner = sanitizePracticePlayerName(playerName || getFlashcardState().playerName);
   if (!learner) {
     alert("Choose a learner or enter a name before starting.");
@@ -8630,6 +8646,7 @@ function startFlashcardSession(deckId, selectedKeys, sessionSize, playerName) {
     alert("No cards are available for that setup. Select at least one tense.");
     return;
   }
+  const size = sanitizeFlashcardSessionSizeForMax(sessionSize, refs.length);
   const selectedRefs = selectFlashcardSessionRefs(
     refs,
     size,
@@ -9356,7 +9373,8 @@ function bindPracticeModalInteractions() {
   const flashcardSessionNumber = modal.querySelector("[data-flashcard-session-size-number]");
   const flashcardSessionLabel = modal.querySelector("[data-flashcard-session-size-label]");
   const syncFlashcardSessionSizeControl = (rawValue) => {
-    const size = sanitizeFlashcardSessionSize(rawValue);
+    const max = Number(flashcardSessionRange?.max || flashcardSessionNumber?.max) || FLASHCARD_SESSION_SIZE_MAX;
+    const size = sanitizeFlashcardSessionSizeForMax(rawValue, max);
     if (flashcardSessionRange) flashcardSessionRange.value = String(size);
     if (flashcardSessionNumber) flashcardSessionNumber.value = String(size);
     if (flashcardSessionLabel) flashcardSessionLabel.textContent = `${size} cards`;
