@@ -4579,6 +4579,19 @@ function handlePracticeOverlaySpanishShortcutCapture(e) {
   if (handleSpanishCharShortcut(e, input)) input.focus();
 }
 
+function focusInputAtEnd(input) {
+  if (!input || typeof input.focus !== "function") return;
+  input.focus();
+  const caret = String(input.value || "").length;
+  if (typeof input.setSelectionRange === "function") {
+    try {
+      input.setSelectionRange(caret, caret);
+    } catch {
+      // Some input types do not allow explicit caret placement.
+    }
+  }
+}
+
 function startInlineEdit(btn, verb) {
   if (!btn || !verb) return;
   if (btn.classList.contains("inactiveTenseForm")) return;
@@ -4613,8 +4626,7 @@ function startInlineEdit(btn, verb) {
   if (!parent) return;
   btn.style.display = "none";
   parent.appendChild(input);
-  input.focus();
-  input.select();
+  focusInputAtEnd(input);
 
   ACTIVE_EDITOR = { input, btn, verbKey: verb._key, cellKey: btn.dataset.cellKey };
   input.addEventListener("keydown", (e) => {
@@ -6222,8 +6234,7 @@ function focusNextPracticeInput(modal, input, options = {}) {
   const idx = inputs.indexOf(input);
   const next = inputs[idx + 1];
   if (next) {
-    next.focus();
-    next.select();
+    focusInputAtEnd(next);
     return true;
   }
   if (options.submitAtEnd) {
@@ -9528,8 +9539,7 @@ function renderPracticeRun() {
   const firstInput = document.querySelector("#practiceModal .practiceInput:not([disabled])");
   if (firstInput) {
     setTimeout(() => {
-      firstInput.focus();
-      firstInput.select();
+      focusInputAtEnd(firstInput);
     }, 0);
   }
 }
