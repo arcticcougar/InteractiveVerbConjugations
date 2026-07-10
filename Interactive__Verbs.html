@@ -2193,6 +2193,17 @@
   .flashcardIntroPanel {
     max-width: 820px;
   }
+  .flashcardFlatPanel {
+    padding: 10px 0 14px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .flashcardFlatPanel + .flashcardFlatPanel {
+    padding-top: 16px;
+    border-top: 1px solid var(--table-rule);
+  }
   .flashcardIntroText {
     color: var(--subhead);
     font-size: 14px;
@@ -2208,10 +2219,7 @@
   .flashcardStatsGrid > div {
     display: grid;
     gap: 3px;
-    padding: 8px 10px;
-    border: 1px solid var(--pill-border);
-    border-radius: 9px;
-    background: var(--chip-bg);
+    padding: 5px 2px;
   }
   .flashcardStatsGrid span {
     color: var(--muted);
@@ -2240,10 +2248,9 @@
     align-content: center;
     gap: 16px;
     padding: 24px;
-    border-color: rgb(139 73 255 / 45%);
-    background:
-      radial-gradient(circle at 50% 0%, rgb(139 73 255 / 12%), transparent 48%),
-      var(--tense-bg);
+    border: 0;
+    background: var(--tense-bg);
+    box-shadow: none;
     text-align: center;
   }
   .flashcardCardMeta {
@@ -2268,6 +2275,10 @@
     font-weight: 950;
     letter-spacing: 0.02em;
     line-height: 1.05;
+  }
+  .flashcardMeaningPrompt {
+    font-size: clamp(26px, 5vw, 46px);
+    line-height: 1.15;
   }
   .flashcardInstruction,
   .flashcardSessionHint,
@@ -2303,9 +2314,8 @@
     display: grid;
     gap: 6px;
     padding: 13px 15px;
-    border: 1px solid rgb(57 217 138 / 32%);
     border-radius: 10px;
-    background: rgb(57 217 138 / 8%);
+    background: rgb(57 217 138 / 12%);
   }
   .flashcardAnswer strong {
     color: var(--good);
@@ -2335,9 +2345,8 @@
     gap: 5px;
     min-height: 56px;
     padding: 8px 12px;
-    border: 1px solid var(--pill-border);
+    border: 0;
     border-radius: 10px;
-    background: var(--chip-bg);
     color: var(--text);
     font-family: inherit;
     font-weight: 900;
@@ -2353,24 +2362,124 @@
   }
   .flashcardRatingBtn:hover,
   .flashcardRatingBtn:focus-visible {
-    border-color: var(--selected-border);
     filter: brightness(1.12);
-    outline: none;
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
   }
   .flashcardRatingBtn--again {
-    border-color: rgb(255 88 88 / 45%);
+    background: rgb(255 88 88 / 16%);
+    color: #ff8f8f;
   }
   .flashcardRatingBtn--hard {
-    border-color: rgb(255 174 66 / 45%);
+    background: rgb(255 174 66 / 16%);
+    color: #ffc16f;
   }
   .flashcardRatingBtn--good {
-    border-color: rgb(57 217 138 / 45%);
+    background: rgb(57 217 138 / 15%);
+    color: #65e5a8;
   }
   .flashcardRatingBtn--easy {
-    border-color: rgb(95 190 255 / 45%);
+    background: rgb(95 190 255 / 16%);
+    color: #8ed1ff;
   }
   .flashcardResultGrid {
     grid-template-columns: repeat(5, minmax(100px, 1fr));
+  }
+  .flashcardProgressToolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 10px 18px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 750;
+  }
+  .flashcardProgressToolbar label {
+    display: grid;
+    gap: 5px;
+  }
+  .flashcardProgressToolbar label > span {
+    color: var(--note-subhead-color);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .flashcardProgressToolbar select {
+    min-height: 36px;
+    padding: 7px 30px 7px 9px;
+    border: 1px solid var(--close-border);
+    border-radius: 8px;
+    background: #171717;
+    color: var(--text);
+    font: inherit;
+  }
+  .flashcardProgressTableWrap {
+    max-height: min(520px, 60vh);
+    overflow: auto;
+  }
+  .flashcardProgressTable {
+    width: 100%;
+    min-width: 880px;
+    border-collapse: collapse;
+    color: var(--subhead);
+    font-size: 12px;
+  }
+  .flashcardProgressTable th,
+  .flashcardProgressTable td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--table-rule);
+    text-align: left;
+    vertical-align: middle;
+  }
+  .flashcardProgressTable th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--tense-bg);
+    color: var(--note-subhead-color);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .flashcardProgressTable tbody tr:hover {
+    background: var(--chip-bg);
+  }
+  .flashcardProgressTable td strong {
+    display: block;
+    color: var(--text);
+    font-size: 13px;
+  }
+  .flashcardProgressTable td small {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 10px;
+  }
+  .flashcardDifficulty {
+    display: inline-block;
+    padding: 4px 7px;
+    border-radius: 999px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+  .flashcardDifficulty--high {
+    background: rgb(255 88 88 / 16%);
+    color: #ff8f8f;
+  }
+  .flashcardDifficulty--medium {
+    background: rgb(255 174 66 / 16%);
+    color: #ffc16f;
+  }
+  .flashcardDifficulty--low {
+    background: rgb(57 217 138 / 15%);
+    color: #65e5a8;
+  }
+  .flashcardDifficulty--new {
+    background: var(--chip-bg);
+    color: var(--muted);
   }
   .practiceMiniBtn {
     padding: 4px 7px;
@@ -3647,7 +3756,7 @@ window.addEventListener("resize", () => {
 <script src="core_notes_overrides.js"></script>
 <script src="core_notes_manual_fixes.js"></script>
 <script src="practice-challenges.js?v=paper-workbook-qc-1"></script>
-<script src="interactive_verbs_app.js?v=adaptive-flashcards-2"></script>
+<script src="interactive_verbs_app.js?v=adaptive-flashcards-3"></script>
 </body>
 </html>
 

@@ -2649,7 +2649,7 @@ function renderTenseHelper(context) {
       <div class="helperPanel">
         <div class="helperSectionTitle">Core workflow</div>
         <ul class="helperList">
-          <li>The current Essential 55 weekly intro opens on load, then continues to practice setup.</li>
+          <li>The current Essential 55 weekly intro opens on load, then continues to conjugation practice setup.</li>
           <li>Choose a player, press Start, then fill the selected forms.</li>
           <li>Double-space, Enter, or Tab moves through practice answer boxes.</li>
           <li>Submit scores the attempt and adds it to the matching online leaderboard group.</li>
@@ -2704,7 +2704,7 @@ function renderTenseHelper(context) {
         <ul class="helperList">
           <li>Single-click any form cell to enter edit mode.</li>
           <li>Tab moves to the next cell in conjugation order.</li>
-          <li>Use practice mode for scored testing and the main table for reference.</li>
+          <li>Use conjugation practice for scored testing and the main table for reference.</li>
         </ul>
       </div>
       <div class="helperSource">Source references: 501 Spanish Verbs, Sec. 1 and Sec. 6.</div>
@@ -4283,8 +4283,8 @@ function renderDetail(verbKey) {
         <div class="big verbIdentityRow">
           <span>${escapeHtml(verb.infinitive)}</span>
           <span class="pill">#${getDisplayVerbNumber(verb)}</span>
-          <button type="button" class="practiceLaunchBtn" data-practice-launch="${verb._key}" aria-label="Start practice mode" title="Practice mode">&#127918;</button>
-          <button type="button" class="practiceLaunchBtn infinitiveGameLaunchBtn" data-infinitive-game-launch aria-label="Start infinitive game" title="Infinitive game">&#127919;</button>
+          <button type="button" class="practiceLaunchBtn" data-practice-launch="${verb._key}" aria-label="Start conjugation practice" title="Conjugation practice">&#127918;</button>
+          <button type="button" class="practiceLaunchBtn infinitiveGameLaunchBtn" data-infinitive-game-launch aria-label="Start infinitive recall" title="Infinitive recall">&#127919;</button>
           <button type="button" class="practiceLaunchBtn flashcardLaunchBtn" data-flashcard-launch aria-label="Start adaptive flashcards" title="Adaptive flashcards">&#128218;</button>
           <button type="button" class="practiceLaunchBtn leaderboardLaunchBtn" data-leaderboard-launch="${verb._key}" aria-label="View leaderboard" title="Leaderboard">&#127942;</button>
         </div>
@@ -5285,7 +5285,7 @@ function renderPracticeSetup(verbKey = CURRENT_VERB_KEY, options = {}) {
       </div>
     </details>
   `;
-  showPracticeModal("Practice setup", `${setupVerb.infinitive} #${getDisplayVerbNumber(setupVerb)}`, body);
+  showPracticeModal("Conjugation practice setup", `${setupVerb.infinitive} #${getDisplayVerbNumber(setupVerb)}`, body);
 }
 
 function formatPracticeIntroTenses(keys) {
@@ -5485,7 +5485,7 @@ function renderPracticeIntro(verbKey, selectedKeys, verbKeys = null, options = {
       "Keep accents and reflexive pronouns in mind; small details often decide the score."
     ]
   };
-  const title = challenge ? `${getPracticeChallengeLabel(challenge)} intro` : "Practice intro";
+  const title = challenge ? `${getPracticeChallengeLabel(challenge)} intro` : "Conjugation practice intro";
   const meta = verbs.map(verb => `${verb.infinitive} #${getDisplayVerbNumber(verb)}`).join(" / ");
   const watchItems = (intro.watch || [])
     .map(item => `<li>${escapeHtml(item)}</li>`)
@@ -5529,7 +5529,7 @@ function renderLeaderboardSetup(verbKey = CURRENT_VERB_KEY) {
       <div class="practiceOptionsGrid">${renderPracticeTenseOptions(PRACTICE_STATE.selectedKeys)}</div>
     </div>
     <div class="practiceActions">
-      <button type="button" class="practiceSecondaryBtn" data-practice-setup>Practice setup</button>
+      <button type="button" class="practiceSecondaryBtn" data-practice-setup>Conjugation practice</button>
       <button type="button" class="practiceActionBtn" data-leaderboard-view>View leaderboard</button>
     </div>
   `;
@@ -5720,8 +5720,8 @@ function renderCombinedLeaderboardTable(leaderboard) {
   }
   const rows = entries.map((entry, idx) => {
     const challenge = getPracticeChallengeForEntry(entry);
-    const actionLabel = challenge ? (challenge.label || getPracticeChallengeLabel(challenge)) : "Practice";
-    const actionTitle = challenge?.focus || "Practice this set";
+    const actionLabel = challenge ? (challenge.label || getPracticeChallengeLabel(challenge)) : "Conjugation practice";
+    const actionTitle = challenge?.focus || "Practice this conjugation set";
     return `
     <tr>
       <td>${entry.rank || idx + 1}</td>
@@ -5809,7 +5809,7 @@ function renderCombinedLeaderboardView() {
     <div class="practiceActions">
       <button type="button" class="practiceSecondaryBtn" data-combined-leaderboard-filters>Filters</button>
       <button type="button" class="practiceSecondaryBtn" data-combined-leaderboard-refresh>Refresh</button>
-      <button type="button" class="practiceActionBtn" data-practice-setup>Practice setup</button>
+      <button type="button" class="practiceActionBtn" data-practice-setup>Conjugation practice</button>
     </div>
   `;
   showPracticeModal("Combined leaderboard", combinedLeaderboardFilterSummary(), body);
@@ -6754,10 +6754,10 @@ function renderInfinitiveGameSetup(options = {}) {
       ${renderPracticePlayerControls(playerName)}
     </div>
     <div class="practiceActions practiceActions--primary">
-      <button type="button" class="practiceActionBtn" data-infinitive-game-start>Start game</button>
+      <button type="button" class="practiceActionBtn" data-infinitive-game-start>Start recall</button>
     </div>
     <details class="practiceAdvancedDetails" open>
-      <summary>Game setup</summary>
+      <summary>Recall setup</summary>
       <div class="practiceAdvancedBody">
         <div class="practicePanel">
           <div class="practiceSectionTitle">Verb list</div>
@@ -6768,7 +6768,7 @@ function renderInfinitiveGameSetup(options = {}) {
           <div class="practiceOptionsGrid">${renderInfinitiveGameSetOptions(listId, setNumber)}</div>
         </div>
         <div class="practiceTypingHint">
-          You will see the English meaning and type the Spanish infinitive. You get three tries per verb, then the game moves on. The answer shape starts hidden; using reveals or clues is tracked on the leaderboard.
+          You will see the English meaning and type the Spanish infinitive. You get three tries per verb, then the recall round moves on. The answer shape starts hidden; using reveals or clues is tracked on the leaderboard.
         </div>
         ${fullWarning}
       </div>
@@ -6779,7 +6779,7 @@ function renderInfinitiveGameSetup(options = {}) {
     </div>
   `;
   showPracticeModal(
-    "Infinitive game setup",
+    "Infinitive recall setup",
     `${infinitiveGameListLabel(listId)} - ${setLabel} - ${selectedSet.length} verbs`,
     body
   );
@@ -6996,7 +6996,7 @@ function renderInfinitiveGameRun() {
     <div class="practiceTypingHint">Spanish characters: Ctrl/Cmd+Shift+A/E/I/O/U/N. If Chrome catches N, Ctrl/Cmd+Shift+; also gives ñ. Double-space submits.</div>
   `;
   showPracticeModal(
-    "Infinitive game",
+    "Infinitive recall",
     `${infinitiveGameListLabel(game.listId)} - ${formatInfinitiveGameSetLabel(game.setNumber)} - ${game.playerName}`,
     body,
     { locked: true }
@@ -7389,8 +7389,8 @@ function renderInfinitiveGameResult() {
   const missedCount = getInfinitiveGameMissedEntries(game).length;
   const missedAndHelpedCount = getInfinitiveGameReviewEntries(game, { includeHelped: true }).length;
   const helpedRetryLabel = missedCount
-    ? `Practice missed + helped (${missedAndHelpedCount})`
-    : `Practice helped (${missedAndHelpedCount})`;
+    ? `Recall missed + helped (${missedAndHelpedCount})`
+    : `Recall helped (${missedAndHelpedCount})`;
   const helpSummary = formatInfinitiveGameHelpSummary({
     helpedVerbCount: game.helpedVerbCount,
     hintCount: game.hintCount
@@ -7415,7 +7415,7 @@ function renderInfinitiveGameResult() {
     ${renderInfinitiveGameReview(game)}
     ${renderInfinitiveGameLeaderboardPanel()}
     <div class="practiceActions">
-      ${missedCount ? `<button type="button" class="practiceSecondaryBtn" data-infinitive-game-missed>Practice missed (${missedCount})</button>` : ""}
+      ${missedCount ? `<button type="button" class="practiceSecondaryBtn" data-infinitive-game-missed>Recall missed (${missedCount})</button>` : ""}
       ${missedAndHelpedCount > missedCount ? `<button type="button" class="practiceSecondaryBtn" data-infinitive-game-missed-helped>${escapeHtml(helpedRetryLabel)}</button>` : ""}
       <button type="button" class="practiceSecondaryBtn" data-infinitive-game-retry>Try this set again</button>
       <button type="button" class="practiceSecondaryBtn" data-infinitive-game-setup>Change setup</button>
@@ -7423,7 +7423,7 @@ function renderInfinitiveGameResult() {
     </div>
   `;
   showPracticeModal(
-    "Infinitive game result",
+    "Infinitive recall result",
     `${infinitiveGameListLabel(game.listId)} - ${formatInfinitiveGameSetLabel(game.setNumber)} - ${game.playerName}`,
     body
   );
@@ -7453,7 +7453,7 @@ function renderInfinitiveGameLeaderboardView(options = {}) {
     </div>
     <div class="practiceActions">
       <button type="button" class="practiceSecondaryBtn" data-infinitive-game-refresh>Refresh</button>
-      <button type="button" class="practiceSecondaryBtn" data-infinitive-game-setup>Game setup</button>
+      <button type="button" class="practiceSecondaryBtn" data-infinitive-game-setup>Recall setup</button>
       <button type="button" class="practiceActionBtn" data-infinitive-game-start>Play this board</button>
     </div>
   `;
@@ -7465,7 +7465,7 @@ function renderInfinitiveGameLeaderboardView(options = {}) {
   if (!options.skipLoad) loadInfinitiveGameLeaderboardOnline(listId, setNumber);
 }
 
-const FLASHCARD_VERSION = 1;
+const FLASHCARD_VERSION = 2;
 const FLASHCARD_DAY_MS = 24 * 60 * 60 * 1000;
 const FLASHCARD_AGAIN_DELAY_MS = 10 * 60 * 1000;
 const FLASHCARD_AGAIN_GAP = 3;
@@ -7475,35 +7475,50 @@ const FLASHCARD_CLOZE_TENSE_KEYS = [
   "8", "9", "10", "11", "12", "13", "14",
   "imperative"
 ];
-const FLASHCARD_DEFAULT_TENSE_KEYS = ["1", "2", "3", "4", "5"];
+const FLASHCARD_LEGACY_DEFAULT_TENSE_KEYS = ["1", "2", "3", "4", "5"];
+const FLASHCARD_DEFAULT_TENSE_KEYS = ["1", "3", "4"];
 const FLASHCARD_DECKS = {
   "essential55-verbs": {
     id: "essential55-verbs",
     listId: "essential55",
-    cardType: "verb",
-    label: "Essential 55 - verb cards",
-    description: "Spanish infinitives with their English meanings."
+    cardType: "verb-forward",
+    label: "Essential 55 · Spanish → English",
+    description: "See the Spanish infinitive, then reveal its English meaning."
   },
-  "core501-verbs": {
-    id: "core501-verbs",
-    listId: "core501",
-    cardType: "verb",
-    label: "Full 501 - verb cards",
-    description: "All numbered verbs with their English meanings."
+  "essential55-reverse": {
+    id: "essential55-reverse",
+    listId: "essential55",
+    cardType: "verb-reverse",
+    label: "Essential 55 · English → Spanish",
+    description: "See the English meaning, then reveal the Spanish infinitive."
   },
   "essential55-cloze": {
     id: "essential55-cloze",
     listId: "essential55",
     cardType: "cloze",
-    label: "Essential 55 - sentence cloze",
-    description: "Conjugated verbs blanked inside translated sentences."
+    label: "Essential 55 · Sentence cloze",
+    description: "Complete a translated sentence in your selected tenses."
+  },
+  "core501-verbs": {
+    id: "core501-verbs",
+    listId: "core501",
+    cardType: "verb-forward",
+    label: "Full 501 · Spanish → English",
+    description: "See the Spanish infinitive, then reveal its English meaning."
+  },
+  "core501-reverse": {
+    id: "core501-reverse",
+    listId: "core501",
+    cardType: "verb-reverse",
+    label: "Full 501 · English → Spanish",
+    description: "See the English meaning, then reveal the Spanish infinitive."
   },
   "core501-cloze": {
     id: "core501-cloze",
     listId: "core501",
     cardType: "cloze",
-    label: "Full 501 - sentence cloze",
-    description: "Tense-selectable sentence cards for all numbered verbs."
+    label: "Full 501 · Sentence cloze",
+    description: "Complete a translated sentence in your selected tenses."
   }
 };
 const FLASHCARD_PERSON_SPECS = [
@@ -7525,15 +7540,22 @@ let FLASHCARD_PROGRESS_CACHE = null;
 const FLASHCARD_EXAMPLE_PAIR_CACHE = new Map();
 
 function defaultFlashcardProgressStore() {
+  const playerName = sanitizePracticePlayerName(loadPracticePlayerName()) || "Scott";
   return {
     version: FLASHCARD_VERSION,
-    cards: {},
+    profiles: {},
     settings: {
       deckId: "essential55-verbs",
       selectedKeys: [...FLASHCARD_DEFAULT_TENSE_KEYS],
-      sessionSize: 20
+      sessionSize: 20,
+      playerName
     }
   };
+}
+
+function flashcardProfileKey(playerName) {
+  const cleaned = sanitizePracticePlayerName(playerName) || "Scott";
+  return normalize(cleaned).replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "") || "scott";
 }
 
 function getFlashcardProgressStore() {
@@ -7545,14 +7567,42 @@ function getFlashcardProgressStore() {
       FLASHCARD_PROGRESS_CACHE = fallback;
       return FLASHCARD_PROGRESS_CACHE;
     }
+    const parsedSettings = parsed.settings && typeof parsed.settings === "object" ? parsed.settings : {};
+    const playerName = sanitizePracticePlayerName(parsedSettings.playerName || fallback.settings.playerName) || "Scott";
+    const rawSelectedKeys = Array.isArray(parsedSettings.selectedKeys)
+      ? parsedSettings.selectedKeys
+      : fallback.settings.selectedKeys;
+    const selectedKeys = Number(parsed.version) < FLASHCARD_VERSION &&
+      hasSameTenseKeySet(rawSelectedKeys, FLASHCARD_LEGACY_DEFAULT_TENSE_KEYS)
+      ? [...FLASHCARD_DEFAULT_TENSE_KEYS]
+      : rawSelectedKeys;
+    const profiles = parsed.profiles && typeof parsed.profiles === "object"
+      ? { ...parsed.profiles }
+      : {};
+    if (parsed.cards && typeof parsed.cards === "object") {
+      const profileKey = flashcardProfileKey(playerName);
+      const existing = profiles[profileKey] && typeof profiles[profileKey] === "object"
+        ? profiles[profileKey]
+        : {};
+      profiles[profileKey] = {
+        displayName: playerName,
+        cards: {
+          ...parsed.cards,
+          ...(existing.cards && typeof existing.cards === "object" ? existing.cards : {})
+        }
+      };
+    }
     FLASHCARD_PROGRESS_CACHE = {
       version: FLASHCARD_VERSION,
-      cards: parsed.cards && typeof parsed.cards === "object" ? parsed.cards : {},
+      profiles,
       settings: {
         ...fallback.settings,
-        ...(parsed.settings && typeof parsed.settings === "object" ? parsed.settings : {})
+        ...parsedSettings,
+        selectedKeys,
+        playerName
       }
     };
+    saveFlashcardProgressStore();
   } catch {
     FLASHCARD_PROGRESS_CACHE = fallback;
   }
@@ -7565,6 +7615,25 @@ function saveFlashcardProgressStore() {
   } catch {
     // Keep the current session usable if local storage is unavailable.
   }
+}
+
+function getFlashcardProgressCards(playerName) {
+  const store = getFlashcardProgressStore();
+  const displayName = sanitizePracticePlayerName(
+    playerName ||
+    PRACTICE_STATE.flashcards?.playerName ||
+    store.settings?.playerName ||
+    loadPracticePlayerName()
+  ) || "Scott";
+  const profileKey = flashcardProfileKey(displayName);
+  const current = store.profiles[profileKey];
+  if (!current || typeof current !== "object") {
+    store.profiles[profileKey] = { displayName, cards: {} };
+  } else {
+    current.displayName = displayName;
+    if (!current.cards || typeof current.cards !== "object") current.cards = {};
+  }
+  return store.profiles[profileKey].cards;
 }
 
 function getFlashcardDeck(deckId) {
@@ -7592,6 +7661,8 @@ function defaultFlashcardState(overrides = {}) {
     deckId: "essential55-verbs",
     selectedKeys: [...FLASHCARD_DEFAULT_TENSE_KEYS],
     sessionSize: 20,
+    playerName: sanitizePracticePlayerName(loadPracticePlayerName()) || "Scott",
+    progressSort: "hardest",
     queue: [],
     currentIndex: 0,
     revealed: false,
@@ -7610,7 +7681,8 @@ function getFlashcardState() {
     PRACTICE_STATE.flashcards = defaultFlashcardState({
       deckId: getFlashcardDeck(settings.deckId).id,
       selectedKeys: sanitizeFlashcardTenseKeys(settings.selectedKeys),
-      sessionSize: sanitizeFlashcardSessionSize(settings.sessionSize)
+      sessionSize: sanitizeFlashcardSessionSize(settings.sessionSize),
+      playerName: sanitizePracticePlayerName(settings.playerName || loadPracticePlayerName()) || "Scott"
     });
   }
   return PRACTICE_STATE.flashcards;
@@ -7621,7 +7693,8 @@ function saveFlashcardSettings(game) {
   store.settings = {
     deckId: getFlashcardDeck(game.deckId).id,
     selectedKeys: sanitizeFlashcardTenseKeys(game.selectedKeys),
-    sessionSize: sanitizeFlashcardSessionSize(game.sessionSize)
+    sessionSize: sanitizeFlashcardSessionSize(game.sessionSize),
+    playerName: sanitizePracticePlayerName(game.playerName || loadPracticePlayerName()) || "Scott"
   };
   saveFlashcardProgressStore();
 }
@@ -7711,12 +7784,13 @@ function getFlashcardTenseForms(verb, tenseKey) {
 function buildFlashcardDeckRefs(deckId, selectedKeys) {
   const deck = getFlashcardDeck(deckId);
   const verbs = getInfinitiveGamePool(deck.listId);
-  if (deck.cardType === "verb") {
+  if (deck.cardType !== "cloze") {
+    const reverse = deck.cardType === "verb-reverse";
     return verbs.map(verb => ({
-      cardId: `verb|${verb._key}`,
+      cardId: `${reverse ? "reverse" : "verb"}|${verb._key}`,
       verbKey: verb._key,
       tenseKey: "",
-      cardType: "verb"
+      cardType: deck.cardType
     }));
   }
   const keys = sanitizeFlashcardTenseKeys(selectedKeys);
@@ -7730,8 +7804,8 @@ function buildFlashcardDeckRefs(deckId, selectedKeys) {
   )));
 }
 
-function getFlashcardProgressRecord(cardId) {
-  const raw = getFlashcardProgressStore().cards[cardId];
+function getFlashcardProgressRecord(cardId, playerName = "") {
+  const raw = getFlashcardProgressCards(playerName)[cardId];
   if (!raw || typeof raw !== "object") return null;
   return {
     reps: Math.max(0, Number(raw.reps) || 0),
@@ -7744,9 +7818,9 @@ function getFlashcardProgressRecord(cardId) {
   };
 }
 
-function getFlashcardDeckStats(refs, now = Date.now()) {
+function getFlashcardDeckStats(refs, now = Date.now(), playerName = "") {
   return (refs || []).reduce((stats, ref) => {
-    const progress = getFlashcardProgressRecord(ref.cardId);
+    const progress = getFlashcardProgressRecord(ref.cardId, playerName);
     if (!progress?.reps) {
       stats.newCount += 1;
       return stats;
@@ -7771,20 +7845,23 @@ function getFlashcardDeckStats(refs, now = Date.now()) {
   });
 }
 
-function flashcardDifficultyScore(ref) {
-  const progress = getFlashcardProgressRecord(ref.cardId);
+function flashcardRecordDifficultyScore(progress) {
   if (!progress) return 0;
   const ratingBoost = progress.lastRating === "again" ? 4 : progress.lastRating === "hard" ? 2 : 0;
   return (progress.lapses * 3) + Math.max(0, (2.5 - progress.ease) * 4) + ratingBoost;
 }
 
-function selectFlashcardSessionRefs(refs, sessionSize, seedText) {
+function flashcardDifficultyScore(ref, playerName = "") {
+  return flashcardRecordDifficultyScore(getFlashcardProgressRecord(ref.cardId, playerName));
+}
+
+function selectFlashcardSessionRefs(refs, sessionSize, seedText, playerName = "") {
   const now = Date.now();
   const due = [];
   const unseen = [];
   const future = [];
   (refs || []).forEach(ref => {
-    const progress = getFlashcardProgressRecord(ref.cardId);
+    const progress = getFlashcardProgressRecord(ref.cardId, playerName);
     if (!progress?.reps) {
       unseen.push(ref);
     } else if (progress.dueAt <= now) {
@@ -7794,14 +7871,16 @@ function selectFlashcardSessionRefs(refs, sessionSize, seedText) {
     }
   });
   due.sort((a, b) => {
-    const difficulty = flashcardDifficultyScore(b) - flashcardDifficultyScore(a);
+    const difficulty = flashcardDifficultyScore(b, playerName) - flashcardDifficultyScore(a, playerName);
     if (difficulty) return difficulty;
-    return (getFlashcardProgressRecord(a.cardId)?.dueAt || 0) - (getFlashcardProgressRecord(b.cardId)?.dueAt || 0);
+    return (getFlashcardProgressRecord(a.cardId, playerName)?.dueAt || 0) -
+      (getFlashcardProgressRecord(b.cardId, playerName)?.dueAt || 0);
   });
   const orderedNew = deterministicShuffle(unseen, `flashcards-v${FLASHCARD_VERSION}:${seedText}`);
   future.sort((a, b) => {
-    const dueDiff = (getFlashcardProgressRecord(a.cardId)?.dueAt || 0) - (getFlashcardProgressRecord(b.cardId)?.dueAt || 0);
-    return dueDiff || flashcardDifficultyScore(b) - flashcardDifficultyScore(a);
+    const dueDiff = (getFlashcardProgressRecord(a.cardId, playerName)?.dueAt || 0) -
+      (getFlashcardProgressRecord(b.cardId, playerName)?.dueAt || 0);
+    return dueDiff || flashcardDifficultyScore(b, playerName) - flashcardDifficultyScore(a, playerName);
   });
   return [...due, ...orderedNew, ...future].slice(0, sanitizeFlashcardSessionSize(sessionSize));
 }
@@ -8134,7 +8213,7 @@ function buildGeneratedFlashcardSentence(verb, tenseKey, form) {
 function buildFlashcard(ref) {
   const verb = findVerbByKey(ref.verbKey);
   if (!verb) return null;
-  if (ref.cardType === "verb") {
+  if (ref.cardType !== "cloze") {
     return {
       ...ref,
       infinitive: cleanText(verb.infinitive || ""),
@@ -8217,7 +8296,11 @@ function getFlashcardSetupFromModal() {
     document.querySelector("#practiceModal input[data-flashcard-session-size]:checked")?.dataset.flashcardSessionSize ||
     current.sessionSize
   );
-  return { deckId, selectedKeys, sessionSize };
+  const hasPlayerControls = !!document.querySelector("#practiceModal input[data-practice-player-preset]");
+  const playerName = hasPlayerControls
+    ? getPracticePlayerNameFromModal()
+    : sanitizePracticePlayerName(current.playerName || loadPracticePlayerName());
+  return { deckId, selectedKeys, sessionSize, playerName };
 }
 
 function renderFlashcardSetup(options = {}) {
@@ -8226,22 +8309,37 @@ function renderFlashcardSetup(options = {}) {
   const deck = getFlashcardDeck(deckId);
   const selectedKeys = sanitizeFlashcardTenseKeys(options.selectedKeys || current.selectedKeys);
   const sessionSize = sanitizeFlashcardSessionSize(options.sessionSize || current.sessionSize);
-  PRACTICE_STATE.flashcards = defaultFlashcardState({ deckId, selectedKeys, sessionSize });
+  const playerName = sanitizePracticePlayerName(
+    options.playerName ||
+    current.playerName ||
+    getFlashcardProgressStore().settings?.playerName ||
+    loadPracticePlayerName()
+  ) || "Scott";
+  PRACTICE_STATE.playerName = savePracticePlayerName(playerName);
+  PRACTICE_STATE.flashcards = defaultFlashcardState({ deckId, selectedKeys, sessionSize, playerName });
   const game = getFlashcardState();
   saveFlashcardSettings(game);
   const refs = buildFlashcardDeckRefs(deckId, selectedKeys);
-  const stats = getFlashcardDeckStats(refs);
+  const stats = getFlashcardDeckStats(refs, Date.now(), playerName);
   const tensePanel = deck.cardType === "cloze" ? `
-    <div class="practicePanel">
+    <div class="practicePanel flashcardFlatPanel">
       <div class="practiceSectionTitle">Tenses</div>
       <div class="practiceOptionsGrid">${renderFlashcardTenseOptions(selectedKeys)}</div>
       <div class="practiceTypingHint">Each selected tense adds one stable card per verb. Translated examples are used when they match reliably; otherwise a tense-aware practice sentence is supplied.</div>
     </div>
   ` : "";
   const body = `
-    <div class="practicePanel flashcardIntroPanel">
+    <div class="practicePanel flashcardFlatPanel">
+      <div class="practiceSectionTitle">Learner profile</div>
+      ${renderPracticePlayerControls(playerName)}
+      <div class="practiceActions">
+        <button type="button" class="practiceSecondaryBtn" data-flashcard-profile-refresh>Load learner progress</button>
+      </div>
+      <div class="practiceTypingHint">Flashcard progress is kept separately for each learner on this device.</div>
+    </div>
+    <div class="practicePanel flashcardIntroPanel flashcardFlatPanel">
       <div class="practiceSectionTitle">Adaptive study</div>
-      <div class="flashcardIntroText">Rate each answer Again, Hard, Good, or Easy. Missed and difficult cards return sooner, while well-known cards are spaced further apart. Progress is saved on this device.</div>
+      <div class="flashcardIntroText">Rate each answer Again, Hard, Good, or Easy. Difficult cards return sooner, while well-known cards are spaced further apart.</div>
       <div class="flashcardStatsGrid">
         <div><span>Cards</span><strong>${stats.totalCount}</strong></div>
         <div><span>Due</span><strong>${stats.dueCount}</strong></div>
@@ -8249,12 +8347,12 @@ function renderFlashcardSetup(options = {}) {
         <div><span>Difficult</span><strong>${stats.difficultCount}</strong></div>
       </div>
     </div>
-    <div class="practicePanel">
+    <div class="practicePanel flashcardFlatPanel">
       <div class="practiceSectionTitle">Card set</div>
       <div class="practiceOptionsGrid practiceOptionsGrid--two">${renderFlashcardDeckOptions(deckId)}</div>
     </div>
     ${tensePanel}
-    <div class="practicePanel">
+    <div class="practicePanel flashcardFlatPanel">
       <div class="practiceSectionTitle">Session size</div>
       <div class="practiceOptionsGrid">${renderFlashcardSessionSizeOptions(sessionSize)}</div>
     </div>
@@ -8262,28 +8360,233 @@ function renderFlashcardSetup(options = {}) {
       <button type="button" class="practiceActionBtn" data-flashcard-start>Study ${sessionSize} cards</button>
     </div>
     <div class="practiceActions">
+      <button type="button" class="practiceSecondaryBtn" data-flashcard-progress>Progress &amp; difficult verbs</button>
       ${stats.learnedCount ? `<button type="button" class="practiceSecondaryBtn" data-flashcard-reset>Reset this deck's progress</button>` : ""}
       <button type="button" class="practiceSecondaryBtn" data-practice-setup>Conjugation practice</button>
-      <button type="button" class="practiceSecondaryBtn" data-flashcard-infinitive-game>Infinitive game</button>
+      <button type="button" class="practiceSecondaryBtn" data-flashcard-infinitive-game>Infinitive recall</button>
     </div>
   `;
   showPracticeModal(
     "Adaptive flashcard setup",
-    `${deck.label} - ${stats.totalCount} cards`,
+    `${playerName} · ${deck.label} · ${stats.totalCount} cards`,
     body
   );
 }
 
-function startFlashcardSession(deckId, selectedKeys, sessionSize) {
+function buildFlashcardProgressRows(refs, playerName) {
+  const now = Date.now();
+  const byVerb = new Map();
+  (refs || []).forEach(ref => {
+    const verb = findVerbByKey(ref.verbKey);
+    if (!verb) return;
+    if (!byVerb.has(ref.verbKey)) {
+      byVerb.set(ref.verbKey, {
+        verbKey: ref.verbKey,
+        infinitive: cleanText(verb.infinitive || ""),
+        meaning: formatInfinitiveGameMeaning(verb),
+        displayNumber: getDisplayVerbNumber(verb),
+        cardCount: 0,
+        reviewedCardCount: 0,
+        reviews: 0,
+        lapses: 0,
+        dueCount: 0,
+        easeTotal: 0,
+        intervalTotal: 0,
+        difficultyTotal: 0,
+        lastReviewedAt: 0,
+        lastRating: ""
+      });
+    }
+    const row = byVerb.get(ref.verbKey);
+    row.cardCount += 1;
+    const progress = getFlashcardProgressRecord(ref.cardId, playerName);
+    if (!progress?.reps) return;
+    row.reviewedCardCount += 1;
+    row.reviews += progress.reps;
+    row.lapses += progress.lapses;
+    row.dueCount += progress.dueAt <= now ? 1 : 0;
+    row.easeTotal += progress.ease;
+    row.intervalTotal += progress.intervalDays;
+    row.difficultyTotal += flashcardRecordDifficultyScore(progress);
+    if (progress.lastReviewedAt >= row.lastReviewedAt) {
+      row.lastReviewedAt = progress.lastReviewedAt;
+      row.lastRating = progress.lastRating;
+    }
+  });
+  return Array.from(byVerb.values()).map(row => ({
+    ...row,
+    difficultyScore: row.reviewedCardCount
+      ? Math.min(100, Math.round((row.difficultyTotal / row.reviewedCardCount) * 12))
+      : null,
+    averageEase: row.reviewedCardCount ? row.easeTotal / row.reviewedCardCount : 0,
+    averageInterval: row.reviewedCardCount ? row.intervalTotal / row.reviewedCardCount : 0
+  }));
+}
+
+function sortFlashcardProgressRows(rows, sortMode) {
+  const alpha = (a, b) => a.infinitive.localeCompare(b.infinitive, "es");
+  const reviewedFirst = (a, b) =>
+    Number(b.reviewedCardCount > 0) - Number(a.reviewedCardCount > 0);
+  return [...(rows || [])].sort((a, b) => {
+    if (sortMode === "easiest") {
+      return reviewedFirst(a, b) ||
+        (a.difficultyScore ?? 101) - (b.difficultyScore ?? 101) ||
+        b.averageInterval - a.averageInterval ||
+        alpha(a, b);
+    }
+    if (sortMode === "most-reviewed") {
+      return b.reviews - a.reviews ||
+        (b.difficultyScore ?? -1) - (a.difficultyScore ?? -1) ||
+        alpha(a, b);
+    }
+    if (sortMode === "alphabetical") return alpha(a, b);
+    return reviewedFirst(a, b) ||
+      (b.difficultyScore ?? -1) - (a.difficultyScore ?? -1) ||
+      b.lapses - a.lapses ||
+      b.reviews - a.reviews ||
+      alpha(a, b);
+  });
+}
+
+function flashcardDifficultyLabel(row) {
+  if (!row.reviewedCardCount) return { label: "New", level: "new" };
+  const score = Math.max(0, Number(row.difficultyScore) || 0);
+  if (score >= 60) return { label: `High · ${score}`, level: "high" };
+  if (score >= 25) return { label: `Medium · ${score}`, level: "medium" };
+  return { label: `Low · ${score}`, level: "low" };
+}
+
+function renderFlashcardProgressTable(rows) {
+  const body = (rows || []).map((row, index) => {
+    const difficulty = flashcardDifficultyLabel(row);
+    const lastRating = row.lastRating
+      ? `${row.lastRating.charAt(0).toUpperCase()}${row.lastRating.slice(1)}`
+      : "—";
+    return `
+      <tr>
+        <td>${index + 1}</td>
+        <td>
+          <strong>${escapeHtml(row.infinitive)}</strong>
+          <small>#${escapeHtml(row.displayNumber)}</small>
+        </td>
+        <td>${escapeHtml(row.meaning)}</td>
+        <td>${row.reviewedCardCount}/${row.cardCount}</td>
+        <td>${row.reviews}</td>
+        <td>${row.lapses}</td>
+        <td>${row.dueCount}</td>
+        <td><span class="flashcardDifficulty flashcardDifficulty--${difficulty.level}">${escapeHtml(difficulty.label)}</span></td>
+        <td>${escapeHtml(lastRating)}</td>
+      </tr>
+    `;
+  }).join("");
+  return `
+    <div class="flashcardProgressTableWrap">
+      <table class="flashcardProgressTable">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Verb</th>
+            <th>English</th>
+            <th>Cards studied</th>
+            <th>Reviews</th>
+            <th>Lapses</th>
+            <th>Due</th>
+            <th>Difficulty</th>
+            <th>Last rating</th>
+          </tr>
+        </thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderFlashcardProgressView(options = {}) {
+  const current = getFlashcardState();
+  const deckId = getFlashcardDeck(options.deckId || current.deckId).id;
+  const deck = getFlashcardDeck(deckId);
+  const selectedKeys = sanitizeFlashcardTenseKeys(options.selectedKeys || current.selectedKeys);
+  const sessionSize = sanitizeFlashcardSessionSize(options.sessionSize || current.sessionSize);
+  const playerName = sanitizePracticePlayerName(options.playerName || current.playerName) || "Scott";
+  const allowedSorts = new Set(["hardest", "easiest", "most-reviewed", "alphabetical"]);
+  const progressSort = allowedSorts.has(options.progressSort || current.progressSort)
+    ? (options.progressSort || current.progressSort)
+    : "hardest";
+  PRACTICE_STATE.flashcards = defaultFlashcardState({
+    mode: "progress",
+    deckId,
+    selectedKeys,
+    sessionSize,
+    playerName,
+    progressSort
+  });
+  saveFlashcardSettings(getFlashcardState());
+  const refs = buildFlashcardDeckRefs(deckId, selectedKeys);
+  const stats = getFlashcardDeckStats(refs, Date.now(), playerName);
+  const rows = sortFlashcardProgressRows(buildFlashcardProgressRows(refs, playerName), progressSort);
+  const difficultVerbCount = rows.filter(row =>
+    row.reviewedCardCount > 0 && (Number(row.difficultyScore) || 0) >= 25
+  ).length;
+  const tenseNote = deck.cardType === "cloze"
+    ? ` · ${selectedKeys.map(key => TENSE_SELECTION_LABELS[key] || key).join(", ")}`
+    : "";
+  const body = `
+    <div class="practicePanel flashcardFlatPanel">
+      <div class="practiceSectionTitle">Profile overview</div>
+      <div class="flashcardIntroText">Difficulty combines lapses, recent Again or Hard ratings, and reduced spacing. New verbs are listed separately from learned difficulty.</div>
+      <div class="flashcardStatsGrid">
+        <div><span>Verbs</span><strong>${rows.length}</strong></div>
+        <div><span>Cards learned</span><strong>${stats.learnedCount}</strong></div>
+        <div><span>Cards due</span><strong>${stats.dueCount}</strong></div>
+        <div><span>Difficult verbs</span><strong>${difficultVerbCount}</strong></div>
+      </div>
+    </div>
+    <div class="flashcardProgressToolbar">
+      <label>
+        <span>Rank by</span>
+        <select data-flashcard-progress-sort>
+          <option value="hardest" ${progressSort === "hardest" ? "selected" : ""}>Hardest first</option>
+          <option value="easiest" ${progressSort === "easiest" ? "selected" : ""}>Easiest first</option>
+          <option value="most-reviewed" ${progressSort === "most-reviewed" ? "selected" : ""}>Most reviewed</option>
+          <option value="alphabetical" ${progressSort === "alphabetical" ? "selected" : ""}>Alphabetical</option>
+        </select>
+      </label>
+      <span>${escapeHtml(deck.label)}${escapeHtml(tenseNote)}</span>
+    </div>
+    ${renderFlashcardProgressTable(rows)}
+    <div class="practiceActions">
+      <button type="button" class="practiceSecondaryBtn" data-flashcard-progress-back>Back to flashcard setup</button>
+      <button type="button" class="practiceActionBtn" data-flashcard-progress-study>Study this card set</button>
+    </div>
+  `;
+  showPracticeModal(
+    "Flashcard progress",
+    `${playerName} · ${deck.label}`,
+    body
+  );
+}
+
+function startFlashcardSession(deckId, selectedKeys, sessionSize, playerName) {
   const deck = getFlashcardDeck(deckId);
   const keys = sanitizeFlashcardTenseKeys(selectedKeys);
   const size = sanitizeFlashcardSessionSize(sessionSize);
+  const learner = sanitizePracticePlayerName(playerName || getFlashcardState().playerName);
+  if (!learner) {
+    alert("Choose a learner or enter a name before starting.");
+    return;
+  }
+  PRACTICE_STATE.playerName = savePracticePlayerName(learner);
   const refs = buildFlashcardDeckRefs(deck.id, keys);
   if (!refs.length) {
     alert("No cards are available for that setup. Select at least one tense.");
     return;
   }
-  const selectedRefs = selectFlashcardSessionRefs(refs, size, `${deck.id}:${keys.join(",")}`);
+  const selectedRefs = selectFlashcardSessionRefs(
+    refs,
+    size,
+    `${deck.id}:${keys.join(",")}`,
+    learner
+  );
   const queue = selectedRefs.map(buildFlashcard).filter(Boolean);
   if (!queue.length) {
     alert("No cards could be built for that setup.");
@@ -8294,6 +8597,7 @@ function startFlashcardSession(deckId, selectedKeys, sessionSize) {
     deckId: deck.id,
     selectedKeys: keys,
     sessionSize: size,
+    playerName: learner,
     queue,
     initialCardCount: queue.length,
     startedAtMs: Date.now()
@@ -8304,6 +8608,10 @@ function startFlashcardSession(deckId, selectedKeys, sessionSize) {
 
 function startFlashcardSessionFromSetup() {
   const setup = getFlashcardSetupFromModal();
+  if (!setup.playerName) {
+    alert("Choose a learner or enter a name before starting.");
+    return;
+  }
   if (getFlashcardDeck(setup.deckId).cardType === "cloze") {
     const checked = document.querySelectorAll("#practiceModal input[data-flashcard-tense]:checked");
     if (!checked.length) {
@@ -8311,7 +8619,7 @@ function startFlashcardSessionFromSetup() {
       return;
     }
   }
-  startFlashcardSession(setup.deckId, setup.selectedKeys, setup.sessionSize);
+  startFlashcardSession(setup.deckId, setup.selectedKeys, setup.sessionSize, setup.playerName);
 }
 
 function currentFlashcard(game = getFlashcardState()) {
@@ -8366,7 +8674,7 @@ function formatFlashcardInterval(schedule, rating) {
 }
 
 function renderFlashcardRatingButtons(card) {
-  const progress = getFlashcardProgressRecord(card.cardId);
+  const progress = getFlashcardProgressRecord(card.cardId, getFlashcardState().playerName);
   const ratings = [
     ["again", "Again", "1"],
     ["hard", "Hard", "2"],
@@ -8392,13 +8700,13 @@ function renderFlashcardRun() {
     return;
   }
   const deck = getFlashcardDeck(game.deckId);
-  const progress = getFlashcardProgressRecord(card.cardId);
+  const progress = getFlashcardProgressRecord(card.cardId, game.playerName);
   const cardStatus = progress?.reps
     ? `${progress.lapses ? `${progress.lapses} lapse${progress.lapses === 1 ? "" : "s"}` : "Review card"}`
     : "New card";
   const progressText = `${Math.min(game.currentIndex + 1, game.queue.length)} / ${game.queue.length}`;
   const ratingTotal = Object.values(game.ratingCounts || {}).reduce((sum, count) => sum + (Number(count) || 0), 0);
-  const front = card.cardType === "verb" ? `
+  const front = card.cardType === "verb-forward" ? `
     <div class="flashcardPromptLabel">Spanish infinitive</div>
     <div class="flashcardInfinitive">${escapeHtml(card.infinitive)}</div>
     <div class="flashcardInstruction">Recall the English meaning, then show the answer.</div>
@@ -8406,6 +8714,16 @@ function renderFlashcardRun() {
       <div class="flashcardAnswer">
         <span>English meaning</span>
         <strong>${escapeHtml(card.meaning)}</strong>
+      </div>
+    ` : ""}
+  ` : card.cardType === "verb-reverse" ? `
+    <div class="flashcardPromptLabel">English meaning</div>
+    <div class="flashcardInfinitive flashcardMeaningPrompt">${escapeHtml(card.meaning)}</div>
+    <div class="flashcardInstruction">Recall the Spanish infinitive, then show the answer.</div>
+    ${game.revealed ? `
+      <div class="flashcardAnswer">
+        <span>Spanish infinitive</span>
+        <strong>${escapeHtml(card.infinitive)}</strong>
       </div>
     ` : ""}
   ` : `
@@ -8455,7 +8773,7 @@ function renderFlashcardRun() {
   `;
   showPracticeModal(
     "Adaptive flashcards",
-    deck.label,
+    `${game.playerName} · ${deck.label}`,
     body
   );
   setTimeout(() => {
@@ -8479,9 +8797,9 @@ function rateCurrentFlashcard(rating) {
   const game = getFlashcardState();
   const card = currentFlashcard(game);
   if (!card || !game.revealed) return;
-  const store = getFlashcardProgressStore();
-  const previous = getFlashcardProgressRecord(card.cardId);
-  store.cards[card.cardId] = calculateFlashcardSchedule(previous, value);
+  const previous = getFlashcardProgressRecord(card.cardId, game.playerName);
+  const cards = getFlashcardProgressCards(game.playerName);
+  cards[card.cardId] = calculateFlashcardSchedule(previous, value);
   saveFlashcardProgressStore();
   game.ratingCounts[value] = Math.max(0, Number(game.ratingCounts[value]) || 0) + 1;
   if (value === "again") {
@@ -8513,11 +8831,11 @@ function renderFlashcardResult() {
   const game = getFlashcardState();
   const deck = getFlashcardDeck(game.deckId);
   const refs = buildFlashcardDeckRefs(game.deckId, game.selectedKeys);
-  const stats = getFlashcardDeckStats(refs);
+  const stats = getFlashcardDeckStats(refs, Date.now(), game.playerName);
   const ratings = game.ratingCounts || {};
   const reviewed = Object.values(ratings).reduce((sum, count) => sum + (Number(count) || 0), 0);
   const body = `
-    <div class="practicePanel">
+    <div class="practicePanel flashcardFlatPanel">
       <div class="practiceSectionTitle">Session complete</div>
       <div class="infinitiveGameResultGrid flashcardResultGrid">
         <div><span>Reviews</span><strong>${reviewed}</strong></div>
@@ -8527,7 +8845,7 @@ function renderFlashcardResult() {
         <div><span>Time</span><strong>${formatPracticeDuration(game.durationMs || 0)}</strong></div>
       </div>
     </div>
-    <div class="practicePanel">
+    <div class="practicePanel flashcardFlatPanel">
       <div class="practiceSectionTitle">Deck now</div>
       <div class="flashcardStatsGrid">
         <div><span>Due</span><strong>${stats.dueCount}</strong></div>
@@ -8538,12 +8856,13 @@ function renderFlashcardResult() {
     </div>
     <div class="practiceActions">
       <button type="button" class="practiceSecondaryBtn" data-flashcard-setup>Change card set</button>
+      <button type="button" class="practiceSecondaryBtn" data-flashcard-progress>View progress</button>
       <button type="button" class="practiceActionBtn" data-flashcard-retry>Study next cards</button>
     </div>
   `;
   showPracticeModal(
     "Flashcard session complete",
-    deck.label,
+    `${game.playerName} · ${deck.label}`,
     body
   );
 }
@@ -8553,10 +8872,10 @@ function resetCurrentFlashcardDeckProgress() {
   const deck = getFlashcardDeck(setup.deckId);
   const resetKeys = deck.cardType === "cloze" ? FLASHCARD_CLOZE_TENSE_KEYS : setup.selectedKeys;
   const refs = buildFlashcardDeckRefs(setup.deckId, resetKeys);
-  if (!window.confirm(`Reset saved progress for ${deck.label}? Shared cards will also be reset in the other deck.`)) return;
-  const store = getFlashcardProgressStore();
+  if (!window.confirm(`Reset ${setup.playerName}'s saved progress for ${deck.label}? Cards shared with the other list will also be reset.`)) return;
+  const cards = getFlashcardProgressCards(setup.playerName);
   refs.forEach(ref => {
-    delete store.cards[ref.cardId];
+    delete cards[ref.cardId];
   });
   saveFlashcardProgressStore();
   renderFlashcardSetup(setup);
@@ -8650,7 +8969,7 @@ function renderPracticeRun() {
         <button type="button" class="practiceActionBtn" data-practice-submit>Submit</button>
       </div>
     `;
-  const title = verbs.length === 1 ? "Practice" : `${verbs.length} verb practice`;
+  const title = verbs.length === 1 ? "Conjugation practice" : `${verbs.length}-verb conjugation practice`;
   const modalTitle = PRACTICE_STATE.submitted ? `${title} result` : title;
   const meta = verbs.map(verb => `${verb.infinitive} #${getDisplayVerbNumber(verb)}`).join(" / ");
   const scoreHtml = renderPracticeScorePills(PRACTICE_STATE.summary);
@@ -8846,7 +9165,7 @@ function renderPracticeSummary() {
       <button type="button" class="practiceActionBtn" data-practice-close>Done</button>
     </div>
   `;
-  showPracticeModal("Practice summary", `${PRACTICE_STATE.attempts.length} attempted`, body);
+  showPracticeModal("Conjugation practice summary", `${PRACTICE_STATE.attempts.length} attempted`, body);
 }
 
 function resetPracticeSession() {
@@ -8951,6 +9270,23 @@ function bindPracticeModalInteractions() {
     customPlayerInput.addEventListener("focus", selectCustomPlayer);
     customPlayerInput.addEventListener("input", selectCustomPlayer);
   }
+  const refreshFlashcardProfile = () => {
+    if (!modal.querySelector("[data-flashcard-start]")) return;
+    const setup = getFlashcardSetupFromModal();
+    if (!setup.playerName) return;
+    renderFlashcardSetup(setup);
+  };
+  modal.querySelectorAll("input[data-practice-player-preset]").forEach(input => {
+    input.addEventListener("change", () => {
+      if (!input.checked || !modal.querySelector("[data-flashcard-start]")) return;
+      if (input.dataset.practicePlayerPreset === "custom" && !getPracticePlayerNameFromModal()) {
+        customPlayerInput?.focus();
+        return;
+      }
+      refreshFlashcardProfile();
+    });
+  });
+  modal.querySelector("[data-flashcard-profile-refresh]")?.addEventListener("click", refreshFlashcardProfile);
   modal.querySelectorAll("input[data-flashcard-deck]").forEach(input => {
     input.addEventListener("change", () => {
       if (!input.checked) return;
@@ -8974,6 +9310,45 @@ function bindPracticeModalInteractions() {
     });
   });
   modal.querySelector("[data-flashcard-start]")?.addEventListener("click", startFlashcardSessionFromSetup);
+  modal.querySelector("[data-flashcard-progress]")?.addEventListener("click", () => {
+    const game = getFlashcardState();
+    const setup = modal.querySelector("input[data-flashcard-deck]")
+      ? getFlashcardSetupFromModal()
+      : {
+          deckId: game.deckId,
+          selectedKeys: game.selectedKeys,
+          sessionSize: game.sessionSize,
+          playerName: game.playerName
+        };
+    if (!setup.playerName) {
+      alert("Choose a learner or enter a name to view progress.");
+      return;
+    }
+    renderFlashcardProgressView(setup);
+  });
+  modal.querySelector("[data-flashcard-progress-back]")?.addEventListener("click", () => {
+    const game = getFlashcardState();
+    renderFlashcardSetup({
+      deckId: game.deckId,
+      selectedKeys: game.selectedKeys,
+      sessionSize: game.sessionSize,
+      playerName: game.playerName
+    });
+  });
+  modal.querySelector("[data-flashcard-progress-study]")?.addEventListener("click", () => {
+    const game = getFlashcardState();
+    startFlashcardSession(game.deckId, game.selectedKeys, game.sessionSize, game.playerName);
+  });
+  modal.querySelector("[data-flashcard-progress-sort]")?.addEventListener("change", (e) => {
+    const game = getFlashcardState();
+    renderFlashcardProgressView({
+      deckId: game.deckId,
+      selectedKeys: game.selectedKeys,
+      sessionSize: game.sessionSize,
+      playerName: game.playerName,
+      progressSort: e.currentTarget.value
+    });
+  });
   modal.querySelector("[data-flashcard-reveal]")?.addEventListener("click", revealCurrentFlashcard);
   modal.querySelectorAll("[data-flashcard-rate]").forEach(btn => {
     btn.addEventListener("click", () => rateCurrentFlashcard(btn.dataset.flashcardRate || "good"));
@@ -8983,12 +9358,13 @@ function bindPracticeModalInteractions() {
     renderFlashcardSetup({
       deckId: game.deckId,
       selectedKeys: game.selectedKeys,
-      sessionSize: game.sessionSize
+      sessionSize: game.sessionSize,
+      playerName: game.playerName
     });
   });
   modal.querySelector("[data-flashcard-retry]")?.addEventListener("click", () => {
     const game = getFlashcardState();
-    startFlashcardSession(game.deckId, game.selectedKeys, game.sessionSize);
+    startFlashcardSession(game.deckId, game.selectedKeys, game.sessionSize, game.playerName);
   });
   modal.querySelector("[data-flashcard-reset]")?.addEventListener("click", resetCurrentFlashcardDeckProgress);
   modal.querySelector("[data-flashcard-infinitive-game]")?.addEventListener("click", () => {
