@@ -8759,28 +8759,108 @@ function buildFlashcardProgressRows(refs, playerName) {
   }));
 }
 
+const FLASHCARD_PROGRESS_SORT_COLUMNS = {
+  rank: { label: "Rank", defaultDirection: "desc" },
+  verb: { label: "Verb", defaultDirection: "asc" },
+  english: { label: "English", defaultDirection: "asc" },
+  studied: { label: "Cards studied", defaultDirection: "desc" },
+  reviews: { label: "Reviews", defaultDirection: "desc" },
+  lapses: { label: "Lapses", defaultDirection: "desc" },
+  due: { label: "Due", defaultDirection: "desc" },
+  difficulty: { label: "Difficulty", defaultDirection: "desc" },
+  lastRating: { label: "Last rating", defaultDirection: "desc" }
+};
+
+function normalizeFlashcardProgressSort(value) {
+  const raw = cleanText(value || "");
+  if (raw === "hardest") return "difficulty-desc";
+  if (raw === "easiest") return "difficulty-asc";
+  if (raw === "most-reviewed") return "reviews-desc";
+  if (raw === "alphabetical") return "verb-asc";
+  const [column, direction] = raw.split("-");
+  const safeColumn = FLASHCARD_PROGRESS_SORT_COLUMNS[column] ? column : "difficulty";
+  const safeDirection = direction === "asc" || direction === "desc"
+    ? direction
+    : FLASHCARD_PROGRESS_SORT_COLUMNS[safeColumn].defaultDirection;
+  return `${safeColumn}-${safeDirection}`;
+}
+
+function getFlashcardProgressSortParts(sortMode) {
+  const normalized = normalizeFlashcardProgressSort(sortMode);
+  const idx = normalized.lastIndexOf("-");
+  return {
+    column: normalized.slice(0, idx),
+    direction: normalized.slice(idx + 1)
+  };
+}
+
+function nextFlashcardProgressSort(currentSort, column) {
+  const safeColumn = FLASHCARD_PROGRESS_SORT_COLUMNS[column] ? column : "difficulty";
+  const current = getFlashcardProgressSortParts(currentSort);
+  const direction = current.column === safeColumn
+    ? (current.direction === "asc" ? "desc" : "asc")
+    : FLASHCARD_PROGRESS_SORT_COLUMNS[safeColumn].defaultDirection;
+  return `${safeColumn}-${direction}`;
+}
+
+function renderFlashcardProgressSortHeader(column, currentSort) {
+  const spec = FLASHCARD_PROGRESS_SORT_COLUMNS[column];
+  const current = getFlashcardProgressSortParts(currentSort);
+  const active = current.column === column;
+  const nextSort = nextFlashcardProgressSort(currentSort, column);
+  const indicator = active ? (current.direction === "asc" ? "^" : "v") : "";
+  const ariaSort = active
+    ? (current.direction === "asc" ? "ascending" : "descending")
+    : "none";
+  return `
+    <th aria-sort="${ariaSort}">
+      <button type="button" class="flashcardProgressSortBtn" data-flashcard-progress-sort="${escapeHtml(nextSort)}">
+        <span>${escapeHtml(spec.label)}</span>
+        ${indicator ? `<span class="flashcardProgressSortMark">${indicator}</span>` : ""}
+      </button>
+    </th>
+  `;
+}
+
 function sortFlashcardProgressRows(rows, sortMode) {
+  const { column, direction } = getFlashcardProgressSortParts(sortMode);
+  const multiplier = direction === "asc" ? 1 : -1;
   const alpha = (a, b) => a.infinitive.localeCompare(b.infinitive, "es");
+  const text = (a, b, field) => cleanText(a[field] || "").localeCompare(cleanText(b[field] || ""), "es");
+  const numeric = (a, b, getter) => (getter(a) - getter(b));
+  const emptyLast = (aEmpty, bEmpty) => Number(aEmpty) - Number(bEmpty);
   const reviewedFirst = (a, b) =>
     Number(b.reviewedCardCount > 0) - Number(a.reviewedCardCount > 0);
+  const ratingWeight = row => ({ again: 1, hard: 2, good: 3, easy: 4 }[row.lastRating] || 0);
+  const base = (a, b) => alpha(a, b);
   return [...(rows || [])].sort((a, b) => {
-    if (sortMode === "easiest") {
-      return reviewedFirst(a, b) ||
-        (a.difficultyScore ?? 101) - (b.difficultyScore ?? 101) ||
-        b.averageInterval - a.averageInterval ||
-        alpha(a, b);
+    let diff = 0;
+    if (column === "verb") {
+      diff = text(a, b, "infinitive");
+    } else if (column === "english") {
+      diff = text(a, b, "meaning");
+    } else if (column === "studied") {
+      diff = numeric(a, b, row => row.reviewedCardCount) ||
+        numeric(a, b, row => row.cardCount);
+    } else if (column === "reviews") {
+      diff = numeric(a, b, row => row.reviews);
+    } else if (column === "lapses") {
+      diff = numeric(a, b, row => row.lapses);
+    } else if (column === "due") {
+      diff = numeric(a, b, row => row.dueCount);
+    } else if (column === "lastRating") {
+      const gate = emptyLast(!ratingWeight(a), !ratingWeight(b));
+      if (gate) return gate;
+      diff = numeric(a, b, ratingWeight);
+    } else {
+      const gate = reviewedFirst(a, b) ||
+        emptyLast(a.difficultyScore == null, b.difficultyScore == null);
+      if (gate) return gate;
+      diff = numeric(a, b, row => Number(row.difficultyScore) || 0) ||
+        numeric(a, b, row => row.lapses) ||
+        numeric(a, b, row => row.reviews);
     }
-    if (sortMode === "most-reviewed") {
-      return b.reviews - a.reviews ||
-        (b.difficultyScore ?? -1) - (a.difficultyScore ?? -1) ||
-        alpha(a, b);
-    }
-    if (sortMode === "alphabetical") return alpha(a, b);
-    return reviewedFirst(a, b) ||
-      (b.difficultyScore ?? -1) - (a.difficultyScore ?? -1) ||
-      b.lapses - a.lapses ||
-      b.reviews - a.reviews ||
-      alpha(a, b);
+    return diff ? diff * multiplier : base(a, b);
   });
 }
 
@@ -8792,7 +8872,7 @@ function flashcardDifficultyLabel(row) {
   return { label: `Low · ${score}`, level: "low" };
 }
 
-function renderFlashcardProgressTable(rows) {
+function renderFlashcardProgressTable(rows, progressSort) {
   const body = (rows || []).map((row, index) => {
     const difficulty = flashcardDifficultyLabel(row);
     const lastRating = row.lastRating
@@ -8820,15 +8900,15 @@ function renderFlashcardProgressTable(rows) {
       <table class="flashcardProgressTable">
         <thead>
           <tr>
-            <th>Rank</th>
-            <th>Verb</th>
-            <th>English</th>
-            <th>Cards studied</th>
-            <th>Reviews</th>
-            <th>Lapses</th>
-            <th>Due</th>
-            <th>Difficulty</th>
-            <th>Last rating</th>
+            ${renderFlashcardProgressSortHeader("rank", progressSort)}
+            ${renderFlashcardProgressSortHeader("verb", progressSort)}
+            ${renderFlashcardProgressSortHeader("english", progressSort)}
+            ${renderFlashcardProgressSortHeader("studied", progressSort)}
+            ${renderFlashcardProgressSortHeader("reviews", progressSort)}
+            ${renderFlashcardProgressSortHeader("lapses", progressSort)}
+            ${renderFlashcardProgressSortHeader("due", progressSort)}
+            ${renderFlashcardProgressSortHeader("difficulty", progressSort)}
+            ${renderFlashcardProgressSortHeader("lastRating", progressSort)}
           </tr>
         </thead>
         <tbody>${body}</tbody>
@@ -8852,10 +8932,7 @@ function renderFlashcardProgressView(options = {}) {
     loadFlashcardPasscode(playerName)
   );
   const playerMeta = playerName || "Choose learner";
-  const allowedSorts = new Set(["hardest", "easiest", "most-reviewed", "alphabetical"]);
-  const progressSort = allowedSorts.has(options.progressSort || current.progressSort)
-    ? (options.progressSort || current.progressSort)
-    : "hardest";
+  const progressSort = normalizeFlashcardProgressSort(options.progressSort || current.progressSort);
   PRACTICE_STATE.flashcards = defaultFlashcardState({
     mode: "progress",
     deckId,
@@ -8900,18 +8977,9 @@ function renderFlashcardProgressView(options = {}) {
           ${renderFlashcardDeckSelectOptions(deckId)}
         </select>
       </label>
-      <label>
-        <span>Rank by</span>
-        <select data-flashcard-progress-sort>
-          <option value="hardest" ${progressSort === "hardest" ? "selected" : ""}>Hardest first</option>
-          <option value="easiest" ${progressSort === "easiest" ? "selected" : ""}>Easiest first</option>
-          <option value="most-reviewed" ${progressSort === "most-reviewed" ? "selected" : ""}>Most reviewed</option>
-          <option value="alphabetical" ${progressSort === "alphabetical" ? "selected" : ""}>Alphabetical</option>
-        </select>
-      </label>
       <span>${escapeHtml(deck.label)}${escapeHtml(tenseNote)}</span>
     </div>
-    ${renderFlashcardProgressTable(rows)}
+    ${renderFlashcardProgressTable(rows, progressSort)}
     <div class="practiceActions">
       <button type="button" class="practiceSecondaryBtn" data-flashcard-progress-back>Back to flashcard setup</button>
       <button type="button" class="practiceActionBtn" data-flashcard-progress-study>Study this card set</button>
@@ -9046,10 +9114,10 @@ function formatFlashcardInterval(schedule, rating) {
 function renderFlashcardRatingButtons(card) {
   const progress = getFlashcardProgressRecord(card.cardId, getFlashcardState().playerName);
   const ratings = [
-    ["again", "Again", "1"],
-    ["hard", "Hard", "2"],
-    ["good", "Good", "3"],
-    ["easy", "Easy", "4"]
+    ["again", "Again", "1 / A"],
+    ["hard", "Hard", "2 / S"],
+    ["good", "Good", "3 / D"],
+    ["easy", "Easy", "4 / F"]
   ];
   return ratings.map(([value, label, shortcut]) => {
     const schedule = calculateFlashcardSchedule(progress, value);
@@ -9112,7 +9180,7 @@ function renderFlashcardRun() {
     ` : ""}
   `;
   const action = game.revealed ? `
-    <div class="flashcardRatingHelp">How well did you know it? Keyboard: 1 Again, 2 Hard, 3 Good, 4 Easy.</div>
+    <div class="flashcardRatingHelp">How well did you know it? Keyboard: 1/A Again, 2/S Hard, 3/D Good, 4/F Easy.</div>
     <div class="flashcardRatingGrid">${renderFlashcardRatingButtons(card)}</div>
   ` : `
     <div class="practiceActions practiceActions--primary">
@@ -9788,15 +9856,17 @@ function bindPracticeModalInteractions() {
       progressSort: game.progressSort
     });
   });
-  modal.querySelector("[data-flashcard-progress-sort]")?.addEventListener("change", (e) => {
-    const game = getFlashcardState();
-    renderFlashcardProgressView({
-      deckId: game.deckId,
-      selectedKeys: game.selectedKeys,
-      sessionSize: game.sessionSize,
-      playerName: game.playerName,
-      passcode: game.passcode,
-      progressSort: e.currentTarget.value
+  modal.querySelectorAll("[data-flashcard-progress-sort]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const game = getFlashcardState();
+      renderFlashcardProgressView({
+        deckId: game.deckId,
+        selectedKeys: game.selectedKeys,
+        sessionSize: game.sessionSize,
+        playerName: game.playerName,
+        passcode: game.passcode,
+        progressSort: btn.dataset.flashcardProgressSort || game.progressSort
+      });
     });
   });
   modal.querySelector("[data-flashcard-reveal]")?.addEventListener("click", revealCurrentFlashcard);
@@ -9831,8 +9901,18 @@ function bindPracticeModalInteractions() {
       return;
     }
     if (!game.revealed) return;
-    const ratingByKey = { "1": "again", "2": "hard", "3": "good", "4": "easy" };
-    const rating = ratingByKey[e.key];
+    const key = String(e.key || "").toLowerCase();
+    const ratingByKey = {
+      "1": "again",
+      "2": "hard",
+      "3": "good",
+      "4": "easy",
+      a: "again",
+      s: "hard",
+      d: "good",
+      f: "easy"
+    };
+    const rating = ratingByKey[key];
     if (!rating) return;
     e.preventDefault();
     rateCurrentFlashcard(rating);
