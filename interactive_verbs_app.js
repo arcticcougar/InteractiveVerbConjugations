@@ -4283,10 +4283,10 @@ function renderDetail(verbKey) {
         <div class="big verbIdentityRow">
           <span>${escapeHtml(verb.infinitive)}</span>
           <span class="pill">#${getDisplayVerbNumber(verb)}</span>
-          <button type="button" class="practiceLaunchBtn" data-practice-launch="${verb._key}" aria-label="Start conjugation practice" title="Conjugation practice">&#127918;</button>
-          <button type="button" class="practiceLaunchBtn infinitiveGameLaunchBtn" data-infinitive-game-launch aria-label="Start infinitive recall" title="Infinitive recall">&#127919;</button>
-          <button type="button" class="practiceLaunchBtn flashcardLaunchBtn" data-flashcard-launch aria-label="Start adaptive flashcards" title="Adaptive flashcards">&#128218;</button>
-          <button type="button" class="practiceLaunchBtn leaderboardLaunchBtn" data-leaderboard-launch="${verb._key}" aria-label="View leaderboard" title="Leaderboard">&#127942;</button>
+          <button type="button" class="practiceLaunchBtn" data-practice-launch="${verb._key}" aria-label="Start conjugation practice">&#127918;</button>
+          <button type="button" class="practiceLaunchBtn infinitiveGameLaunchBtn" data-infinitive-game-launch aria-label="Start infinitive recall">&#127919;</button>
+          <button type="button" class="practiceLaunchBtn flashcardLaunchBtn" data-flashcard-launch aria-label="Start adaptive flashcards">&#128218;</button>
+          <button type="button" class="practiceLaunchBtn leaderboardLaunchBtn" data-leaderboard-launch="${verb._key}" aria-label="View leaderboard">&#127942;</button>
         </div>
         <div class="meaning">${escapeHtml(meaningInfo.meaning || "")}</div>
       </div>
@@ -7469,7 +7469,9 @@ const FLASHCARD_VERSION = 2;
 const FLASHCARD_DAY_MS = 24 * 60 * 60 * 1000;
 const FLASHCARD_AGAIN_DELAY_MS = 10 * 60 * 1000;
 const FLASHCARD_AGAIN_GAP = 3;
-const FLASHCARD_SESSION_SIZES = [10, 20, 50];
+const FLASHCARD_SESSION_SIZE_MIN = 5;
+const FLASHCARD_SESSION_SIZE_MAX = 100;
+const FLASHCARD_SESSION_SIZE_STEP = 5;
 const FLASHCARD_CLOZE_TENSE_KEYS = [
   "1", "2", "3", "4", "5", "6", "7",
   "8", "9", "10", "11", "12", "13", "14",
@@ -7521,6 +7523,14 @@ const FLASHCARD_DECKS = {
     description: "Complete a translated sentence in your selected tenses."
   }
 };
+const FLASHCARD_DECK_ORDER = [
+  "essential55-verbs",
+  "core501-verbs",
+  "essential55-reverse",
+  "core501-reverse",
+  "essential55-cloze",
+  "core501-cloze"
+];
 const FLASHCARD_PERSON_SPECS = [
   { number: "sg", tableKey: "singular", index: 0, es: "yo", en: "I", objectEn: "me", bePresent: "am", bePast: "was", have: "have" },
   { number: "sg", tableKey: "singular", index: 1, es: "tú", en: "you", objectEn: "you", bePresent: "are", bePast: "were", have: "have" },
@@ -7640,6 +7650,10 @@ function getFlashcardDeck(deckId) {
   return FLASHCARD_DECKS[deckId] || FLASHCARD_DECKS["essential55-verbs"];
 }
 
+function getOrderedFlashcardDecks() {
+  return FLASHCARD_DECK_ORDER.map(id => FLASHCARD_DECKS[id]).filter(Boolean);
+}
+
 function sanitizeFlashcardTenseKeys(keys) {
   const allowed = new Set(FLASHCARD_CLOZE_TENSE_KEYS);
   const out = [];
@@ -7651,8 +7665,9 @@ function sanitizeFlashcardTenseKeys(keys) {
 }
 
 function sanitizeFlashcardSessionSize(value) {
-  const size = Math.round(Number(value) || 20);
-  return FLASHCARD_SESSION_SIZES.includes(size) ? size : 20;
+  const raw = Math.round(Number(value) || 20);
+  const stepped = Math.round(raw / FLASHCARD_SESSION_SIZE_STEP) * FLASHCARD_SESSION_SIZE_STEP;
+  return Math.max(FLASHCARD_SESSION_SIZE_MIN, Math.min(FLASHCARD_SESSION_SIZE_MAX, stepped));
 }
 
 function defaultFlashcardState(overrides = {}) {
@@ -8128,8 +8143,8 @@ function buildGeneratedFlashcardSentence(verb, tenseKey, form) {
   const enStart = capitalizeFlashcardText(en);
   const generated = {
     "1": {
-      spanish: `En este ejemplo, ${es} ${answer}.`,
-      clozeSpanish: `En este ejemplo, ${es} ____.`,
+      spanish: `${es} ${answer}.`,
+      clozeSpanish: `${es} ____.`,
       english: `${flashcardPresentEnglish(person, action)}.`
     },
     "2": {
@@ -8241,7 +8256,7 @@ function buildFlashcard(ref) {
 }
 
 function renderFlashcardDeckOptions(selectedDeckId) {
-  return Object.values(FLASHCARD_DECKS).map(deck => `
+  return getOrderedFlashcardDecks().map(deck => `
     <label class="practiceOption flashcardDeckOption">
       <input
         type="radio"
@@ -8257,6 +8272,12 @@ function renderFlashcardDeckOptions(selectedDeckId) {
   `).join("");
 }
 
+function renderFlashcardDeckSelectOptions(selectedDeckId) {
+  return getOrderedFlashcardDecks().map(deck => `
+    <option value="${escapeHtml(deck.id)}" ${selectedDeckId === deck.id ? "selected" : ""}>${escapeHtml(deck.label)}</option>
+  `).join("");
+}
+
 function renderFlashcardTenseOptions(selectedKeys) {
   const selected = new Set(sanitizeFlashcardTenseKeys(selectedKeys));
   return FLASHCARD_CLOZE_TENSE_KEYS.map(key => `
@@ -8268,23 +8289,38 @@ function renderFlashcardTenseOptions(selectedKeys) {
 }
 
 function renderFlashcardSessionSizeOptions(selectedSize) {
-  return FLASHCARD_SESSION_SIZES.map(size => `
-    <label class="practiceOption">
+  const size = sanitizeFlashcardSessionSize(selectedSize);
+  return `
+    <div class="flashcardSessionSizeControl">
       <input
-        type="radio"
-        name="flashcardSessionSize"
-        data-flashcard-session-size="${size}"
-        ${selectedSize === size ? "checked" : ""}
+        type="range"
+        min="${FLASHCARD_SESSION_SIZE_MIN}"
+        max="${FLASHCARD_SESSION_SIZE_MAX}"
+        step="${FLASHCARD_SESSION_SIZE_STEP}"
+        value="${size}"
+        data-flashcard-session-size
+        aria-label="Cards in this session"
       >
-      <span>${size} cards</span>
-    </label>
-  `).join("");
+      <input
+        class="practiceTextInput"
+        type="number"
+        min="${FLASHCARD_SESSION_SIZE_MIN}"
+        max="${FLASHCARD_SESSION_SIZE_MAX}"
+        step="${FLASHCARD_SESSION_SIZE_STEP}"
+        value="${size}"
+        data-flashcard-session-size-number
+        aria-label="Cards in this session"
+      >
+      <span class="flashcardSessionSizeValue" data-flashcard-session-size-label>${size} cards</span>
+    </div>
+  `;
 }
 
 function getFlashcardSetupFromModal() {
   const current = getFlashcardState();
   const deckId = getFlashcardDeck(
     document.querySelector("#practiceModal input[data-flashcard-deck]:checked")?.dataset.flashcardDeck ||
+    document.querySelector("#practiceModal [data-flashcard-progress-deck]")?.value ||
     current.deckId
   ).id;
   const checkedTenses = Array.from(document.querySelectorAll("#practiceModal input[data-flashcard-tense]:checked"))
@@ -8293,7 +8329,7 @@ function getFlashcardSetupFromModal() {
     ? sanitizeFlashcardTenseKeys(checkedTenses)
     : sanitizeFlashcardTenseKeys(current.selectedKeys);
   const sessionSize = sanitizeFlashcardSessionSize(
-    document.querySelector("#practiceModal input[data-flashcard-session-size]:checked")?.dataset.flashcardSessionSize ||
+    document.querySelector("#practiceModal [data-flashcard-session-size]")?.value ||
     current.sessionSize
   );
   const hasPlayerControls = !!document.querySelector("#practiceModal input[data-practice-player-preset]");
@@ -8541,7 +8577,20 @@ function renderFlashcardProgressView(options = {}) {
         <div><span>Difficult verbs</span><strong>${difficultVerbCount}</strong></div>
       </div>
     </div>
+    <div class="practicePanel flashcardFlatPanel">
+      <div class="practiceSectionTitle">Learner data</div>
+      ${renderPracticePlayerControls(playerName)}
+      <div class="practiceActions">
+        <button type="button" class="practiceSecondaryBtn" data-flashcard-progress-load-player>Load learner data</button>
+      </div>
+    </div>
     <div class="flashcardProgressToolbar">
+      <label>
+        <span>Card set</span>
+        <select data-flashcard-progress-deck>
+          ${renderFlashcardDeckSelectOptions(deckId)}
+        </select>
+      </label>
       <label>
         <span>Rank by</span>
         <select data-flashcard-progress-sort>
@@ -9303,12 +9352,21 @@ function bindPracticeModalInteractions() {
       renderFlashcardSetup(getFlashcardSetupFromModal());
     });
   });
-  modal.querySelectorAll("input[data-flashcard-session-size]").forEach(input => {
-    input.addEventListener("change", () => {
-      if (!input.checked) return;
-      renderFlashcardSetup(getFlashcardSetupFromModal());
-    });
-  });
+  const flashcardSessionRange = modal.querySelector("[data-flashcard-session-size]");
+  const flashcardSessionNumber = modal.querySelector("[data-flashcard-session-size-number]");
+  const flashcardSessionLabel = modal.querySelector("[data-flashcard-session-size-label]");
+  const syncFlashcardSessionSizeControl = (rawValue) => {
+    const size = sanitizeFlashcardSessionSize(rawValue);
+    if (flashcardSessionRange) flashcardSessionRange.value = String(size);
+    if (flashcardSessionNumber) flashcardSessionNumber.value = String(size);
+    if (flashcardSessionLabel) flashcardSessionLabel.textContent = `${size} cards`;
+    const startBtn = modal.querySelector("[data-flashcard-start]");
+    if (startBtn) startBtn.textContent = `Study ${size} cards`;
+  };
+  flashcardSessionRange?.addEventListener("input", (e) => syncFlashcardSessionSizeControl(e.currentTarget.value));
+  flashcardSessionRange?.addEventListener("change", () => renderFlashcardSetup(getFlashcardSetupFromModal()));
+  flashcardSessionNumber?.addEventListener("input", (e) => syncFlashcardSessionSizeControl(e.currentTarget.value));
+  flashcardSessionNumber?.addEventListener("change", () => renderFlashcardSetup(getFlashcardSetupFromModal()));
   modal.querySelector("[data-flashcard-start]")?.addEventListener("click", startFlashcardSessionFromSetup);
   modal.querySelector("[data-flashcard-progress]")?.addEventListener("click", () => {
     const game = getFlashcardState();
@@ -9338,6 +9396,31 @@ function bindPracticeModalInteractions() {
   modal.querySelector("[data-flashcard-progress-study]")?.addEventListener("click", () => {
     const game = getFlashcardState();
     startFlashcardSession(game.deckId, game.selectedKeys, game.sessionSize, game.playerName);
+  });
+  modal.querySelector("[data-flashcard-progress-deck]")?.addEventListener("change", (e) => {
+    const game = getFlashcardState();
+    renderFlashcardProgressView({
+      deckId: e.currentTarget.value,
+      selectedKeys: game.selectedKeys,
+      sessionSize: game.sessionSize,
+      playerName: game.playerName,
+      progressSort: game.progressSort
+    });
+  });
+  modal.querySelector("[data-flashcard-progress-load-player]")?.addEventListener("click", () => {
+    const game = getFlashcardState();
+    const playerName = getPracticePlayerNameFromModal();
+    if (!playerName) {
+      alert("Choose a learner or enter a name to view progress.");
+      return;
+    }
+    renderFlashcardProgressView({
+      deckId: game.deckId,
+      selectedKeys: game.selectedKeys,
+      sessionSize: game.sessionSize,
+      playerName,
+      progressSort: game.progressSort
+    });
   });
   modal.querySelector("[data-flashcard-progress-sort]")?.addEventListener("change", (e) => {
     const game = getFlashcardState();

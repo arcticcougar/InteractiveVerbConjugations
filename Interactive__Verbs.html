@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Interactive Verb Demo</title>
+<title>DYSLEXAI - Verb Trainer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800;900&display=swap" rel="stylesheet">
@@ -2234,6 +2234,27 @@
     font-weight: 950;
     line-height: 1;
   }
+  .flashcardSessionSizeControl {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) 86px max-content;
+    gap: 8px;
+    align-items: center;
+    max-width: 620px;
+  }
+  .flashcardSessionSizeControl input[type="range"] {
+    width: 100%;
+    accent-color: var(--section-color);
+  }
+  .flashcardSessionSizeControl input[type="number"] {
+    min-height: 36px;
+    text-align: center;
+  }
+  .flashcardSessionSizeValue {
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
   .flashcardTop {
     display: flex;
     flex-wrap: wrap;
@@ -2421,8 +2442,9 @@
   }
   .flashcardProgressTable {
     width: 100%;
-    min-width: 880px;
+    min-width: 1040px;
     border-collapse: collapse;
+    table-layout: fixed;
     color: var(--subhead);
     font-size: 12px;
   }
@@ -2432,6 +2454,39 @@
     border-bottom: 1px solid var(--table-rule);
     text-align: left;
     vertical-align: middle;
+  }
+  .flashcardProgressTable th:nth-child(1),
+  .flashcardProgressTable td:nth-child(1) {
+    width: 54px;
+  }
+  .flashcardProgressTable th:nth-child(2),
+  .flashcardProgressTable td:nth-child(2) {
+    width: 140px;
+  }
+  .flashcardProgressTable th:nth-child(3),
+  .flashcardProgressTable td:nth-child(3) {
+    width: 310px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
+  }
+  .flashcardProgressTable th:nth-child(4),
+  .flashcardProgressTable td:nth-child(4),
+  .flashcardProgressTable th:nth-child(9),
+  .flashcardProgressTable td:nth-child(9) {
+    width: 96px;
+  }
+  .flashcardProgressTable th:nth-child(5),
+  .flashcardProgressTable td:nth-child(5),
+  .flashcardProgressTable th:nth-child(6),
+  .flashcardProgressTable td:nth-child(6),
+  .flashcardProgressTable th:nth-child(7),
+  .flashcardProgressTable td:nth-child(7) {
+    width: 74px;
+  }
+  .flashcardProgressTable th:nth-child(8),
+  .flashcardProgressTable td:nth-child(8) {
+    width: 130px;
   }
   .flashcardProgressTable th {
     position: sticky;
@@ -2788,6 +2843,15 @@
     .flashcardStatsGrid,
     .flashcardRatingGrid {
       grid-template-columns: 1fr 1fr;
+    }
+    .flashcardSessionSizeControl {
+      grid-template-columns: 1fr 82px;
+    }
+    .flashcardSessionSizeControl input[type="range"] {
+      grid-column: 1 / -1;
+    }
+    .flashcardSessionSizeValue {
+      justify-self: end;
     }
     .practiceTenseGrid {
       grid-template-columns: max-content minmax(0, 1fr);
@@ -3756,8 +3820,6 @@ window.addEventListener("resize", () => {
 <script src="core_notes_overrides.js"></script>
 <script src="core_notes_manual_fixes.js"></script>
 <script src="practice-challenges.js?v=paper-workbook-qc-1"></script>
-<script src="interactive_verbs_app.js?v=adaptive-flashcards-3"></script>
+<script src="interactive_verbs_app.js?v=adaptive-flashcards-4"></script>
 </body>
 </html>
-
-
