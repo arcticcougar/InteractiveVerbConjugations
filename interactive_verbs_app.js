@@ -3,6 +3,7 @@
 const STATE_KEY = "ivc_state_v1";
 const PRACTICE_PLAYER_KEY = "ivc_practice_player_v1";
 const FLASHCARD_STORAGE_KEY = "ivc_flashcards_v1";
+const FLASHCARD_PASSCODE_SESSION_PREFIX = "ivc_flashcard_passcode_v1:";
 const BACKUP_VERSION = 1;
 
 function initialInfinitiveKey(verb) {
@@ -2136,6 +2137,16 @@ let PRACTICE_STATE = {
     selectedKeys: []
   },
   infinitiveGame: null,
+  flashcardAccount: {
+    playerName: "",
+    passcode: "",
+    authenticated: false,
+    status: "idle",
+    message: "",
+    storage: "",
+    created: false,
+    lastSyncedAt: 0
+  },
   flashcards: null,
   modalLocked: false
 };
@@ -4891,6 +4902,85 @@ function getPracticePlayerNameFromModal() {
     ? document.querySelector("#practiceModal [data-practice-player-custom]")?.value || ""
     : selected;
   return sanitizePracticePlayerName(rawName);
+}
+
+function sanitizeFlashcardPasscode(value) {
+  return String(value || "").trim().slice(0, 64);
+}
+
+function flashcardAccountSessionKey(playerName) {
+  const key = flashcardProfileKey(playerName);
+  return key ? `${FLASHCARD_PASSCODE_SESSION_PREFIX}${key}` : "";
+}
+
+function loadFlashcardPasscode(playerName) {
+  const storageKey = flashcardAccountSessionKey(playerName);
+  if (!storageKey) return "";
+  try {
+    return sanitizeFlashcardPasscode(sessionStorage.getItem(storageKey) || "");
+  } catch {
+    return "";
+  }
+}
+
+function saveFlashcardPasscode(playerName, passcode) {
+  const storageKey = flashcardAccountSessionKey(playerName);
+  const cleaned = sanitizeFlashcardPasscode(passcode);
+  if (!storageKey || !cleaned) return cleaned;
+  try {
+    sessionStorage.setItem(storageKey, cleaned);
+  } catch {
+    // Session storage is just a convenience, not required.
+  }
+  return cleaned;
+}
+
+function getFlashcardPasscodeFromModal() {
+  return sanitizeFlashcardPasscode(document.querySelector("#practiceModal [data-flashcard-passcode]")?.value || "");
+}
+
+function getFlashcardAccountFor(playerName) {
+  const account = PRACTICE_STATE.flashcardAccount || {};
+  const cleaned = sanitizePracticePlayerName(playerName);
+  return account.playerName === cleaned ? account : null;
+}
+
+function setFlashcardAccountStatus(status, message = "", updates = {}) {
+  PRACTICE_STATE.flashcardAccount = {
+    ...(PRACTICE_STATE.flashcardAccount || {}),
+    status,
+    message,
+    ...updates
+  };
+}
+
+function renderFlashcardAccountControls(playerName, passcode = "") {
+  const account = getFlashcardAccountFor(playerName);
+  const status = account?.status || "idle";
+  const message = account?.message || "Use a simple passcode to keep this learner's online progress separate.";
+  const statusClass = status === "synced"
+    ? "flashcardAccountStatus flashcardAccountStatus--good"
+    : status === "error"
+      ? "flashcardAccountStatus flashcardAccountStatus--bad"
+      : "flashcardAccountStatus";
+  return `
+    <div class="flashcardAccountControls">
+      <label class="practiceField">
+        <span>Passcode</span>
+        <input
+          class="practiceTextInput"
+          type="password"
+          data-flashcard-passcode
+          value="${escapeHtml(passcode)}"
+          placeholder="Create or enter passcode"
+          maxlength="64"
+          autocomplete="current-password"
+          spellcheck="false"
+        >
+      </label>
+      <div class="${statusClass}" data-flashcard-account-status>${escapeHtml(message)}</div>
+    </div>
+  `;
 }
 
 function getPracticeTabOrderFromModal() {
@@ -7694,6 +7784,7 @@ function defaultFlashcardState(overrides = {}) {
     selectedKeys: [...FLASHCARD_DEFAULT_TENSE_KEYS],
     sessionSize: 20,
     playerName: sanitizePracticePlayerName(loadPracticePlayerName()),
+    passcode: "",
     progressSort: "hardest",
     queue: [],
     currentIndex: 0,
@@ -7732,6 +7823,189 @@ function saveFlashcardSettings(game) {
     playerName: sanitizePracticePlayerName(game.playerName || loadPracticePlayerName())
   };
   saveFlashcardProgressStore();
+}
+
+function normalizeFlashcardProgressRecord(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const lastRating = cleanText(raw.lastRating || "");
+  return {
+    reps: Math.max(0, Math.round(Number(raw.reps) || 0)),
+    lapses: Math.max(0, Math.round(Number(raw.lapses) || 0)),
+    ease: Math.max(1.3, Number(raw.ease) || 2.5),
+    intervalDays: Math.max(0, Number(raw.intervalDays) || 0),
+    dueAt: Math.max(0, Math.round(Number(raw.dueAt) || 0)),
+    lastReviewedAt: Math.max(0, Math.round(Number(raw.lastReviewedAt) || 0)),
+    lastRating
+  };
+}
+
+function flashcardProgressShouldReplace(existing, incoming) {
+  if (!existing) return true;
+  const existingReviewed = Number(existing.lastReviewedAt) || 0;
+  const incomingReviewed = Number(incoming.lastReviewedAt) || 0;
+  if (incomingReviewed !== existingReviewed) return incomingReviewed > existingReviewed;
+  return (Number(incoming.reps) || 0) >= (Number(existing.reps) || 0);
+}
+
+function serializeFlashcardProgressCards(playerName) {
+  const source = getFlashcardProgressCards(playerName);
+  const out = {};
+  Object.entries(source || {}).forEach(([cardId, raw]) => {
+    const progress = normalizeFlashcardProgressRecord(raw);
+    if (!progress || (!progress.reps && !progress.lastReviewedAt)) return;
+    out[cardId] = progress;
+  });
+  return out;
+}
+
+function mergeFlashcardProgressCards(playerName, incomingCards) {
+  const cards = getFlashcardProgressCards(playerName);
+  Object.entries(incomingCards && typeof incomingCards === "object" ? incomingCards : {}).forEach(([cardId, raw]) => {
+    const progress = normalizeFlashcardProgressRecord(raw);
+    if (!progress) return;
+    const existing = normalizeFlashcardProgressRecord(cards[cardId]);
+    if (flashcardProgressShouldReplace(existing, progress)) cards[cardId] = progress;
+  });
+  saveFlashcardProgressStore();
+}
+
+async function postFlashcardProgressOnline(payload) {
+  const res = await fetch("/api/flashcard-progress", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.ok === false) {
+    throw new Error(data.message || "Online flashcard progress could not be saved.");
+  }
+  return data;
+}
+
+function updateFlashcardAccountDomStatus(status, message) {
+  const el = document.querySelector("#practiceModal [data-flashcard-account-status]");
+  if (!el) return;
+  el.className = status === "synced"
+    ? "flashcardAccountStatus flashcardAccountStatus--good"
+    : status === "error"
+      ? "flashcardAccountStatus flashcardAccountStatus--bad"
+      : "flashcardAccountStatus";
+  el.textContent = message;
+}
+
+async function syncFlashcardProgressOnline(setup, options = {}) {
+  const playerName = sanitizePracticePlayerName(setup?.playerName || "");
+  const passcode = sanitizeFlashcardPasscode(setup?.passcode || "");
+  if (!playerName) {
+    if (options.alert !== false) alert("Choose a learner or enter a name.");
+    return false;
+  }
+  if (passcode.length < 4) {
+    if (options.alert !== false) alert("Enter a passcode of at least 4 characters.");
+    return false;
+  }
+  setFlashcardAccountStatus("syncing", "Syncing online flashcard progress...", {
+    playerName,
+    passcode,
+    authenticated: false
+  });
+  updateFlashcardAccountDomStatus("syncing", "Syncing online flashcard progress...");
+  try {
+    const data = await postFlashcardProgressOnline({
+      action: "sync",
+      playerName,
+      passcode,
+      cards: serializeFlashcardProgressCards(playerName)
+    });
+    if (data.configured === false) {
+      setFlashcardAccountStatus("unavailable", data.message || "Online progress is not configured; this device will keep local progress.", {
+        playerName,
+        passcode,
+        authenticated: false,
+        storage: ""
+      });
+      updateFlashcardAccountDomStatus("unavailable", PRACTICE_STATE.flashcardAccount.message);
+      return true;
+    }
+    mergeFlashcardProgressCards(playerName, data.cards || {});
+    saveFlashcardPasscode(playerName, passcode);
+    setFlashcardAccountStatus("synced", data.account?.created ? "Learner account created and synced." : "Online progress synced.", {
+      playerName,
+      passcode,
+      authenticated: true,
+      storage: data.storage || "",
+      created: !!data.account?.created,
+      lastSyncedAt: Date.now()
+    });
+    updateFlashcardAccountDomStatus("synced", PRACTICE_STATE.flashcardAccount.message);
+    return true;
+  } catch (err) {
+    const message = err?.message || "Online flashcard progress could not be reached.";
+    setFlashcardAccountStatus("error", message, {
+      playerName,
+      passcode,
+      authenticated: false
+    });
+    updateFlashcardAccountDomStatus("error", message);
+    if (options.alert !== false) alert(message);
+    return false;
+  }
+}
+
+async function saveFlashcardProgressOnline(cardId, progress, game = getFlashcardState()) {
+  const playerName = sanitizePracticePlayerName(game.playerName || "");
+  const passcode = sanitizeFlashcardPasscode(game.passcode || getFlashcardAccountFor(playerName)?.passcode || "");
+  if (!playerName || passcode.length < 4) return;
+  try {
+    const data = await postFlashcardProgressOnline({
+      action: "update",
+      playerName,
+      passcode,
+      cardId,
+      progress
+    });
+    if (data.configured === false) return;
+    setFlashcardAccountStatus("synced", "Online progress saved.", {
+      playerName,
+      passcode,
+      authenticated: true,
+      storage: data.storage || "",
+      lastSyncedAt: Date.now()
+    });
+  } catch (err) {
+    setFlashcardAccountStatus("error", err?.message || "Online progress could not be saved.", {
+      playerName,
+      passcode,
+      authenticated: false
+    });
+  }
+}
+
+async function resetFlashcardProgressOnline(setup, cardIds) {
+  const playerName = sanitizePracticePlayerName(setup?.playerName || "");
+  const passcode = sanitizeFlashcardPasscode(setup?.passcode || "");
+  if (!playerName || passcode.length < 4) return false;
+  try {
+    const data = await postFlashcardProgressOnline({
+      action: "reset",
+      playerName,
+      passcode,
+      cardIds
+    });
+    if (data.configured === false) return true;
+    mergeFlashcardProgressCards(playerName, data.cards || {});
+    setFlashcardAccountStatus("synced", "Online progress reset.", {
+      playerName,
+      passcode,
+      authenticated: true,
+      storage: data.storage || "",
+      lastSyncedAt: Date.now()
+    });
+    return true;
+  } catch (err) {
+    alert(err?.message || "Online progress could not be reset.");
+    return false;
+  }
 }
 
 function flashcardAnswerVariants(rawValue, options = {}) {
@@ -7841,16 +8115,7 @@ function buildFlashcardDeckRefs(deckId, selectedKeys) {
 
 function getFlashcardProgressRecord(cardId, playerName = "") {
   const raw = getFlashcardProgressCards(playerName)[cardId];
-  if (!raw || typeof raw !== "object") return null;
-  return {
-    reps: Math.max(0, Number(raw.reps) || 0),
-    lapses: Math.max(0, Number(raw.lapses) || 0),
-    ease: Math.max(1.3, Number(raw.ease) || 2.5),
-    intervalDays: Math.max(0, Number(raw.intervalDays) || 0),
-    dueAt: Math.max(0, Number(raw.dueAt) || 0),
-    lastReviewedAt: Math.max(0, Number(raw.lastReviewedAt) || 0),
-    lastRating: cleanText(raw.lastRating || "")
-  };
+  return normalizeFlashcardProgressRecord(raw);
 }
 
 function getFlashcardDeckStats(refs, now = Date.now(), playerName = "") {
@@ -8359,7 +8624,10 @@ function getFlashcardSetupFromModal() {
   const playerName = hasPlayerControls
     ? getPracticePlayerNameFromModal()
     : sanitizePracticePlayerName(current.playerName || loadPracticePlayerName());
-  return { deckId, selectedKeys, sessionSize, playerName };
+  const passcode = getFlashcardPasscodeFromModal() ||
+    sanitizeFlashcardPasscode(current.passcode) ||
+    loadFlashcardPasscode(playerName);
+  return { deckId, selectedKeys, sessionSize, playerName, passcode };
 }
 
 function renderFlashcardSetup(options = {}) {
@@ -8376,8 +8644,14 @@ function renderFlashcardSetup(options = {}) {
     PRACTICE_STATE.playerName ||
     loadPracticePlayerName()
   );
+  const passcode = sanitizeFlashcardPasscode(
+    options.passcode ||
+    current.passcode ||
+    getFlashcardAccountFor(playerName)?.passcode ||
+    loadFlashcardPasscode(playerName)
+  );
   PRACTICE_STATE.playerName = playerName ? savePracticePlayerName(playerName) : "";
-  PRACTICE_STATE.flashcards = defaultFlashcardState({ deckId, selectedKeys, sessionSize, playerName });
+  PRACTICE_STATE.flashcards = defaultFlashcardState({ deckId, selectedKeys, sessionSize, playerName, passcode });
   const game = getFlashcardState();
   saveFlashcardSettings(game);
   const stats = getFlashcardDeckStats(refs, Date.now(), playerName);
@@ -8393,10 +8667,11 @@ function renderFlashcardSetup(options = {}) {
     <div class="practicePanel flashcardFlatPanel">
       <div class="practiceSectionTitle">Learner profile</div>
       ${renderPracticePlayerControls(playerName)}
+      ${renderFlashcardAccountControls(playerName, passcode)}
       <div class="practiceActions">
         <button type="button" class="practiceSecondaryBtn" data-flashcard-profile-refresh>Load learner progress</button>
       </div>
-      <div class="practiceTypingHint">Flashcard progress is kept separately for each learner on this device.</div>
+      <div class="practiceTypingHint">First use creates the learner account. After that, the same passcode is needed to load or save online flashcard progress.</div>
     </div>
     <div class="practicePanel flashcardIntroPanel flashcardFlatPanel">
       <div class="practiceSectionTitle">Adaptive study</div>
@@ -8570,6 +8845,12 @@ function renderFlashcardProgressView(options = {}) {
   const refs = buildFlashcardDeckRefs(deckId, selectedKeys);
   const sessionSize = sanitizeFlashcardSessionSizeForMax(options.sessionSize || current.sessionSize, refs.length);
   const playerName = sanitizePracticePlayerName(options.playerName || current.playerName);
+  const passcode = sanitizeFlashcardPasscode(
+    options.passcode ||
+    current.passcode ||
+    getFlashcardAccountFor(playerName)?.passcode ||
+    loadFlashcardPasscode(playerName)
+  );
   const playerMeta = playerName || "Choose learner";
   const allowedSorts = new Set(["hardest", "easiest", "most-reviewed", "alphabetical"]);
   const progressSort = allowedSorts.has(options.progressSort || current.progressSort)
@@ -8581,6 +8862,7 @@ function renderFlashcardProgressView(options = {}) {
     selectedKeys,
     sessionSize,
     playerName,
+    passcode,
     progressSort
   });
   saveFlashcardSettings(getFlashcardState());
@@ -8606,6 +8888,7 @@ function renderFlashcardProgressView(options = {}) {
     <div class="practicePanel flashcardFlatPanel">
       <div class="practiceSectionTitle">Learner data</div>
       ${renderPracticePlayerControls(playerName)}
+      ${renderFlashcardAccountControls(playerName, passcode)}
       <div class="practiceActions">
         <button type="button" class="practiceSecondaryBtn" data-flashcard-progress-load-player>Load learner data</button>
       </div>
@@ -8641,12 +8924,17 @@ function renderFlashcardProgressView(options = {}) {
   );
 }
 
-function startFlashcardSession(deckId, selectedKeys, sessionSize, playerName) {
+function startFlashcardSession(deckId, selectedKeys, sessionSize, playerName, passcode = "") {
   const deck = getFlashcardDeck(deckId);
   const keys = sanitizeFlashcardTenseKeys(selectedKeys);
   const learner = sanitizePracticePlayerName(playerName || getFlashcardState().playerName);
+  const cleanPasscode = sanitizeFlashcardPasscode(passcode || getFlashcardState().passcode || getFlashcardAccountFor(learner)?.passcode || "");
   if (!learner) {
     alert("Choose a learner or enter a name before starting.");
+    return;
+  }
+  if (cleanPasscode.length < 4) {
+    alert("Enter a passcode of at least 4 characters before starting.");
     return;
   }
   PRACTICE_STATE.playerName = savePracticePlayerName(learner);
@@ -8673,6 +8961,7 @@ function startFlashcardSession(deckId, selectedKeys, sessionSize, playerName) {
     selectedKeys: keys,
     sessionSize: size,
     playerName: learner,
+    passcode: cleanPasscode,
     queue,
     initialCardCount: queue.length,
     startedAtMs: Date.now()
@@ -8681,10 +8970,14 @@ function startFlashcardSession(deckId, selectedKeys, sessionSize, playerName) {
   renderFlashcardRun();
 }
 
-function startFlashcardSessionFromSetup() {
+async function startFlashcardSessionFromSetup() {
   const setup = getFlashcardSetupFromModal();
   if (!setup.playerName) {
     alert("Choose a learner or enter a name before starting.");
+    return;
+  }
+  if (setup.passcode.length < 4) {
+    alert("Enter a passcode of at least 4 characters before starting.");
     return;
   }
   if (getFlashcardDeck(setup.deckId).cardType === "cloze") {
@@ -8694,7 +8987,9 @@ function startFlashcardSessionFromSetup() {
       return;
     }
   }
-  startFlashcardSession(setup.deckId, setup.selectedKeys, setup.sessionSize, setup.playerName);
+  const synced = await syncFlashcardProgressOnline(setup);
+  if (!synced) return;
+  startFlashcardSession(setup.deckId, setup.selectedKeys, setup.sessionSize, setup.playerName, setup.passcode);
 }
 
 function currentFlashcard(game = getFlashcardState()) {
@@ -8874,8 +9169,10 @@ function rateCurrentFlashcard(rating) {
   if (!card || !game.revealed) return;
   const previous = getFlashcardProgressRecord(card.cardId, game.playerName);
   const cards = getFlashcardProgressCards(game.playerName);
-  cards[card.cardId] = calculateFlashcardSchedule(previous, value);
+  const schedule = calculateFlashcardSchedule(previous, value);
+  cards[card.cardId] = schedule;
   saveFlashcardProgressStore();
+  saveFlashcardProgressOnline(card.cardId, schedule, game);
   game.ratingCounts[value] = Math.max(0, Number(game.ratingCounts[value]) || 0) + 1;
   if (value === "again") {
     const insertAt = Math.min(game.queue.length, game.currentIndex + FLASHCARD_AGAIN_GAP + 1);
@@ -8942,21 +9239,29 @@ function renderFlashcardResult() {
   );
 }
 
-function resetCurrentFlashcardDeckProgress() {
+async function resetCurrentFlashcardDeckProgress() {
   const setup = getFlashcardSetupFromModal();
   if (!setup.playerName) {
     alert("Choose a learner or enter a name before resetting progress.");
     return;
   }
+  if (setup.passcode.length < 4) {
+    alert("Enter a passcode of at least 4 characters before resetting progress.");
+    return;
+  }
   const deck = getFlashcardDeck(setup.deckId);
   const resetKeys = deck.cardType === "cloze" ? FLASHCARD_CLOZE_TENSE_KEYS : setup.selectedKeys;
   const refs = buildFlashcardDeckRefs(setup.deckId, resetKeys);
+  const synced = await syncFlashcardProgressOnline(setup);
+  if (!synced) return;
   if (!window.confirm(`Reset ${setup.playerName}'s saved progress for ${deck.label}? Cards shared with the other list will also be reset.`)) return;
   const cards = getFlashcardProgressCards(setup.playerName);
+  const cardIds = refs.map(ref => ref.cardId).filter(Boolean);
   refs.forEach(ref => {
     delete cards[ref.cardId];
   });
   saveFlashcardProgressStore();
+  await resetFlashcardProgressOnline(setup, cardIds);
   renderFlashcardSetup(setup);
 }
 
@@ -9349,10 +9654,17 @@ function bindPracticeModalInteractions() {
     customPlayerInput.addEventListener("focus", selectCustomPlayer);
     customPlayerInput.addEventListener("input", selectCustomPlayer);
   }
-  const refreshFlashcardProfile = () => {
+  const refreshFlashcardProfile = async () => {
     if (!modal.querySelector("[data-flashcard-start]")) return;
     const setup = getFlashcardSetupFromModal();
     if (!setup.playerName) return;
+    if (setup.passcode.length < 4) {
+      alert("Enter a passcode of at least 4 characters to load learner progress.");
+      modal.querySelector("[data-flashcard-passcode]")?.focus();
+      return;
+    }
+    const synced = await syncFlashcardProgressOnline(setup);
+    if (!synced) return;
     renderFlashcardSetup(setup);
   };
   modal.querySelectorAll("input[data-practice-player-preset]").forEach(input => {
@@ -9362,7 +9674,7 @@ function bindPracticeModalInteractions() {
         customPlayerInput?.focus();
         return;
       }
-      refreshFlashcardProfile();
+      renderFlashcardSetup(getFlashcardSetupFromModal());
     });
   });
   modal.querySelector("[data-flashcard-profile-refresh]")?.addEventListener("click", refreshFlashcardProfile);
@@ -9399,7 +9711,7 @@ function bindPracticeModalInteractions() {
   flashcardSessionNumber?.addEventListener("input", (e) => syncFlashcardSessionSizeControl(e.currentTarget.value));
   flashcardSessionNumber?.addEventListener("change", () => renderFlashcardSetup(getFlashcardSetupFromModal()));
   modal.querySelector("[data-flashcard-start]")?.addEventListener("click", startFlashcardSessionFromSetup);
-  modal.querySelector("[data-flashcard-progress]")?.addEventListener("click", () => {
+  modal.querySelector("[data-flashcard-progress]")?.addEventListener("click", async () => {
     const game = getFlashcardState();
     const setup = modal.querySelector("input[data-flashcard-deck]")
       ? getFlashcardSetupFromModal()
@@ -9407,12 +9719,19 @@ function bindPracticeModalInteractions() {
           deckId: game.deckId,
           selectedKeys: game.selectedKeys,
           sessionSize: game.sessionSize,
-          playerName: game.playerName
+          playerName: game.playerName,
+          passcode: game.passcode
         };
     if (!setup.playerName) {
       alert("Choose a learner or enter a name to view progress.");
       return;
     }
+    if (setup.passcode.length < 4) {
+      alert("Enter a passcode of at least 4 characters to view progress.");
+      return;
+    }
+    const synced = await syncFlashcardProgressOnline(setup);
+    if (!synced) return;
     renderFlashcardProgressView(setup);
   });
   modal.querySelector("[data-flashcard-progress-back]")?.addEventListener("click", () => {
@@ -9421,12 +9740,13 @@ function bindPracticeModalInteractions() {
       deckId: game.deckId,
       selectedKeys: game.selectedKeys,
       sessionSize: game.sessionSize,
-      playerName: game.playerName
+      playerName: game.playerName,
+      passcode: game.passcode
     });
   });
   modal.querySelector("[data-flashcard-progress-study]")?.addEventListener("click", () => {
     const game = getFlashcardState();
-    startFlashcardSession(game.deckId, game.selectedKeys, game.sessionSize, game.playerName);
+    startFlashcardSession(game.deckId, game.selectedKeys, game.sessionSize, game.playerName, game.passcode);
   });
   modal.querySelector("[data-flashcard-progress-deck]")?.addEventListener("change", (e) => {
     const game = getFlashcardState();
@@ -9435,21 +9755,36 @@ function bindPracticeModalInteractions() {
       selectedKeys: game.selectedKeys,
       sessionSize: game.sessionSize,
       playerName: game.playerName,
+      passcode: game.passcode,
       progressSort: game.progressSort
     });
   });
-  modal.querySelector("[data-flashcard-progress-load-player]")?.addEventListener("click", () => {
+  modal.querySelector("[data-flashcard-progress-load-player]")?.addEventListener("click", async () => {
     const game = getFlashcardState();
     const playerName = getPracticePlayerNameFromModal();
+    const passcode = getFlashcardPasscodeFromModal();
     if (!playerName) {
       alert("Choose a learner or enter a name to view progress.");
       return;
     }
+    if (passcode.length < 4) {
+      alert("Enter a passcode of at least 4 characters to view progress.");
+      return;
+    }
+    const synced = await syncFlashcardProgressOnline({
+      deckId: game.deckId,
+      selectedKeys: game.selectedKeys,
+      sessionSize: game.sessionSize,
+      playerName,
+      passcode
+    });
+    if (!synced) return;
     renderFlashcardProgressView({
       deckId: game.deckId,
       selectedKeys: game.selectedKeys,
       sessionSize: game.sessionSize,
       playerName,
+      passcode,
       progressSort: game.progressSort
     });
   });
@@ -9460,6 +9795,7 @@ function bindPracticeModalInteractions() {
       selectedKeys: game.selectedKeys,
       sessionSize: game.sessionSize,
       playerName: game.playerName,
+      passcode: game.passcode,
       progressSort: e.currentTarget.value
     });
   });
@@ -9473,12 +9809,13 @@ function bindPracticeModalInteractions() {
       deckId: game.deckId,
       selectedKeys: game.selectedKeys,
       sessionSize: game.sessionSize,
-      playerName: game.playerName
+      playerName: game.playerName,
+      passcode: game.passcode
     });
   });
   modal.querySelector("[data-flashcard-retry]")?.addEventListener("click", () => {
     const game = getFlashcardState();
-    startFlashcardSession(game.deckId, game.selectedKeys, game.sessionSize, game.playerName);
+    startFlashcardSession(game.deckId, game.selectedKeys, game.sessionSize, game.playerName, game.passcode);
   });
   modal.querySelector("[data-flashcard-reset]")?.addEventListener("click", resetCurrentFlashcardDeckProgress);
   modal.querySelector("[data-flashcard-infinitive-game]")?.addEventListener("click", () => {
